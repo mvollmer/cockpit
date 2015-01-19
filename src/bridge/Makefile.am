@@ -33,6 +33,8 @@ libcockpit_bridge_a_SOURCES = \
 	src/bridge/cockpitinteracttransport.h \
 	src/bridge/cockpitpackages.c \
 	src/bridge/cockpitpackages.h \
+	src/bridge/cockpitinternalmetrics.c \
+	src/bridge/cockpitinternalmetrics.h \
 	src/bridge/cockpitpaths.c \
 	src/bridge/cockpitpaths.h \
 	src/bridge/cockpitpolkitagent.c \
