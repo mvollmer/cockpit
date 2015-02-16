@@ -60,7 +60,10 @@ var common_plot_options = {
             borderColor: "#e1e6ed",
             hoverable: true,
             autoHighlight: false
-          }
+          },
+    selection: {
+        mode: "x"
+    }
 };
 
 function memory_ticks(opts) {
@@ -261,6 +264,10 @@ PageDashboard.prototype = {
             scroll_plot_right();
         });
 
+        $('#dashboard-zoom-out').click(function () {
+            zoom_plot_out();
+        });
+
         function update_scroll_buttons() {
             $('#dashboard-scroll-right').attr('disabled', plot_x_stop === undefined);
         }
@@ -291,6 +298,36 @@ PageDashboard.prototype = {
                     plot_x_stop = undefined;
                 plot_reset_soft();
             }
+            update_scroll_buttons();
+        }
+
+        function zoom_plot_start() {
+            if (plot_x_stop === undefined) {
+                self.plots.forEach(function (p) {
+                    p.stop_walking();
+                });
+                plot_x_stop = (new Date()).getTime() / 1000;
+                update_scroll_buttons();
+            }
+        }
+
+        function zoom_plot_in(x_range, x_stop) {
+            $('#dashboard-range-buttons button').removeClass("active");
+            plot_x_range = x_range;
+            plot_x_stop = x_stop;
+            plot_reset_soft();
+            update_scroll_buttons();
+        }
+
+        function zoom_plot_out(x_range, x_stop) {
+            var factor = 2.0;
+            $('#dashboard-range-buttons button').removeClass("active");
+            if (plot_x_stop !== undefined)
+                plot_x_stop += (factor/4)*plot_x_range;
+            if (plot_x_stop >= (new Date()).getTime() / 1000 - 10)
+                plot_x_stop = undefined;
+            plot_x_range *= factor;
+            plot_reset_soft();
             update_scroll_buttons();
         }
 
@@ -488,6 +525,9 @@ PageDashboard.prototype = {
                     if (plot.archives)
                         $("#dashboard-toolbar").show();
                 });
+
+                $(plot).on("zoomstart", function (event) { zoom_plot_start(); });
+                $(plot).on("zoom", function (event, x_range, x_stop) { zoom_plot_in(x_range, x_stop); });
             });
 
             series = {};
