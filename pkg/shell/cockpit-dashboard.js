@@ -77,22 +77,13 @@ function memory_ticks(opts) {
 
 var resource_monitors = [
     { selector: "#dashboard-plot-0",
-      plot: { metrics: [ "kernel.all.cpu.nice",
-                         "kernel.all.cpu.user",
-                         "kernel.all.cpu.sys"
-                       ],
-              units: "millisec",
-              derive: "rate",
-              factor: 0.1  // millisec / sec -> percent
-            },
+      monitor: 'cpu_monitor',
       options: { yaxis: { tickColor: "#e1e6ed",
                           tickFormatter: function(v) { return v + "%"; }} },
       ymax_unit: 100
     },
     { selector: "#dashboard-plot-1",
-      plot: { metrics: [ "mem.util.used" ],
-              units: "byte"
-            },
+      monitor: 'mem_monitor',
       options: { yaxis: { ticks: memory_ticks,
                           tickColor: "#e1e6ed",
                           tickFormatter:  function (v) { return cockpit.format_bytes(v); }
@@ -101,11 +92,7 @@ var resource_monitors = [
       ymax_unit: 100000000
     },
     { selector: "#dashboard-plot-2",
-      plot: { metrics: [ "network.interface.total.bytes" ],
-              units: "byte",
-              'omit-instances': [ "lo" ],
-              derive: "rate"
-            },
+      monitor: 'net_monitor',
       options: { yaxis: { tickColor: "#e1e6ed",
                           tickFormatter:  function (v) { return cockpit.format_bits_per_sec(v*8); }
                         }
@@ -113,10 +100,7 @@ var resource_monitors = [
       ymax_min: 100000
     },
     { selector: "#dashboard-plot-3",
-      plot: { metrics: [ "disk.dev.total_bytes" ],
-              units: "byte",
-              derive: "rate"
-            },
+      monitor: 'disk_monitor',
       options: { yaxis: { tickColor: "#e1e6ed",
                           tickFormatter:  function (v) { return cockpit.format_bytes_per_sec(v); }
                         }
@@ -471,13 +455,18 @@ PageDashboard.prototype = {
             var i = 0;
             resource_monitors.forEach(function (rm) {
                 if (self.plots[i]) {
-                    series.push(self.plots[i].add_metrics_sum_series($.extend({ host: addr},
-                                                                              rm.plot),
-                                                                     { color: shell_info.color,
-                                                                       lines: {
-                                                                           lineWidth: 2
-                                                                       }
-                                                                     }));
+                    var mon = shell[rm.monitor]();
+                    series.push(self.plots[i].add_monitor(mon,
+                                                          { color: shell_info.color,
+                                                            lines: {
+                                                                lineWidth: 2
+                                                            }
+                                                          }));
+                    mon.has_archives()
+                        .done(function (res) {
+                            if (res)
+                                $("#dashboard-toolbar").show();
+                        });
                 }
                 i += 1;
             });
@@ -520,11 +509,6 @@ PageDashboard.prototype = {
                 var plot = shell.plot($(rm.selector), plot_x_range, plot_x_stop);
                 plot.set_options(options);
                 self.plots.push(plot);
-
-                $(plot).on("changed", function() {
-                    if (plot.archives)
-                        $("#dashboard-toolbar").show();
-                });
 
                 $(plot).on("zoomstart", function (event) { zoom_plot_start(); });
                 $(plot).on("zoom", function (event, x_range, x_stop) { zoom_plot_in(x_range, x_stop); });
