@@ -5,6 +5,7 @@
     <title>Cockpit terminal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../@@latest@@/cockpit.css" type="text/css" rel="stylesheet">
+    <script src="../@@latest@@/mustache.js"></script>
     <script src="../@@latest@@/cockpit.js"></script>
 </head>
 <body style="display: none;">
@@ -46,6 +47,9 @@ require([
     cockpit.locale(po);
     var _ = cockpit.gettext;
     var C_ = cockpit.gettext;
+
+    /* global Mustache */
+    console.log(Mustache);
 
     $("#translation").text(_("Translation"));
     $("#reverse").text(C_("reverse", "Translation"));
