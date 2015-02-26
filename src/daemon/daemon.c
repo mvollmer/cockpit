@@ -24,14 +24,6 @@
 #include "daemon.h"
 #include "manager.h"
 #include "machines.h"
-#include "cpumonitor.h"
-#include "memorymonitor.h"
-#include "networkmonitor.h"
-#include "diskiomonitor.h"
-#include "cgroupmonitor.h"
-#include "netdevmonitor.h"
-#include "blockdevmonitor.h"
-#include "mountmonitor.h"
 #include "storageprovider.h"
 #include "storagemanager.h"
 #include "realms.h"
@@ -185,8 +177,6 @@ daemon_constructed (GObject *_object)
   Daemon *daemon = DAEMON (_object);
   CockpitManager *manager;
   CockpitMachines *machines;
-  CockpitResourceMonitor *monitor;
-  CockpitMultiResourceMonitor *multi_monitor;
   CockpitRealms *realms;
   CockpitServices *services;
   CockpitAccounts *accounts;
@@ -228,86 +218,6 @@ daemon_constructed (GObject *_object)
   g_object_unref (object);
 
   g_debug ("exported manager");
-
-  /* /com/redhat/Cockpit/CpuMonitor */
-  monitor = cpu_monitor_new (daemon);
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/CpuMonitor");
-  cockpit_object_skeleton_set_resource_monitor (object, monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (monitor);
-  g_object_unref (object);
-
-  g_debug ("exported cpu monitor");
-
-  /* /com/redhat/Cockpit/MemoryMonitor */
-  monitor = memory_monitor_new (daemon);
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/MemoryMonitor");
-  cockpit_object_skeleton_set_resource_monitor (object, monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (monitor);
-  g_object_unref (object);
-
-  g_debug ("exported memory monitor");
-
-  /* /com/redhat/Cockpit/NetworkMonitor */
-  monitor = network_monitor_new (daemon);
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/NetworkMonitor");
-  cockpit_object_skeleton_set_resource_monitor (object, monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (monitor);
-  g_object_unref (object);
-
-  g_debug ("exported network monitor");
-
-  /* /com/redhat/Cockpit/DiskIOMonitor */
-  monitor = disk_io_monitor_new (daemon);
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/DiskIOMonitor");
-  cockpit_object_skeleton_set_resource_monitor (object, monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (monitor);
-  g_object_unref (object);
-
-  g_debug ("exported disk io monitor");
-
-  /* /com/redhat/Cockpit/LxcMonitor */
-  multi_monitor = cgroup_monitor_new (G_OBJECT (daemon));
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/LxcMonitor");
-  cockpit_object_skeleton_set_multi_resource_monitor (object, multi_monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (multi_monitor);
-  g_object_unref (object);
-
-  g_debug ("exported lxc monitor");
-
-  /* /com/redhat/Cockpit/NetdevMonitor */
-  multi_monitor = netdev_monitor_new (G_OBJECT (daemon));
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/NetdevMonitor");
-  cockpit_object_skeleton_set_multi_resource_monitor (object, multi_monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (multi_monitor);
-  g_object_unref (object);
-
-  g_debug ("exported net dev monitor");
-
-  /* /com/redhat/Cockpit/BlockdevMonitor */
-  multi_monitor = blockdev_monitor_new (G_OBJECT (daemon));
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/BlockdevMonitor");
-  cockpit_object_skeleton_set_multi_resource_monitor (object, multi_monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (multi_monitor);
-  g_object_unref (object);
-
-  g_debug ("exported block dev monitor");
-
-  /* /com/redhat/Cockpit/MountMonitor */
-  multi_monitor = mount_monitor_new (G_OBJECT (daemon));
-  object = cockpit_object_skeleton_new ("/com/redhat/Cockpit/MountMonitor");
-  cockpit_object_skeleton_set_multi_resource_monitor (object, multi_monitor);
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
-  g_object_unref (multi_monitor);
-  g_object_unref (object);
-
-  g_debug ("exported mount monitor");
 
   /* /com/redhat/Cockpit/Realms */
   realms = realms_new (daemon);

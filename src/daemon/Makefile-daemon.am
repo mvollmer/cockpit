@@ -45,22 +45,6 @@ libcockpitd_a_SOURCES = \
 	src/daemon/machines.c \
 	src/daemon/machine.h \
 	src/daemon/machine.c \
-	src/daemon/cpumonitor.h \
-	src/daemon/cpumonitor.c \
-	src/daemon/memorymonitor.h \
-	src/daemon/memorymonitor.c \
-	src/daemon/networkmonitor.h \
-	src/daemon/networkmonitor.c \
-	src/daemon/diskiomonitor.h \
-	src/daemon/diskiomonitor.c \
-	src/daemon/cgroupmonitor.h \
-	src/daemon/cgroupmonitor.c \
-	src/daemon/netdevmonitor.h \
-	src/daemon/netdevmonitor.c \
-	src/daemon/blockdevmonitor.h \
-	src/daemon/blockdevmonitor.c \
-	src/daemon/mountmonitor.h \
-	src/daemon/mountmonitor.c \
 	src/daemon/storagemanager.h \
 	src/daemon/storagemanager.c \
 	src/daemon/storageprovider.h \
@@ -134,12 +118,7 @@ CLEANFILES += \
 # TESTS
 
 DAEMON_CHECKS = \
-	test-cgroupmonitor \
 	test-machines
-
-test_cgroupmonitor_SOURCES = src/daemon/test-cgroupmonitor.c
-test_cgroupmonitor_CFLAGS = $(libcockpitd_a_CFLAGS)
-test_cgroupmonitor_LDADD = $(cockpitd_LDADD)
 
 test_machines_SOURCES = src/daemon/test-machines.c
 test_machines_CFLAGS = $(libcockpitd_a_CFLAGS)
