@@ -33,20 +33,20 @@
 #define COCKPIT_INTERNAL_METRICS(o) \
   (G_TYPE_CHECK_INSTANCE_CAST ((o), COCKPIT_TYPE_INTERNAL_METRICS, CockpitInternalMetrics))
 
-#if 0
-typedef void (* FetchCallback) (CockpitSamples *);
+typedef enum {
+  MEMORY_SAMPLER = 0x01
+} SamplerSet;
 
 typedef struct {
-  const gchar *metric;
-#if 0
-  xxx semantics;
-#endif
+  const gchar *name;
+  const gchar *units;
+} MetricDefinition;
+
+typedef struct {
+  const gchar *name;
+  const gchar *derive;
+  SamplerSet sampler;
 } MetricInfo;
-
-typedef struct {
-  gchar *instance;
-  gint64 value;
-} MetricData;
 
 typedef struct {
   CockpitMetrics parent;
@@ -54,377 +54,30 @@ typedef struct {
 
   MetricInfo *metrics;
   const gchar **instances;
-  FetchCallback *callbacks;
-  GArray **data;
+  const gchar **omit_instances;
+  SamplerSet samplers;
 } CockpitInternalMetrics;
 
 typedef struct {
   CockpitMetricsClass parent_class;
 } CockpitInternalMetricsClass;
 
-G_DEFINE_TYPE (CockpitInternalMetrics, cockpit_internal_metrics, COCKPIT_TYPE_METRICS);
-
-static MetricInfo *
-parse_metric_info (CockpitInternalMetrics *self,
-                   Jsonnode *node)
-{
-  MetricInfo *ret = NULL;
-  MetricInfo *info;
-
-  info = g_new0 (MetricInfo, 1);
-
-  if (json_node_get_node_type (node) != JSON_NODE_OBJECT)
-    {
-      g_warning ("%s: invalid \"metrics\" option", self->name);
-      goto out;
-    }
-
-  object = json_node_get_object (node);
-
-  if (!cockpit_json_get_string (object, "name", NULL, &info->name))
-    {
-      g_warning ("%s: invalid \"name\" option was specified", self->name);
-      goto out;
-    }
-  else if (!name)
-    {
-      g_warning ("%s: missing \"name\" option was specified", self->name);
-      goto out;
-    }
-
-  if (!cockpit_json_get_string (object, "type", NULL, &type))
-    {
-      g_warning ("%s: invalid \"type\" for metric %s", self->name, info->name);
-      goto out;
-    }
-  else if (type && !g_str_equal (type, "number"))
-    {
-      g_warning ("%s: the \"type\" for metric %s should be \"number\"", self->name, info->name);
-      goto out;
-    }
-
-  if (!cockpit_json_get_string (object, "semantics", NULL, &semantics))
-    {
-      g_warning ("%s: invalid \"semantics\" for metric %s", self->name, info->name);
-      return FALSE;
-    }
-
-  if (!cockpit_json_get_string (object, "units", NULL, &units))
-    {
-      g_warning ("%s: invalid \"units\" for metric %s", self->name, info->name);
-      return FALSE;
-        }
-
-  
-}
+G_DEFINE_TYPE_WITH_CODE (CockpitInternalMetrics, cockpit_internal_metrics, COCKPIT_TYPE_METRICS,
+                         G_IMPLEMENT_INTERFACE (COCKPIT_TYPE_SAMPLES,
+                                                cockpit_samples_interface_init))
 
 static void
 cockpit_internal_metrics_init (CockpitInternalMetrics *self)
 {
-#if 0
-  self->context = -1;
-#endif
 }
-
-#if 0
-static JsonObject *
-build_meta (CockpitInternalMetrics *self,
-            pmResult *result)
-{
-  JsonArray *metrics;
-  JsonObject *metric;
-  JsonArray *instances;
-  JsonObject *root;
-  pmValueSet *vs;
-  gint64 timestamp;
-  char *instance;
-  int i, j;
-  int rc;
-
-  timestamp = (result->timestamp.tv_sec * 1000) +
-              (result->timestamp.tv_usec / 1000);
-
-  root = json_object_new ();
-  json_object_set_int_member (root, "timestamp", timestamp);
-  json_object_set_int_member (root, "interval", self->interval);
-
-  metrics = json_array_new ();
-  for (i = 0; i < result->numpmid; i++)
-    {
-      metric = json_object_new ();
-
-      /* Name
-       */
-      json_object_set_string_member (metric, "name", self->metrics[i].name);
-
-      /* Instances
-       */
-      vs = result->vset[i];
-      if (vs->numval < 0 || (vs->numval == 1 && vs->vlist[0].inst == PM_IN_NULL))
-        {
-          /* When negative numval is an error code ... we don't care */
-        }
-      else
-        {
-          instances = json_array_new ();
-
-          for (j = 0; j < vs->numval; j++)
-            {
-              /* PCP guarantees that the result is in the same order as requested */
-              rc = pmNameInDom (self->metrics[i].desc.indom, vs->vlist[j].inst, &instance);
-              if (rc != 0)
-                {
-                  g_warning ("%s: instance name lookup failed: %s", self->name, pmErrStr (rc));
-                  instance = NULL;
-                }
-
-              /* HACK: We can't use json_builder_add_string_value here since
-                 it turns empty strings into 'null' values inside arrays.
-
-                 https://bugzilla.gnome.org/show_bug.cgi?id=730803
-              */
-              {
-                JsonNode *string_element = json_node_alloc ();
-                json_node_init_string (string_element, instance);
-                json_array_add_element (instances, string_element);
-              }
-
-              if (instance)
-                free (instance);
-            }
-          json_object_set_array_member (metric, "instances", instances);
-        }
-
-      /* Units
-       */
-      if (self->metrics[i].factor == 1.0)
-        {
-          json_object_set_string_member (metric, "units", pmUnitsStr(self->metrics[i].units));
-        }
-      else
-        {
-          gchar *name = g_strdup_printf ("%s*%g", pmUnitsStr(self->metrics[i].units), 1.0/self->metrics[i].factor);
-          json_object_set_string_member (metric, "units", name);
-          g_free (name);
-        }
-
-      /* Type
-       */
-      switch (self->metrics[i].desc.type) {
-      case PM_TYPE_STRING:
-        json_object_set_string_member (metric, "type", "string");
-        break;
-      case PM_TYPE_32:
-      case PM_TYPE_U32:
-      case PM_TYPE_64:
-      case PM_TYPE_U64:
-      case PM_TYPE_FLOAT:
-      case PM_TYPE_DOUBLE:
-        json_object_set_string_member (metric, "type", "number");
-        break;
-      default:
-        break;
-      }
-
-      /* Semantics
-       */
-      switch (self->metrics[i].desc.sem) {
-      case PM_SEM_COUNTER:
-        json_object_set_string_member (metric, "semantics", "counter");
-        break;
-      case PM_SEM_INSTANT:
-        json_object_set_string_member (metric, "semantics", "instant");
-        break;
-      case PM_SEM_DISCRETE:
-        json_object_set_string_member (metric, "semantics", "discrete");
-        break;
-      default:
-        break;
-      }
-
-      json_array_add_object_element (metrics, metric);
-    }
-
-  json_object_set_array_member (root, "metrics", metrics);
-  return root;
-}
-
-static JsonObject *
-build_meta_if_necessary (CockpitInternalMetrics *self)
-{
-  if (self->last)
-    {
-      /*
-       * If we've already sent the first meta message, then only send
-       * another when the set of instances in the results change.
-       */
-
-      if (result_meta_equal (self->last, result))
-        return NULL;
-    }
-
-  return build_meta (self, result);
-}
-
-static JsonNode *
-build_sample (CockpitInternalMetrics *self,
-              pmResult *result,
-              int metric,
-              int instance)
-{
-  MetricInfo *info = &self->metrics[metric];
-  int valfmt = result->vset[metric]->valfmt;
-  pmValue *value = &result->vset[metric]->vlist[instance];
-  pmAtomValue sample;
-
-  /* The following mouth full will set sample.d to the appropriate
-     value, or return early for special cases and errors.
-  */
-
-  if (info->desc.type == PM_TYPE_AGGREGATE || info->desc.type == PM_TYPE_EVENT)
-    return NULL;
-
-  if (info->desc.sem == PM_SEM_COUNTER && info->desc.type != PM_TYPE_STRING)
-    {
-      if (!self->last)
-        return NULL;
-
-      pmAtomValue old, new;
-      pmValue *last_value = &self->last->vset[metric]->vlist[instance];
-
-      if (info->desc.type == PM_TYPE_64)
-        {
-          if (pmExtractValue (valfmt, value, PM_TYPE_64, &new, PM_TYPE_64) < 0
-              || pmExtractValue (valfmt, last_value, PM_TYPE_64, &old, PM_TYPE_64) < 0)
-            return json_node_new (JSON_NODE_NULL);
-
-          sample.d = new.ll - old.ll;
-        }
-      else if (info->desc.type == PM_TYPE_U64)
-        {
-          if (pmExtractValue (valfmt, value, PM_TYPE_U64, &new, PM_TYPE_U64) < 0
-              || pmExtractValue (valfmt, last_value, PM_TYPE_U64, &old, PM_TYPE_U64) < 0)
-            return json_node_new (JSON_NODE_NULL);
-
-          sample.d = new.ull - old.ull;
-        }
-      else
-        {
-          if (pmExtractValue (valfmt, value, info->desc.type, &new, PM_TYPE_DOUBLE) < 0
-              || pmExtractValue (valfmt, last_value, info->desc.type, &old, PM_TYPE_DOUBLE) < 0)
-            return json_node_new (JSON_NODE_NULL);
-
-          sample.d = new.d - old.d;
-        }
-    }
-  else
-    {
-      if (self->last)
-        {
-          pmValue *last_value = &self->last->vset[metric]->vlist[instance];
-          if (result_value_equal (valfmt, value, last_value))
-            return NULL;
-        }
-
-      if (info->desc.type == PM_TYPE_STRING)
-        {
-          if (pmExtractValue (valfmt, value, PM_TYPE_STRING, &sample, PM_TYPE_STRING) < 0)
-            return json_node_new (JSON_NODE_NULL);
-
-          JsonNode *node = json_node_new (JSON_NODE_VALUE);
-          json_node_set_string (node, sample.cp);
-          free (sample.cp);
-          return node;
-        }
-      else
-        {
-          if (pmExtractValue (valfmt, value, info->desc.type, &sample, PM_TYPE_DOUBLE) < 0)
-            return json_node_new (JSON_NODE_NULL);
-        }
-    }
-
-  if (info->units != &info->desc.units)
-    {
-      if (pmConvScale (PM_TYPE_DOUBLE, &sample, &info->desc.units, &sample, info->units) < 0)
-        return json_node_new (JSON_NODE_NULL);
-      sample.d *= info->factor;
-    }
-
-  JsonNode *node = json_node_new (JSON_NODE_VALUE);
-  json_node_set_double (node, sample.d);
-  return node;
-}
-
-static JsonArray *
-build_samples (CockpitInternalMetrics *self,
-               pmResult *result)
-{
-  CockpitCompressedArrayBuilder samples;
-  CockpitCompressedArrayBuilder array;
-  pmValueSet *vs;
-  int i, j;
-
-  cockpit_compressed_array_builder_init (&samples);
-
-  for (i = 0; i < result->numpmid; i++)
-    {
-      vs = result->vset[i];
-
-      /* When negative numval is an error code ... we don't care */
-      if (vs->numval < 0)
-        cockpit_compressed_array_builder_add (&samples, NULL);
-      else if (vs->numval == 1 && vs->vlist[0].inst == PM_IN_NULL)
-        cockpit_compressed_array_builder_add (&samples, build_sample (self, result, i, 0));
-      else
-        {
-          cockpit_compressed_array_builder_init (&array);
-          for (j = 0; j < vs->numval; j++)
-            cockpit_compressed_array_builder_add (&array, build_sample (self, result, i, j));
-          cockpit_compressed_array_builder_take_and_add_array (&samples,
-                                                               cockpit_compressed_array_builder_finish (&array));
-        }
-    }
-
-  return cockpit_compressed_array_builder_finish (&samples);
-}
-#endif
 
 static void
 cockpit_internal_metrics_tick (CockpitMetrics *metrics,
                                gint64 timestamp)
 {
-#if 0
   CockpitInternalMetrics *self = (CockpitInternalMetrics *)metrics;
-  JsonArray *message;
-  JsonObject *meta;
-  int rc;
-
-  meta = build_meta_if_necessary (self, result);
-  if (meta)
-    {
-      send_object (self, meta);
-      json_object_unref (meta);
-
-      /* We can't compress across a meta message.
-       */
-      if (self->last)
-        pmFreeResult (self->last);
-      self->last = NULL;
-    }
-
-  /* Send one set of samples */
-  message = json_array_new ();
-  json_array_add_array_element (message, build_samples (self, result));
-  send_array (self, message);
-  json_array_unref (message);
-
-  if (self->last)
-    pmFreeResult (self->last);
-  self->last = result;
-#endif
 }
 
-#if 0
 static gboolean
 convert_metric_description (CockpitInternalMetrics *self,
                             JsonNode *node,
@@ -432,8 +85,6 @@ convert_metric_description (CockpitInternalMetrics *self,
                             int index)
 {
   const gchar *units;
-  const gchar *type;
-  const gchar *semantics;
 
   if (json_node_get_node_type (node) == JSON_NODE_OBJECT)
     {
@@ -452,16 +103,9 @@ convert_metric_description (CockpitInternalMetrics *self,
           return FALSE;
         }
 
-      if (!cockpit_json_get_string (json_node_get_object (node), "type", NULL, &type))
+      if (!cockpit_json_get_string (json_node_get_object (node), "derive", NULL, &info->derive))
         {
-          g_warning ("%s: invalid type for metric %s (not a string)",
-                     self->name, info->name);
-          return FALSE;
-        }
-
-      if (!cockpit_json_get_string (json_node_get_object (node), "semantics", NULL, &semantics))
-        {
-          g_warning ("%s: invalid semantics for metric %s (not a string)",
+          g_warning ("%s: invalid derivation mode for metric %s (not a string)",
                      self->name, info->name);
           return FALSE;
         }
@@ -473,97 +117,14 @@ convert_metric_description (CockpitInternalMetrics *self,
       return FALSE;
     }
 
-  if (pmLookupName (1, (char **)&info->name, &info->id) < 0)
+  int sampler = find_sampler (info->name);
+  if (sampler)
     {
-      g_warning ("%s: no such metric: %s (%s)", self->name, info->name, pmErrStr (self->context));
-      return FALSE;
+      self->samplers |= sampler;
     }
-
-  if (pmLookupDesc (info->id, &info->desc) < 0)
+  else
     {
-      g_warning ("%s: no such metric: %s (%s)", self->name, info->name, pmErrStr (self->context));
-      return FALSE;
-    }
-
-  if (units)
-    {
-      if (type == NULL)
-        type = "number";
-
-      if (my_pmParseUnitsStr (units, &info->units_buf, &info->factor) < 0)
-        {
-          g_warning ("%s: failed to parse units: %s", self->name, units);
-          return FALSE;
-        }
-
-      if (!units_convertible (&info->desc.units, &info->units_buf))
-        {
-          g_warning ("%s: can't convert metric %s to units %s", self->name, info->name, units);
-          return FALSE;
-        }
-
-      if (info->factor != 1.0 || !units_equal (&info->desc.units, &info->units_buf))
-        info->units = &info->units_buf;
-    }
-
-  if (!info->units)
-    {
-      info->units = &info->desc.units;
-      info->factor = 1.0;
-    }
-
-  if (g_strcmp0 (type, "number") == 0)
-    {
-      int dt = info->desc.type;
-      if (!(dt == PM_TYPE_32 || dt == PM_TYPE_U32 ||
-            dt == PM_TYPE_64 || dt == PM_TYPE_U64 ||
-            dt == PM_TYPE_FLOAT || dt == PM_TYPE_DOUBLE))
-        {
-          g_warning ("%s: metric %s is not a number", self->name, info->name);
-          return FALSE;
-        }
-    }
-  else if (g_strcmp0 (type, "string") == 0)
-    {
-      if (info->desc.type != PM_TYPE_STRING)
-        {
-          g_warning ("%s: metric %s is not a string", self->name, info->name);
-          return FALSE;
-        }
-    }
-  else if (type != NULL)
-    {
-      g_warning ("%s: unsupported type %s", self->name, type);
-      return FALSE;
-    }
-
-  if (g_strcmp0 (semantics, "counter") == 0)
-    {
-      if (info->desc.sem != PM_SEM_COUNTER)
-        {
-          g_warning ("%s: metric %s is not a counter", self->name, info->name);
-          return FALSE;
-        }
-    }
-  else if (g_strcmp0 (semantics, "instant") == 0)
-    {
-      if (info->desc.sem != PM_SEM_INSTANT)
-        {
-          g_warning ("%s: metric %s is not instantaneous", self->name, info->name);
-          return FALSE;
-        }
-    }
-  else if (g_strcmp0 (semantics, "discrete") == 0)
-    {
-      if (info->desc.sem != PM_SEM_DISCRETE)
-        {
-          g_warning ("%s: metric %s is not discrete", self->name, info->name);
-          return FALSE;
-        }
-    }
-  else if (semantics != NULL)
-    {
-      g_warning ("%s: unsupported semantics %s", self->name, semantics);
+      g_warning ("%s: unknown internal metric %s", self->name, info->name);
       return FALSE;
     }
 
