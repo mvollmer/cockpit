@@ -32,19 +32,12 @@ G_BEGIN_DECLS
 typedef struct _CockpitSamples CockpitSamples;
 typedef struct _CockpitSamplesIface CockpitSamplesIface;
 
-typedef enum {
-  COCKPIT_SAMPLE_NUMBER = 0,
-  COCKPIT_SAMPLE_SPEED,
-  COCKPIT_SAMPLE_PERCENT_NANO
-} CockpitSampleType;
-
 struct _CockpitSamplesIface {
   GTypeInterface parent_iface;
 
   void       (* sample)           (CockpitSamples *samples,
                                    const gchar *metric,
                                    const gchar *instance,
-                                   CockpitSampleType type,
                                    gint64 value);
 };
 
@@ -53,7 +46,6 @@ GType               cockpit_samples_get_type        (void) G_GNUC_CONST;
 void                cockpit_samples_sample          (CockpitSamples *self,
                                                      const gchar *metric,
                                                      const gchar *instance,
-                                                     CockpitSampleType type,
                                                      gint64 value);
 
 G_END_DECLS

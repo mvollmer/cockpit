@@ -84,14 +84,8 @@ cockpit_netdev_samples (CockpitSamples *samples)
       if (len > 0 && iface_name[len-1] == ':')
         iface_name[len-1] = 0;
 
-      cockpit_samples_sample (samples, "network.interface.rx", iface_name,
-                              COCKPIT_SAMPLE_NUMBER, bytes_rx);
-      cockpit_samples_sample (samples, "network.interface.tx", iface_name,
-                              COCKPIT_SAMPLE_NUMBER, bytes_tx);
-      cockpit_samples_sample (samples, "network.interface.rx", iface_name,
-                              COCKPIT_SAMPLE_SPEED, bytes_rx);
-      cockpit_samples_sample (samples, "network.interface.tx", iface_name,
-                              COCKPIT_SAMPLE_SPEED, bytes_tx);
+      cockpit_samples_sample (samples, "network.interface.rx", iface_name, bytes_rx);
+      cockpit_samples_sample (samples, "network.interface.tx", iface_name, bytes_tx);
     }
 
  out:

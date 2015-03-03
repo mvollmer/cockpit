@@ -34,7 +34,6 @@ void
 cockpit_samples_sample (CockpitSamples *self,
                         const gchar *metric,
                         const gchar *instance,
-                        CockpitSampleType type,
                         gint64 value)
 {
   CockpitSamplesIface *iface;
@@ -43,5 +42,5 @@ cockpit_samples_sample (CockpitSamples *self,
   g_return_if_fail (iface != NULL);
 
   g_assert (iface->sample);
-  (iface->sample) (self, metric, instance, type, value);
+  (iface->sample) (self, metric, instance, value);
 }

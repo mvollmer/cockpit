@@ -92,10 +92,8 @@ cockpit_network_samples (CockpitSamples *samples)
       total_tx += bytes_tx;
     }
 
-  cockpit_samples_sample (samples, "network.all.rx", NULL,
-                          COCKPIT_SAMPLE_SPEED, total_rx);
-  cockpit_samples_sample (samples, "network.all.tx", NULL,
-                          COCKPIT_SAMPLE_SPEED, total_tx);
+  cockpit_samples_sample (samples, "network.all.rx", NULL, total_rx);
+  cockpit_samples_sample (samples, "network.all.tx", NULL, total_tx);
 
 out:
   g_strfreev (lines);

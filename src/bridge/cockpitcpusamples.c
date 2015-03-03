@@ -88,15 +88,10 @@ cockpit_cpu_samples (CockpitSamples *samples)
         }
 
       user_hz = ensure_user_hz ();
-      cockpit_samples_sample (samples, "cpu.basic.nice", NULL,
-                              COCKPIT_SAMPLE_PERCENT_NANO, nice * user_hz);
-      cockpit_samples_sample (samples, "cpu.basic.user", NULL,
-                              COCKPIT_SAMPLE_PERCENT_NANO, user * user_hz);
-      cockpit_samples_sample (samples, "cpu.basic.system", NULL,
-                              COCKPIT_SAMPLE_PERCENT_NANO, system * user_hz);
-      cockpit_samples_sample (samples, "cpu.basic.iowait", NULL,
-                              COCKPIT_SAMPLE_PERCENT_NANO, iowait * user_hz);
-
+      cockpit_samples_sample (samples, "cpu.basic.nice", NULL, nice*1000/user_hz);
+      cockpit_samples_sample (samples, "cpu.basic.user", NULL, user*1000/user_hz);
+      cockpit_samples_sample (samples, "cpu.basic.system", NULL, system*1000/user_hz);
+      cockpit_samples_sample (samples, "cpu.basic.iowait", NULL, iowait*1000/user_hz);
       break;
     }
 

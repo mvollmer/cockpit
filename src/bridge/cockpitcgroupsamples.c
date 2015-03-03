@@ -82,14 +82,10 @@ collect_memory (CockpitSamples *samples,
           memsw_limit_in_bytes == (double)G_MAXSSIZE)
         memsw_limit_in_bytes = 0;
 
-      cockpit_samples_sample (samples, "cgroup.memory.usage", cgroup,
-                              COCKPIT_SAMPLE_NUMBER, mem_usage_in_bytes);
-      cockpit_samples_sample (samples, "cgroup.memory.limit", cgroup,
-                              COCKPIT_SAMPLE_NUMBER, mem_limit_in_bytes);
-      cockpit_samples_sample (samples, "cgroup.memory.sw-usage", cgroup,
-                              COCKPIT_SAMPLE_NUMBER, memsw_usage_in_bytes);
-      cockpit_samples_sample (samples, "cgroup.memory.sw-limit", cgroup,
-                              COCKPIT_SAMPLE_NUMBER, memsw_limit_in_bytes);
+      cockpit_samples_sample (samples, "cgroup.memory.usage", cgroup, mem_usage_in_bytes);
+      cockpit_samples_sample (samples, "cgroup.memory.limit", cgroup, mem_limit_in_bytes);
+      cockpit_samples_sample (samples, "cgroup.memory.sw-usage", cgroup, memsw_usage_in_bytes);
+      cockpit_samples_sample (samples, "cgroup.memory.sw-limit", cgroup, memsw_limit_in_bytes);
     }
 }
 
@@ -106,12 +102,9 @@ collect_cpu (CockpitSamples *samples,
       cpuacct_usage = read_double (path, "cpuacct.usage");
       cpu_shares = read_double (path, "cpu.shares");
 
-      cockpit_samples_sample (samples, "cgroup.cpu.usage", cgroup,
-                              COCKPIT_SAMPLE_NUMBER, cpuacct_usage);
-      cockpit_samples_sample (samples, "cgroup.cpu.shares", cgroup,
-                              COCKPIT_SAMPLE_NUMBER, cpu_shares);
-      cockpit_samples_sample (samples, "cgroup.cpu.usage", cgroup,
-                              COCKPIT_SAMPLE_PERCENT_NANO, cpuacct_usage);
+      cockpit_samples_sample (samples, "cgroup.cpu.usage", cgroup, cpuacct_usage);
+      cockpit_samples_sample (samples, "cgroup.cpu.shares", cgroup, cpu_shares);
+      cockpit_samples_sample (samples, "cgroup.cpu.usage", cgroup, cpuacct_usage);
     }
 }
 

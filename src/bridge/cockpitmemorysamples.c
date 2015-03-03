@@ -68,14 +68,10 @@ cockpit_memory_samples (CockpitSamples *samples)
         g_warn_if_fail (sscanf (line + sizeof ("Cached:") - 1, "%" G_GUINT64_FORMAT, &cached_kb) == 1);
     }
 
-  cockpit_samples_sample (samples, "memory.free", NULL,
-                          COCKPIT_SAMPLE_NUMBER, free_kb * 1024);
-  cockpit_samples_sample (samples, "memory.used", NULL,
-                          COCKPIT_SAMPLE_NUMBER, (total_kb - free_kb) * 1024);
-  cockpit_samples_sample (samples, "memory.cached", NULL,
-                          COCKPIT_SAMPLE_NUMBER, (buffers_kb + cached_kb) * 1024);
-  cockpit_samples_sample (samples, "memory.swap-used", NULL,
-                          COCKPIT_SAMPLE_NUMBER, (swap_total_kb - swap_free_kb) * 1024);
+  cockpit_samples_sample (samples, "memory.free", NULL, free_kb);
+  cockpit_samples_sample (samples, "memory.used", NULL, total_kb - free_kb);
+  cockpit_samples_sample (samples, "memory.cached", NULL, buffers_kb + cached_kb);
+  cockpit_samples_sample (samples, "memory.swap-used", NULL, swap_total_kb - swap_free_kb);
 
 out:
   g_strfreev (lines);

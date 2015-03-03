@@ -103,14 +103,8 @@ cockpit_block_samples (CockpitSamples *samples)
           continue;
         }
 
-      cockpit_samples_sample (samples, "block.device.read", dev_name,
-                              COCKPIT_SAMPLE_NUMBER, num_sectors_read * 512);
-      cockpit_samples_sample (samples, "block.device.written", dev_name,
-                              COCKPIT_SAMPLE_NUMBER, num_sectors_written * 512);
-      cockpit_samples_sample (samples, "block.device.read", dev_name,
-                              COCKPIT_SAMPLE_SPEED, num_sectors_read * 512);
-      cockpit_samples_sample (samples, "block.device.written", dev_name,
-                              COCKPIT_SAMPLE_SPEED, num_sectors_written * 512);
+      cockpit_samples_sample (samples, "block.device.read", dev_name, num_sectors_read * 512);
+      cockpit_samples_sample (samples, "block.device.written", dev_name, num_sectors_written * 512);
     }
 
 out:

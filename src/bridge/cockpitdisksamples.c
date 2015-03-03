@@ -48,6 +48,7 @@ cockpit_disk_samples (CockpitSamples *samples)
 
   bytes_read = 0;
   bytes_written = 0;
+  num_ops = 0;
 
   lines = g_strsplit (contents, "\n", -1);
   for (n = 0; lines != NULL && lines[n] != NULL; n++)
@@ -130,12 +131,9 @@ cockpit_disk_samples (CockpitSamples *samples)
       num_ops += num_reads_merged + num_writes_merged;
     }
 
-  cockpit_samples_sample (samples, "disk.all.read", NULL,
-                          COCKPIT_SAMPLE_SPEED, bytes_read);
-  cockpit_samples_sample (samples, "disk.all.written", NULL,
-                          COCKPIT_SAMPLE_SPEED, bytes_written);
-  cockpit_samples_sample (samples, "disk.all.ops", NULL,
-                          COCKPIT_SAMPLE_SPEED, num_ops);
+  cockpit_samples_sample (samples, "disk.all.read", NULL, bytes_read);
+  cockpit_samples_sample (samples, "disk.all.written", NULL, bytes_written);
+  cockpit_samples_sample (samples, "disk.all.ops", NULL, num_ops);
 
 out:
   g_strfreev (lines);
