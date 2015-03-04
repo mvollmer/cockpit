@@ -28,7 +28,7 @@ unset command_not_found_handle
 HS_BASE_PCKGS="virt-deploy pystache sshpass telnet fabric python-pip avocado virt-manager qemu-img"
 export HS_GRP="virtualization"
 HS_CON="-c qemu:///system"
-export HS_POOLNAME="cockpit"
+export HS_POOLNAME="cockpit-avocado"
 export HS_POOLNAME_PATH=/home/$HS_POOLNAME
 
 function host_dependencies_fedora(){
@@ -59,7 +59,7 @@ function definepools(){
 EOF
     sudo virsh $HS_CON pool-start $HS_PNAME
     sudo virsh $HS_CON pool-autostart $HS_PNAME
-    
+
     sudo virsh $HS_CON net-define /dev/stdin <<EOF
 <network>
   <name>$HS_PNAME</name>
@@ -96,7 +96,7 @@ ResultAny=yes
 ResultInactive=yes
 ResultActive=yes
 "
-    
+
 }
 
 

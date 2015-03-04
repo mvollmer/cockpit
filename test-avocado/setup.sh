@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-#set -x
+set -x
 SCRIPT_DIR=`dirname "$(readlink -f "$0")"`
 COCKPIT_DIR=$(cd $SCRIPT_DIR;cd ..; echo `pwd`)
 BASE=`basename $SCRIPT_DIR`
