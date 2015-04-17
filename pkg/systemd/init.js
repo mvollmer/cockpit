@@ -149,35 +149,11 @@ define([
     }
 
     function init_units() {
-        var units_by_path = { };
-        var path_by_id = { };
+        var units_template = $("#services-units-tmpl").html();
+        mustache.parse(units_template);
 
-        function get_unit(path) {
-            var unit = units_by_path[path];
-            if (!unit) {
-                unit = { aliases: [ ], path: path };
-                units_by_path[path] = unit;
-            }
-            return unit;
-        }
-
-        function update_properties(unit, props) {
-            function prop(p) {
-                if (props[p])
-                    unit[p] = props[p].v;
-            }
-
-            prop("Id");
-            prop("Description");
-            prop("LoadState");
-            prop("ActiveState");
-            prop("SubState");
-
-            if (props["Id"])
-                path_by_id[unit.Id] = unit.path;
-
-            update_computed_properties(unit);
-        }
+        var units = systemd_client.proxies("org.freedesktop.systemd1.Unit");
+        var units_by_id = { };
 
         function update_computed_properties(unit) {
             var load_state = unit.LoadState;
@@ -202,34 +178,16 @@ define([
             unit.CombinedState = active_state;
         }
 
-        function refresh_properties(path, tweak_callback) {
-            systemd_client.call(path,
-                                "org.freedesktop.DBus.Properties", "GetAll",
-                                [ "org.freedesktop.systemd1.Unit" ]).
-                fail(function (error) {
-                    console.log(error);
-                }).
-                done(function (result) {
-                    var unit = get_unit(path);
-                    update_properties(unit, result[0]);
-                    if (tweak_callback)
-                        tweak_callback(unit);
-                    render();
-                });
-        }
-
-        var units_template = $("#services-units-tmpl").html();
-        mustache.parse(units_template);
-
         function render_now() {
             var pattern = $('#services-filter button.active').attr('data-pattern');
 
-            function cmp_path(a, b) { return units_by_path[a].Id.localeCompare(units_by_path[b].Id); }
-            var sorted_keys = Object.keys(units_by_path).sort(cmp_path);
+            function has_id(a) { return units[a].Id !== undefined; }
+            function cmp_path(a, b) { return units[a].Id.localeCompare(units[b].Id); }
+            var sorted_keys = Object.keys(units).filter(has_id).sort(cmp_path);
             var enabled = [ ], disabled = [ ], statics = [ ];
 
             sorted_keys.forEach(function (path) {
-                var unit = units_by_path[path];
+                var unit = units[path];
                 if (!(unit.Id && pattern && unit.Id.match(pattern)))
                     return;
                 if (unit.UnitFileState && startsWith(unit.UnitFileState, 'enabled'))
@@ -273,143 +231,36 @@ define([
             }
         }
 
-        var update_run = 0;
+        $(units).on("added changed", function (event, proxy) {
+            if (proxy.Id)
+                units_by_id[proxy.Id] = proxy;
+            else
+                console.log(proxy);
+            update_computed_properties(proxy);
+            render();
+        });
+
+        $(units).on("removed", function (event, proxy) {
+            console.log("R", proxy.Id);
+            if (proxy.Id)
+                delete units_by_id[proxy.Id];
+            render();
+        });
 
         function update_all() {
-            var my_run = ++update_run;
-
-            units_by_path = { };
-            path_by_id = { };
-
-            function fail(error) {
-                console.log(error);
-            }
-
-            function record_unit_state(state) {
-                // 0: Id
-                // 1: Description
-                // 2: LoadState
-                // 3: ActiveState
-                // 4: SubState
-                // 5: Following
-                // 6: object-path
-                // 7: Job[0], number
-                // 8: job-type
-                // 9: Job[1], object-path
-
-                var unit = get_unit(state[6]);
-                unit.Id = state[0];
-                unit.Description = state[1];
-                unit.LoadState = state[2];
-                unit.ActiveState = state[3];
-                unit.SubState = state[4];
-
-                path_by_id[unit.Id] = unit.path;
-
-                update_computed_properties(unit);
-            }
-
-            function record_unit_file_state(state) {
-                // 0: FragmentPath
-                // 1: UnitFileState
-
-                var name = state[0].split('/').pop();
-
-                if (name.indexOf("@") != -1) {
-                    // A template, create a fake unit for it
-                    units_by_path[name] = {
-                        Id: name,
-                        Description: cockpit.format(_("$0 Template"), name),
-                        UnitFileState: state[1]
-                    };
-                    return;
-                }
-
-                /* We need to know the object path for detecting
-                 * aliases and we also need at least the Description
-                 * property, so we load all unloaded units here with a
-                 * LoadUnit/GetAll pair of method calls.
-                 */
-
-                if (path_by_id[name])
-                    with_path(path_by_id[name]);
-                else {
-                    systemd_manager.LoadUnit(name).
-                        fail(function (error) {
-                            console.log(error);
-                        }).
-                        done(with_path);
-                }
-
-                function with_path(path) {
-                    var unit = units_by_path[path];
-
-                    if (unit)
-                        with_unit(unit);
-                    else
-                        refresh_properties(path, with_unit);
-
-                    function with_unit(unit) {
-                        if (unit.Id == name) {
-                            // Primary id, add UnitFileState
-                            unit.UnitFileState = state[1];
-                        } else {
-                            // Alias for loaded unit, add alias
-                            unit.aliases.push(name);
-                        }
-                        update_computed_properties(unit);
-                    }
-                }
-            }
-
-            systemd_manager.ListUnits().
-                fail(fail).
+            systemd_manager.ListUnitFiles().
                 done(function (result) {
-                    if (my_run != update_run)
-                        return;
-                    for (var i = 0; i < result.length; i++)
-                        record_unit_state(result[i]);
-                    systemd_manager.ListUnitFiles().
-                        fail(fail).
-                        done(function (result) {
-                            if (my_run != update_run)
-                                return;
-                            for (var i = 0; i < result.length; i++)
-                                record_unit_file_state(result[i]);
-                            render();
-                        });
+                    for (var i = 0; i < result.length; i++) {
+                        var name = result[i][0].split('/').pop();
+                        if (!units_by_id[name])
+                            systemd_manager.LoadUnit(name);
+                    }
                 });
         }
 
-        $(systemd_manager).on("UnitNew", function (event, id, path) {
-            path_by_id[id] = path;
-        });
-
-        $(systemd_manager).on("JobNew JobRemoved", function (event, number, path, unit_id, result) {
-            var unit_path = path_by_id[unit_id];
-            if (unit_path)
-                refresh_properties(unit_path);
-        });
-
-        systemd_client.subscribe({ 'interface': "org.freedesktop.DBus.Properties",
-                                   'member': "PropertiesChanged"
-                                 },
-                                 function (path, iface, signal, args) {
-                                     var unit = units_by_path[path];
-                                     if (unit) {
-                                         update_properties(unit, args[1]);
-                                         render();
-                                     }
-                                 });
-
         $(systemd_manager).on("UnitFilesChanged", function (event) {
+            console.log("UC");
             update_all();
-        });
-
-        $('#services-filter button').on('click', function () {
-            $('#services-filter button').removeClass('active');
-            $(this).addClass('active');
-            render();
         });
 
         update_all();
