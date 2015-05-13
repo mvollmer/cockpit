@@ -519,6 +519,8 @@ class QemuMachine(Machine):
 
         image = "%s-%s" % (self.os, self.arch)
         image_file = os.path.join(self.test_data, "%s.qcow2" % (image, ))
+        tarball = os.path.join(self.test_data, "%s.tar.gz" % (image, ))
+
         if os.path.isfile(image_file):
             """ We have a real image file, use that """
             self.message("Creating disk copy:", self._image_image)
@@ -550,11 +552,8 @@ class QemuMachine(Machine):
                     modify_func(gf)
                 finally:
                     gf.close()
-        else:
-            tarball = os.path.join(self.test_data, "%s.tar.gz" % (image, ))
-            if not os.path.exists(tarball):
-               raise Failure("Unsupported configuration %s: %s not found." % (image, tarball))
-
+        elif os.path.exists(tarball):
+            """We have a old-style magic base tarball."""
             gf = guestfs.GuestFS(python_return_dict=True)
             if self.verbose:
                 gf.set_trace(1)
@@ -588,6 +587,8 @@ class QemuMachine(Machine):
 
             finally:
                 gf.close()
+        else:
+            raise Failure("Unsupported configuration %s: neither %s nor %s found." % (image, image_file, tarball))
 
     def post_setup(self):
         if not self._image_image:
