@@ -248,7 +248,10 @@ include src/static/Makefile-static.am
 include src/remotectl/Makefile-remotectl.am
 include src/reauthorize/Makefile-reauthorize.am
 include src/selinux/Makefile-selinux.am
+
 include branding/default/Makefile.am
-include branding/fedora/Makefile.am
+include branding/fedora-server/Makefile.am
+include branding/fedora-workstation/Makefile.am
+include branding/fedora-cloud/Makefile.am
 include branding/centos/Makefile.am
 include branding/rhel/Makefile.am
