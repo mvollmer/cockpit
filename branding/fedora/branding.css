@@ -1,0 +1,18 @@
+body.login-pf {
+    background: url("/cockpit/static/bg-login.jpg") no-repeat 50% 0;
+    background-size: auto;
+    background-color: #101010;
+}
+
+#badge {
+    width: 115px;
+    height: 35px;
+    background-image: url("/cockpit/static/logo.png");
+}
+
+#brand {
+}
+
+#index-brand {
+    height: 10px;
+}
