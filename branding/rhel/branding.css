@@ -17,10 +17,9 @@ body.login-pf {
 }
 
 #brand {
-    width: 486px;
-    height: 18px;
-    background-image: url("/cockpit/static/brand-large.png");
-}
+    font-size: 18pt;
+    content: "${NAME_HTML|NAME}";
+}}
 
 #index-brand {
     width: 270px;

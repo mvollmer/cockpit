@@ -11,6 +11,8 @@ body.login-pf {
 }
 
 #brand {
+    font-size: 18pt;
+    content: "${VARIANT_HTML|VARIANT}";
 }
 
 #index-brand {
