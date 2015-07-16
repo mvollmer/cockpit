@@ -6,7 +6,6 @@ echo foobar | passwd --stdin admin
 dnf -y update
 
 dnf -y install fedora-release-server
-dnf -y upgrade --enablerepo=updates-testing libssh
 
 firewall-cmd --permanent --add-service cockpit
 

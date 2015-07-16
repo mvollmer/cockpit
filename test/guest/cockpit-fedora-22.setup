@@ -38,7 +38,6 @@ echo foobar | passwd --stdin admin
 dnf -y upgrade dnf
 dnf -y upgrade
 dnf -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
-dnf -y upgrade --enablerepo=updates-testing libssh
 
 rm -rf /var/log/journal/*
 
