@@ -342,7 +342,8 @@ _cockpit_assert_json_eq_msg (const char *domain,
                              int line,
                              const char *func,
                              gpointer object_or_array,
-                             const gchar *expect)
+                             const gchar *expect,
+                             double fuzz)
 {
   GError *error = NULL;
   JsonNode *node;
@@ -366,7 +367,7 @@ _cockpit_assert_json_eq_msg (const char *domain,
     g_assertion_message_error (domain, file, line, func, "error", error, 0, 0);
   g_assert (exnode);
 
-  if (!cockpit_json_equal (exnode, node))
+  if (!cockpit_json_equal (exnode, node, fuzz))
     {
       escaped = cockpit_json_write (node, NULL);
 

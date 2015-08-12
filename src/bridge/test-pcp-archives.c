@@ -220,7 +220,7 @@ assert_sample_msg (const char *domain,
 {
   JsonNode *node = recv_json (tc);
   g_assert_cmpint (json_node_get_node_type (node), ==, JSON_NODE_ARRAY);
-  _cockpit_assert_json_eq_msg (domain, file, line, func, json_node_get_array (node), json_str);
+  _cockpit_assert_json_eq_msg (domain, file, line, func, json_node_get_array (node), json_str, 0.5);
 }
 
 #define assert_sample(tc, json) \

@@ -68,10 +68,11 @@ void     _cockpit_assert_json_eq_msg        (const char *domain,
                                              int line,
                                              const char *func,
                                              gpointer object_or_array,
-                                             const gchar *json);
+                                             const gchar *json,
+                                             double fuzz);
 
 #define cockpit_assert_json_eq(obj_or_arr, json) \
-  (_cockpit_assert_json_eq_msg (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, (obj_or_arr), (json)))
+  (_cockpit_assert_json_eq_msg (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, (obj_or_arr), (json), 0))
 
 void     _cockpit_assert_data_eq_msg        (const char *domain,
                                              const char *file,

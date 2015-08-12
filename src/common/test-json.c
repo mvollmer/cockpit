@@ -332,7 +332,7 @@ test_equal (gconstpointer data)
   if (fixture->b)
     b = cockpit_json_parse (fixture->b, -1, &error);
 
-  g_assert (cockpit_json_equal (a, b) == fixture->equal);
+  g_assert (cockpit_json_equal (a, b, 0) == fixture->equal);
 
   json_node_free (a);
   json_node_free (b);

@@ -22,6 +22,8 @@
 #include "cockpitjson.h"
 
 #include <string.h>
+#include <math.h>
+#include <stdio.h>
 
 gboolean
 cockpit_json_get_int (JsonObject *object,
@@ -221,7 +223,8 @@ cockpit_json_get_null (JsonObject *object,
 
 static gboolean
 cockpit_json_equal_object (JsonObject *previous,
-                           JsonObject *current)
+                           JsonObject *current,
+                           double fuzz)
 {
   const gchar *name = NULL;
   gboolean ret = TRUE;
@@ -239,7 +242,8 @@ cockpit_json_equal_object (JsonObject *previous,
 
       name = l->data;
       if (!cockpit_json_equal (json_object_get_member (previous, name),
-                               json_object_get_member (current, name)))
+                               json_object_get_member (current, name),
+                               fuzz))
         {
           ret = FALSE;
           break;
@@ -252,7 +256,8 @@ cockpit_json_equal_object (JsonObject *previous,
 
 static gboolean
 cockpit_json_equal_array (JsonArray *previous,
-                          JsonArray *current)
+                          JsonArray *current,
+                          double fuzz)
 {
   guint len_previous;
   guint len_current;
@@ -268,7 +273,8 @@ cockpit_json_equal_array (JsonArray *previous,
   for (i = 0; i < len_previous; i++)
     {
       if (!cockpit_json_equal (json_array_get_element (previous, i),
-                               json_array_get_element (current, i)))
+                               json_array_get_element (current, i),
+                               fuzz))
         return FALSE;
     }
 
@@ -292,7 +298,8 @@ cockpit_json_equal_array (JsonArray *previous,
  */
 gboolean
 cockpit_json_equal (JsonNode *previous,
-                    JsonNode *current)
+                    JsonNode *current,
+                    double fuzz)
 
 {
   JsonNodeType type = 0;
@@ -318,10 +325,12 @@ cockpit_json_equal (JsonNode *previous,
     {
     case JSON_NODE_OBJECT:
       return cockpit_json_equal_object (json_node_get_object (previous),
-                                        json_node_get_object (current));
+                                        json_node_get_object (current),
+                                        fuzz);
     case JSON_NODE_ARRAY:
       return cockpit_json_equal_array (json_node_get_array (previous),
-                                       json_node_get_array (current));
+                                       json_node_get_array (current),
+                                       fuzz);
     case JSON_NODE_NULL:
       return TRUE;
 
@@ -329,7 +338,12 @@ cockpit_json_equal (JsonNode *previous,
       if (gtype == G_TYPE_INT64)
         return json_node_get_int (previous) == json_node_get_int (current);
       else if (gtype == G_TYPE_DOUBLE)
-        return json_node_get_double (previous) == json_node_get_double (current);
+        {
+          double a = json_node_get_double (previous);
+          double b = json_node_get_double (current);
+
+          return (a == b) || fabs(a-b) <= fuzz;
+        }
       else if (gtype == G_TYPE_BOOLEAN)
         return json_node_get_boolean (previous) == json_node_get_boolean (current);
       else if (gtype == G_TYPE_STRING)

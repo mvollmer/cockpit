@@ -51,7 +51,8 @@ gchar *        cockpit_json_write_object      (JsonObject *object,
 GBytes *       cockpit_json_write_bytes       (JsonObject *object);
 
 gboolean       cockpit_json_equal             (JsonNode *previous,
-                                               JsonNode *current);
+                                               JsonNode *current,
+                                               double fuzz);
 
 gboolean       cockpit_json_get_int           (JsonObject *object,
                                                const gchar *member,

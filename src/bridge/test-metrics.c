@@ -152,7 +152,7 @@ assert_sample_msg (const char *domain,
                    const gchar *json_str)
 {
   JsonArray *array = recv_array (tc);
-  _cockpit_assert_json_eq_msg (domain, file, line, func, array, json_str);
+  _cockpit_assert_json_eq_msg (domain, file, line, func, array, json_str, 0.5);
   json_array_unref (array);
 }
 
@@ -284,7 +284,7 @@ test_derive_delta (TestCase *tc,
   send_sample (tc,    0, 1, 0.0);
   assert_sample (tc, "[[false]]");
   send_sample (tc,  100, 1, 10.0);
-  assert_sample (tc, "[[10]]");
+  assert_sample (tc, "[[10.2]]");
   send_sample (tc,  200, 1, 20.0);
   assert_sample (tc, "[[10]]");
   send_sample (tc,  300, 1, 40.0);
