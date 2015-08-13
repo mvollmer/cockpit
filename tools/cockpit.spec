@@ -100,6 +100,7 @@ Requires: %{name}-networkmanager = %{version}-%{release}
 Requires: %{name}-ws = %{version}-%{release}
 Requires: %{name}-shell = %{version}-%{release}
 Requires: %{name}-storaged = %{version}-%{release}
+Requires: %{name}-users = %{version}-%{release}
 %ifarch x86_64 armv7hl
 Requires: %{name}-docker = %{version}-%{release}
 %endif
@@ -233,6 +234,9 @@ find %{buildroot}%{_datadir}/%{name}/storage -type f >> storaged.list
 
 echo '%dir %{_datadir}/%{name}/network' > networkmanager.list
 find %{buildroot}%{_datadir}/%{name}/network -type f >> networkmanager.list
+
+echo '%dir %{_datadir}/%{name}/users' > users.list
+find %{buildroot}%{_datadir}/%{name}/users -type f >> users.list
 
 %ifarch x86_64 armv7hl
 echo '%dir %{_datadir}/%{name}/docker' > docker.list
@@ -399,6 +403,14 @@ Requires: NetworkManager
 The Cockpit component for managing networking.  This package uses NetworkManager.
 
 %files networkmanager -f networkmanager.list
+
+%package users
+Summary: Cockpit user interface for local accounts
+
+%description users
+The Cockpit component for managing local accounts
+
+%files users -f users.list
 
 %if %{defined gitcommit}
 
