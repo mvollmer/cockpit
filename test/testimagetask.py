@@ -5,9 +5,10 @@ import sys
 import testinfra
 
 class GithubImageTask(object):
-    def __init__(self, name, image):
+    def __init__(self, name, image, config):
         self.name = name
         self.image = image
+        self.config = config
         self.sink = None
 
     def description(self):
@@ -58,6 +59,9 @@ class GithubImageTask(object):
             message = "Image creation done"
         else:
             message = "Image creation failed"
+
+        if not branch:
+            message += "\nBranch creation failed"
 
         requests = [
             # Post comment

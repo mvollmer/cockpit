@@ -67,11 +67,27 @@ NOT_TESTED = "Not yet tested"
 NO_TESTING = "Manual testing required"
 
 DEFAULT_IMAGE_REFRESH = {
-    'fedora-22': { },
-    'fedora-23': { },
-    'fedora-atomic': { },
-    'debian-unstable': { },
-    'fedora-testing': { }
+    'fedora-22': {
+        'triggers': [ "verify/fedora-22" ]
+    },
+    'fedora-23': {
+        'triggers': [
+            "verify/fedora-23",
+            "verify/fedora-atomic",  # builds in fedora-23
+            "avocado/fedora-23",
+            "selenium/firefox",
+            "selenium/chrome"
+        ]
+    },
+    'fedora-atomic': {
+        'triggers': [ "verify/fedora-atomic" ]
+    },
+    'debian-unstable': {
+        'triggers': [ "verify/debian-unstable" ]
+    },
+    'fedora-testing': {
+        'triggers': [ "verify/fedora-testing" ]
+    }
 }
 
 ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
@@ -439,7 +455,7 @@ class GitHub(object):
         issues = self.get("issues?labels=bot")
 
         results = [ ]
-        for image in DEFAULT_IMAGE_REFRESH:
+        for image, config in DEFAULT_IMAGE_REFRESH.items():
             found = False
             for issue in issues:
                 if issue['title'] == ISSUE_TITLE_IMAGE_REFRESH.format(image):
@@ -447,7 +463,8 @@ class GitHub(object):
                     if age < IMAGE_REFRESH * 24 * 60 * 60:
                         found = True
             if not found:
-                results.append(GitHub.TaskEntry(BASELINE_PRIORITY, GithubImageTask("refresh-" + image, image)))
+                results.append(GitHub.TaskEntry(BASELINE_PRIORITY, GithubImageTask("refresh-" + image, image,
+                                                                                   config)))
 
         return results
 
