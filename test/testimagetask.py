@@ -56,12 +56,12 @@ class GithubImageTask(object):
 
     def stop_publishing(self, github, ret, branch):
         if ret == 0:
-            message = "Image creation done"
+            message = "Image creation done."
         else:
-            message = "Image creation failed"
+            message = "Image creation failed."
 
         if not branch:
-            message += "\nBranch creation failed"
+            message += "\nBranch creation failed."
 
         requests = [
             # Post comment
@@ -82,9 +82,24 @@ class GithubImageTask(object):
                       "issue": "{issue/number}",
                       "head": branch,
                       "base": "master"
-                  }
+                  },
+                  "result": "pull"
                 }
             ]
+
+            for t in self.config.get("triggers", [ ]):
+                requests += [
+                    # Trigger testing
+                    { "method": "POST",
+                      "resource": github.base + "statuses/${pull/head/sha}",
+                      "data": {
+                          "state": "pending",
+                          "context": t,
+                          "description": testinfra.NOT_TESTED
+                      }
+                    }
+                ]
+
 
         self.sink.status['github']['requests'] = requests
         self.sink.flush()
