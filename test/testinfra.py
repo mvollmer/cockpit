@@ -202,7 +202,7 @@ def dict_is_subset(full, check):
     return True
 
 class GitHub(object):
-    def __init__(self, base="/repos/cockpit-project/cockpit/"):
+    def __init__(self, base="/repos/mvollmer/cockpit/"):
         self.base = base
         self.conn = None
         self.token = None
