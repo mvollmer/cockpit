@@ -48,6 +48,7 @@ virt-builder "$os" \
              --size $BOOTSTRAP_VOLUME_SIZE \
              --format qcow2 \
              --arch "$arch"\
+             --no-network \
              --root-password password:foobar \
              --mkdir /root/.ssh \
              --chmod 0700:/root/.ssh \
