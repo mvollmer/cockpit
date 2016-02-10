@@ -64,6 +64,9 @@ openssh-client \
 # that we don't have to go to the network during a test run.
 #
 IPA_CLIENT_PACKAGES="\
+sssd-tools \
+packagekit \
+freeipa-client \
 "
 
 TEST_PACKAGES="\
