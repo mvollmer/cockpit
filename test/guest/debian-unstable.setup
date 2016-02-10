@@ -91,6 +91,9 @@ echo PBUILDERSATISFYDEPENDSCMD=true >~/.pbuilderrc
 # docker images that we need for integration testing
 /var/lib/testvm/docker-images.setup
 
+# in case there are unnecessary packages
+apt-get -y autoremove || true
+
 # reduce image size
 apt-get clean
 /var/lib/testvm/zero-disk.setup
