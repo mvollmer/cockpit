@@ -106,8 +106,11 @@ mkdir /var/log/journal
 # Allow root login with password
 sed -i 's/^PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-# Disable old SSH init script.  Something is calling "/etc/init.d/ssh
-# reload" during boot and that results in the ssh port being
+# Disable reloading of sshd since that results in the ssh port being
 # unreachable temporarily.
 #
-chmod a-x /etc/init.d/ssh
+mkdir /etc/systemd/system/ssh.service.d
+cat >/etc/systemd/system/ssh.service.d/no-reload.conf <<EOF
+[Service]
+ExecReload=
+EOF
