@@ -68,9 +68,11 @@ NO_TESTING = "Manual testing required"
 
 DEFAULT_IMAGE_REFRESH = {
     'fedora-22': {
+        'automatic': True,
         'triggers': [ "verify/fedora-22" ]
     },
     'fedora-23': {
+        'automatic': True,
         'triggers': [
             "verify/fedora-23",
             "verify/fedora-atomic",  # builds in fedora-23
@@ -80,24 +82,41 @@ DEFAULT_IMAGE_REFRESH = {
         ]
     },
     'fedora-atomic': {
+        'automatic': True,
         'triggers': [ "verify/fedora-atomic" ]
     },
     'debian-unstable': {
+        'automatic': True,
         'triggers': [ "verify/debian-unstable" ]
     },
     'fedora-testing': {
+        'automatic': True,
         'triggers': [ "verify/fedora-testing" ]
+    },
+    'ipa': {
+        'automatic': False
+    },
+    'openshift': {
+        'automatic': False
+    },
+    'stock-fedora': {
+        'automatic': False
+    },
+    'selenium': {
+        'automatic': False
     }
 }
 
 PRIVATE_IMAGE_REFRESH = {
     'rhel-7': {
+        'automatic': True,
         'triggers': [
             "verify/rhel-7",
             "verify/rhel-atomic"  # builds in rhel-7
         ]
     },
     'rhel-atomic': {
+        'automatic': True,
         'triggers': [ "verify/rhel-atomic" ]
     }
 }
@@ -496,6 +515,8 @@ class GitHub(object):
 
         wait_times = { }
         for image, config in DEFAULT_IMAGE_REFRESH.items():
+            if not config['automatic']:
+                continue
             wait_times[image] = 0
             for issue in issues:
                 if issue['title'] == ISSUE_TITLE_IMAGE_REFRESH.format(image):
