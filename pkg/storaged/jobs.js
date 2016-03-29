@@ -181,6 +181,7 @@ define([
                 var j = job(path);
 
                 var age_ms = server_now - j.StartTime/1000;
+                console.log(j.Operation, age_ms);
                 return age_ms >= 2000;
             }
 
