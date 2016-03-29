@@ -1663,7 +1663,6 @@ define([
                 $('#detail').text(_("Not found"));
 
             jobs.update('#storage-detail');
-            $('#detail-jobs').amend(jobs.render());
             permissions.update();
         }
 
@@ -1686,6 +1685,7 @@ define([
         function hide() {
             name = null;
             $('#storage-detail').hide();
+            jobs.teardown_panel($('#detail-jobs'));
         }
 
         function show(t, n) {
@@ -1697,6 +1697,7 @@ define([
             type = t;
             name = n;
             render();
+            jobs.setup_panel($('#detail-jobs'));
             $('#storage-detail').show();
         }
 
