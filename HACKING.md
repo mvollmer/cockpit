@@ -19,10 +19,9 @@ Vagrant. In the top level directory of the repository, you can run:
     $ vagrant up
 
 Cockpit will listen on port 9090 of the vagrant VM started, and also
-port 9090 of localhost if cockpit is not running locally. Access Cockpit
-at:
+port 9091 of localhost. Access Cockpit at:
 
-    http://localhost:9090
+    http://localhost:9091
 
 and login with user `admin` and password `foobar`. Any changes you
 make to the system in the Vagrant VM won't affect the host machine.
