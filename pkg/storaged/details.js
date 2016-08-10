@@ -1659,7 +1659,6 @@
                 } else {
                     action = "pvol_remove";
                 }
-                var btn = create_simple_btn (_("Remove"), action, [ pvol.path ], excuse);
                 return {
                     dbus: block,
                     LinkTarget: utils.get_block_link_target(client, pvol.path),
@@ -1667,7 +1666,9 @@
                     Sizes: cockpit.format(_("$0, $1 free"),
                                           utils.fmt_size(pvol.Size),
                                           utils.fmt_size(pvol.FreeSize)),
-                    Button: btn
+                    action: action,
+                    args: JSON.stringify([ pvol.path ]),
+                    Excuse: excuse
                 };
             }
 
@@ -1707,11 +1708,17 @@
                 html = render_vgroup();
 
             if (html) {
-                $('#detail button.tooltip-ct').tooltip('destroy');
+                $('button.tooltip-ct').tooltip('destroy');
                 $('#detail-header').amend(html[0]);
                 $('#detail-sidebar').amend(html[1]);
                 $('#detail-content').amend(html[2]);
-                $('#detail button.tooltip-ct').tooltip();
+                $('button.tooltip-ct').tooltip();
+
+                if (html[1])
+                    $('#detail-body').attr("class", "col-md-8 col-lg-9 col-md-pull-4 col-lg-pull-3");
+                else
+                    $('#detail-body').attr("class", "col-md-12");
+
             } else {
                 $('#detail-header').text(_("Not found"));
                 $('#detail-sidebar').empty();
