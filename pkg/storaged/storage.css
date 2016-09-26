@@ -503,3 +503,9 @@ td.vgroup-action {
 #detail-sidebar .table td.storage-action {
     width: 51px;
 }
+
+/* Make the patternfly spinner work inside a span.
+ */
+span.spinner {
+    display: inline-block;
+}

@@ -26,6 +26,9 @@
     var mustache = require("mustache");
     var journal = require("journal");
 
+    var React = require("react");
+    var ContentViews = require("./content-views.jsx");
+
     var utils = require("./utils");
     var dialog = require("./dialog");
     var permissions = require("./permissions");
@@ -1771,6 +1774,31 @@
             type = t;
             name = n;
             render();
+
+            React.unmountComponentAtNode($("#detail-content-new")[0]);
+            if (type == 'block') {
+                React.render(React.createElement(ContentViews.Block,
+                                                 { client: client,
+                                                   actions: actions,
+                                                   name: name
+                                                 }),
+                             $("#detail-content-new")[0]);
+            } else if (type == 'mdraid') {
+                React.render(React.createElement(ContentViews.MDRaid,
+                                                 { client: client,
+                                                   actions: actions,
+                                                   name: name
+                                                 }),
+                             $("#detail-content-new")[0]);
+            } else if (type == 'vgroup') {
+                React.render(React.createElement(ContentViews.VGroup,
+                                                 { client: client,
+                                                   actions: actions,
+                                                   name: name
+                                                 }),
+                             $("#detail-content-new")[0]);
+            }
+
             $('#storage-detail').show();
         }
 
