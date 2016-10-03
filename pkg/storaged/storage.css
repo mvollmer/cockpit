@@ -509,3 +509,8 @@ td.vgroup-action {
 span.spinner {
     display: inline-block;
 }
+
+span.spinner.spinner-sm {
+    margin: 4px;
+    top: 6px;
+}

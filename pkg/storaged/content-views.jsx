@@ -31,6 +31,80 @@
     var _ = cockpit.gettext;
     var C_ = cockpit.gettext;
 
+    /* Edit-in-Place widgets
+     */
+
+    function guard(promise) {
+        if (promise) {
+            promise.fail(function (error) {
+                $('#error-popup-title').text(_("Error"));
+                $('#error-popup-message').text(error.toString());
+                $('#error-popup').modal('show');
+            });
+            return promise;
+        } else {
+            return $.when();
+        }
+    }
+
+    var TextInput = React.createClass({
+        getInitialState: function () {
+            return { state: "idle",
+                     value: this.props.value };
+        },
+        componentWillReceiveProps: function (newProps) {
+            if (this.state.state == "idle")
+                this.setState({ value: newProps.value });
+        },
+        startEditing: function () {
+            this.setState({ state: "edit" });
+        },
+        cancelEdits: function () {
+            this.setState({ state: "idle" });
+        },
+        valueChange: function (event) {
+            if (this.state.state == "edit")
+                this.setState({ value: event.target.value });
+        },
+        applyEdits: function () {
+            var self = this;
+            this.setState({ state: "apply" });
+            guard(this.props.onApply(this.state.value)).
+                 always(function () {
+                     self.setState({ state: "idle" });
+                 });
+        },
+        render: function () {
+            if (this.state.state == "idle") {
+                return (
+                    <button className="btn btn-default"
+                            onClick={this.startEditing}>
+                        {this.props.value || "-"}
+                    </button>
+                );
+            }
+
+            if (this.state.state == "edit") {
+                return (
+                    <span>
+                        <input value={this.state.value} onChange={this.valueChange}/>
+                        <button className="btn btn-default" onClick={this.cancelEdits}>Cancel</button>
+                        <button className="btn btn-default" onClick={this.applyEdits}>Apply</button>
+                    </span>
+                );
+            }
+
+            if (this.state.state == "apply") {
+                return (
+                    <span>
+                        <input value={this.state.value} disabled/>
+                        <span className="spinner spinner-sm"></span>
+                    </span>
+                );
+            }
+        }
+    });
+
     var FilesystemTab = React.createClass({
         onSamplesChanged: function () {
             this.setState({});
@@ -41,16 +115,12 @@
         componentWillUnmount: function () {
             $(this.props.client.fsys_sizes).off("changed", this.onSamplesChanged);
         },
-        componentWillReceiveProps: function (newProps) {
-            console.log("Props", this.props.block.path, newProps.block.path);
-        },
         render: function() {
             var self = this;
             var block_fsys = self.props.block && self.props.client.blocks_fsys[self.props.block.path];
-            var is_filesystem_mounted = (block_fsys && block_fsys.MountPoints.length > 0);
             var used;
 
-            if (is_filesystem_mounted) {
+            if (block_fsys && block_fsys.MountPoints.length > 0) {
                 var mount = utils.decode_filename(block_fsys.MountPoints[0]);
                 var samples = self.props.client.fsys_sizes.data[mount];
                 if (samples)
@@ -67,29 +137,98 @@
                 return create_simple_btn(self.props.actions, title, action, [ self.props.block.path ], disabled);
             }
 
+            function change_name(new_name) {
+                if (block_fsys)
+                    return block_fsys.SetLabel(new_name, {});
+                else
+                    return $.when();
+            }
+
+            var old_config, config_mount_point, mounted_at_config;
+
+            if (self.props.block) {
+                old_config = utils.array_find(self.props.block.Configuration, function (c) {
+                    return c[0] == "fstab";
+                });
+            }
+            if (old_config) {
+                config_mount_point = utils.decode_filename(old_config[1].dir.v);
+            }
+            if (config_mount_point && block_fsys) {
+                mounted_at_config = utils.array_find(block_fsys.MountPoints, function (mp) {
+                    return utils.decode_filename(mp) == config_mount_point;
+                });
+            }
+
+            console.log(config_mount_point, mounted_at_config);
+
+            function change_config(new_mount_point) {
+                var new_config = null;
+                if (new_mount_point != "") {
+                    new_config = [
+                        "fstab", {
+                            dir: { t: 'ay', v: utils.encode_filename(new_mount_point) },
+                            type: { t: 'ay', v: utils.encode_filename("auto") },
+                            opts: { t: 'ay', v: utils.encode_filename("defaults") },
+                            freq: { t: 'i', v: 0 },
+                            passno: { t: 'i', v: 0 },
+                            "track-parents": { t: 'b', v: true }
+                        }];
+                }
+
+                if (!old_config && new_config)
+                    return self.props.block.AddConfigurationItem(new_config, {});
+                else if (old_config && !new_config)
+                    return self.props.block.RemoveConfigurationItem(old_config, {});
+                else if (old_config && new_config)
+                    return self.props.block.UpdateConfigurationItem(old_config, new_config, {});
+                else
+                    return $.when();
+            }
+
+            function change_mount_point(new_mount_point) {
+                if (mounted_at_config) {
+                    return (
+                        block_fsys.Unmount({}).then(function () {
+                            return change_config(new_mount_point);
+                        }).then(function () {
+                            if (new_mount_point)
+                                return block_fsys.Mount({});
+                            else
+                                return $.when();
+                        })
+                    );
+                } else {
+                    return change_config(new_mount_point);
+                }
+
+            }
+
             return (
-                <div>
-                    <div className="pull-right">
-                        { btn(_("Mount"),              "mount",        is_filesystem_mounted)   }
-                        { btn(_("Unmount"),            "unmount",      !is_filesystem_mounted)  }
-                        { btn(_("Filesystem Options"), "fsys_options", false)                   }
-                    </div>
-                    <table className="info-table-ct">
-                        <tr>
-                            <td>{_("Name")}</td>
-                            <td>{this.props.block.IdLabel || "-"}</td>
-                        </tr>
-                        <tr>
-                            <td>{_("Mount Points")}</td>
-                            <td>{block_fsys && block_fsys.MountPoints.length > 0?
-                                 block_fsys.MountPoints.map(utils.decode_filename) : "-"}</td>
-                        </tr>
-                        <tr>
-                            <td>{_("Used")}</td>
-                            <td>{used}</td>
-                        </tr>
-                    </table>
-                </div>
+                <table className="info-table-ct">
+                    <tr>
+                        <td>{_("Name")}</td>
+                        <td>
+                            <TextInput value={this.props.block.IdLabel}
+                                       onApply={change_name}>
+                            </TextInput>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{_("Mount Point")}</td>
+                        <td>
+                            <TextInput value={config_mount_point}
+                                       onApply={change_mount_point}>
+                            </TextInput>
+                            { btn(_("Mount"),              "mount",   !(config_mount_point && !mounted_at_config)) }
+                            { btn(_("Unmount"),            "unmount", !(config_mount_point && mounted_at_config))  }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{_("Used")}</td>
+                        <td>{used}</td>
+                    </tr>
+                </table>
             );
         },
     });
@@ -431,13 +570,7 @@
 
     function create_simple_btn(actions, title, action, args, disabled) {
         function click(event) {
-            var promise = actions[action].apply(this, args);
-            if (promise)
-                promise.fail(function (error) {
-                    $('#error-popup-title').text(_("Error"));
-                    $('#error-popup-message').text(error.toString());
-                    $('#error-popup').modal('show');
-                });
+            guard(actions[action].apply(this, args));
             event.stopPropagation();
         }
 
