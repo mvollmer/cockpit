@@ -102,7 +102,7 @@ class TestNetworking(MachineCase):
 
         m.execute("nmcli connection add type ethernet ifname %s con-name TEST" % iface)
         m.execute("nmcli connection add type ethernet ifname %s con-name TEST2" % iface)
-        m.execute("nmcli connection modify TEST ipv4.method link-local")
+        m.execute("nmcli connection modify TEST ipv4.method shared")
         m.execute('nmcli connection up TEST')
 
         self.wait_for_iface(iface)
@@ -112,7 +112,7 @@ class TestNetworking(MachineCase):
         # Make sure we are working on the settings written above.
         #
         b.wait_present("tr:contains('IPv4')")
-        b.wait_in_text("tr:contains('IPv4')", "Link local")
+        b.wait_in_text("tr:contains('IPv4')", "Shared")
 
         # Configure a manual IP address
         #
