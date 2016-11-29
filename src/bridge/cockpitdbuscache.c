@@ -1241,6 +1241,7 @@ cockpit_dbus_cache_set_property (GObject *obj,
         break;
       case PROP_INTERFACE_INFO:
         self->introspected = g_value_dup_boxed (value);
+        g_hash_table_ref (self->introspected);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
