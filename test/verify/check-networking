@@ -639,5 +639,35 @@ NM_CONTROLLED=no
         self.assertEqual(m.execute("nmcli -m tabular -t -f ipv4.dhcp-hostname con show TEST").strip(),
                          "foo")
 
+    def testBondRename(self):
+        b = self.browser
+        m = self.machine
+
+        self.login_and_go("/network")
+
+        # Make a simple bond without any members.  This is enough to
+        # test the renaming.
+
+        b.click("button:contains('Add Bond')")
+        b.wait_popup("network-bond-settings-dialog")
+        b.set_val("#network-bond-settings-dialog tr:contains('Name') input", "tbond")
+        b.click("#network-bond-settings-dialog button:contains('Apply')")
+        b.wait_popdown("network-bond-settings-dialog")
+        b.wait_present("#networking-interfaces tr[data-interface='tbond']")
+
+        # Rename while it is active
+
+        b.click("#networking-interfaces tr[data-interface='tbond'] td:first-child")
+        b.wait_visible("#network-interface")
+        b.click(".panel-heading .btn:contains('On')")
+        b.wait_in_text("tr:contains('Status')", "Configuring")
+
+        b.click("tr:contains('Bond') a")
+        b.wait_popup("network-bond-settings-dialog")
+        b.set_val("#network-bond-settings-dialog tr:contains('Name') input", "tbond3000")
+        b.click("#network-bond-settings-dialog button:contains('Apply')")
+        b.wait_popdown("network-bond-settings-dialog")
+        b.wait_text("#network-interface-name", "tbond3000")
+
 if __name__ == '__main__':
     test_main()
