@@ -403,6 +403,8 @@ $(function() {
         var pd = $('<div class="panel-group" id="accordion-markup">');
         var tab = $('<ul class="nav nav-tabs nav-tabs-pf">');
 
+        var d_btn =  $('<button class="btn btn-danger problem-btn btn-delete pficon pficon-delete">');
+
         ge_t.click(function() {
             switch_tab(ge_t, ge);
         });
@@ -413,6 +415,11 @@ $(function() {
 
         pd_t.click(function() {
             switch_tab(pd_t, pd);
+        });
+
+        d_btn.click(function() {
+            service.DeleteProblems([problem.path]);
+            cockpit.location.go('/');
         });
 
         // write into general tab non-ABRT related items
@@ -430,6 +437,7 @@ $(function() {
         tab.html(ge_t);
         tab.append(pi_t);
         tab.append(pd_t);
+        tab.append(d_btn);
 
         out.html(tab);
         out.css("margin-bottom", "0px");
