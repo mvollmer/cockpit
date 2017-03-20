@@ -254,6 +254,10 @@
                 if (parseInt(entry['PROBLEM_COUNT']) < displayable_problems[p]['count']) {
                     return "";
                 }
+                //Use problem count
+                if (displayable_problems[p]['count'] > 1)
+                    parts['count'] = parseInt(entry['PROBLEM_COUNT']);
+
                 parts['problem'] = true;
                 parts['service'] = entry['PROBLEM_BINARY'];
             }
