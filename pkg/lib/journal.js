@@ -31,6 +31,8 @@
 
     var journal = { };
 
+    var displayable_problems = { };
+
     /**
      * journalctl([match, ...], [options])
      * @match: any number of journal match strings
@@ -90,6 +92,8 @@
                 console.warn("journal.journalctl called with invalid argument:", arg);
             }
         }
+
+        displayable_problems = options.problems;
 
         if (options.count === undefined) {
             if (options.follow)
@@ -231,6 +235,25 @@
             if (count > 1)
                 parts['count'] = count;
             if (ident === 'abrt-notification') {
+                // Problem can be identified by 3 elements. Most likely the first, but in some
+                // cases other two can be used as well.
+                var all_p = [entry['PROBLEM_DIR'], entry['PROBLEM_DUPHASH'], entry['PROBLEM_UUID']];
+                var p;
+                var known = false;
+                for (var i = 0; i < all_p.length; i++) {
+                    if (all_p[i] in displayable_problems) {
+                        p = all_p[i];
+                        known = true;
+                        break;
+                    }
+                }
+                //Do not render unknown (deleted) problems
+                if (! known)
+                    return "";
+                //Do not render problems, that have counter less than current count
+                if (parseInt(entry['PROBLEM_COUNT']) < displayable_problems[p]['count']) {
+                    return "";
+                }
                 parts['problem'] = true;
                 parts['service'] = entry['PROBLEM_BINARY'];
             }
@@ -452,6 +475,12 @@
         }
 
         function top_output() {
+            var rendered;
+            if (top_state.entry) {
+                rendered = render_state_line(top_state);
+                if (rendered === "")
+                    return;
+            }
             if (top_state.header_present) {
                 output_funcs.remove_first();
                 top_state.header_present = false;
@@ -461,7 +490,7 @@
                 top_state.line_present = false;
             }
             if (top_state.entry) {
-                output_funcs.prepend(render_state_line(top_state));
+                output_funcs.prepend(rendered);
                 top_state.line_present = true;
             }
         }
@@ -499,14 +528,21 @@
         }
 
         function bottom_output() {
+            var rendered;
+            if (bottom_state.entry) {
+                rendered = render_state_line(bottom_state);
+                if (rendered === "")
+                    return false;
+            }
             if (bottom_state.line_present) {
                 output_funcs.remove_last();
                 bottom_state.line_present = false;
             }
             if (bottom_state.entry) {
-                output_funcs.append(render_state_line(bottom_state));
+                output_funcs.append(rendered);
                 bottom_state.line_present = true;
             }
+            return true;
         }
 
         function append(journal_entry) {
@@ -516,14 +552,14 @@
                 bottom_state.count += 1;
                 bottom_state.last_time = entry.time;
             } else {
-                bottom_output();
-
-                if (!bottom_state.entry || entry.day != bottom_state.entry.day) {
-                    output_funcs.append(output_funcs.render_day_header(entry.day));
-                    bottom_state.header_present = true;
+                if (bottom_output()){
+                    if (!bottom_state.entry || entry.day != bottom_state.entry.day) {
+                        output_funcs.append(output_funcs.render_day_header(entry.day));
+                        bottom_state.header_present = true;
+                    }
+                    if (bottom_state.entry && entry.bootid != bottom_state.entry.bootid)
+                        output_funcs.append(output_funcs.render_reboot_separator());
                 }
-                if (bottom_state.entry && entry.bootid != bottom_state.entry.bootid)
-                    output_funcs.append(output_funcs.render_reboot_separator());
 
                 start_new_line();
                 bottom_state.entry = entry;

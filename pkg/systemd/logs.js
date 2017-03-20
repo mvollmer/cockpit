@@ -138,7 +138,7 @@ $(function() {
                 var count = 0;
                 var stopped = null;
                 start_box.text(_("Loading..."));
-                procs.push(journal.journalctl(match, { follow: false, reverse: true, cursor: first }).
+                procs.push(journal.journalctl(match, { follow: false, reverse: true, cursor: first, problems: displayable_problems }).
                     fail(query_error).
                     stream(function(entries) {
                         if (entries[0]["__CURSOR"] == first)
@@ -159,7 +159,7 @@ $(function() {
         }
 
         function follow(cursor) {
-            procs.push(journal.journalctl(match, { follow: true, count: 0, cursor: cursor }).
+            procs.push(journal.journalctl(match, { follow: true, count: 0, cursor: cursor, problems: displayable_problems }).
                 fail(query_error).
                 stream(function(entries) {
                     if (entries[0]["__CURSOR"] == cursor)
@@ -202,7 +202,8 @@ $(function() {
 
         var options = {
             follow: false,
-            reverse: true
+            reverse: true,
+            problems: displayable_problems
         };
 
         var all = false;
@@ -242,7 +243,8 @@ $(function() {
                 if (!last) {
                     procs.push(journal.journalctl(match, { follow: true, count: 0,
                                                            boot: options["boot"],
-                                                           since: options["since"]
+                                                           since: options["since"],
+                                                           problems: displayable_problems
                                                          }).
                         fail(query_error).
                         stream(function(entries) {
@@ -366,7 +368,7 @@ $(function() {
                         text(error)));
         }
 
-        journal.journalctl({ cursor: cursor, count: 1, follow: false }).
+        journal.journalctl({ cursor: cursor, count: 1, follow: false, problems: displayable_problems }).
             done(function (entries) {
                 if (entries.length >= 1 && entries[0]["__CURSOR"] == cursor)
                     show_entry(entries[0]);
