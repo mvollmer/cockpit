@@ -172,3 +172,5 @@ Test*.html
 /pkg/networkmanager/override.json
 /pkg/storaged/override.json
 /pkg/docker/storage.js
+/pkg/apps/mock/repodata/
+/pkg/apps/mock/*.rpm

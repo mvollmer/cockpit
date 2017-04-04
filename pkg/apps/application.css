@@ -1,0 +1,96 @@
+/* Application list */
+
+.app-list caption {
+    font-size: 20px;
+}
+
+.app-list tr:last-child td {
+    border-bottom: 1px solid #d1d1d1;
+}
+
+.app-list img {
+    width: 32px;
+    height: 32px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.app-list td {
+    vertical-align: middle !important;
+}
+
+.app-list td:nth-child(1) {
+    width: 50px;
+}
+
+.app-list td:nth-child(2) {
+    margin-right: 10px;
+}
+
+.app-list td:nth-child(3) {
+    width: 70%;
+}
+
+.app-list td:nth-child(4) {
+    width: 80px;
+}
+
+.app-list td:nth-child(4) button {
+    width: 100%;
+}
+
+.app-list .progress-title {
+    float: left;
+    margin-right: 10px;
+}
+
+.app-list .progress {
+    margin-bottom: 0px;
+}
+
+/* Application */
+
+.app td img {
+    width: 32px;
+    height: 32px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.app td {
+    vertical-align: middle !important;
+}
+
+.app td:nth-child(1) {
+    width: 50px;
+}
+
+.app td {
+    border-top: 0px !important;
+    border-bottom: 1px solid #d1d1d1;
+}
+
+.app td:nth-child(3) {
+    text-align: right;
+}
+
+.app td:nth-child(4) {
+    width: 80px;
+}
+
+.app td:nth-child(4) button {
+    width: 100%;
+}
+
+.app .progress-title {
+    float: left;
+    margin-right: 10px;
+}
+
+.app .progress {
+    margin-bottom: 0px;
+}
+
+.breadcrumb {
+    margin-bottom: 0px;
+}

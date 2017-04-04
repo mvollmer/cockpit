@@ -1,0 +1,23 @@
+<component type="addon">
+  <id>org.cockpit-project.mock.app-extension</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>Demo Application</name>
+  <icon type="local" height="64" width="64">/usr/share/metainfo/org.cockpit-project.mock.app-extension.64x64.png</icon>
+  <summary>
+    A demo add-on application for Cockpit
+  </summary>
+  <description>
+    <p>Vaporware gluten-free ethical, twee vape trust fund photo booth
+    +1 knausgaard sustainable plaid man bun slow-carb retro
+    chicharrones. Succulents hot chicken locavore stumptown plaid,
+    kinfolk chia messenger bag raw denim etsy kogi neutra. Succulents
+    photo booth typewriter sartorial next level.</p>
+    <p>Fixie asymmetrical tote bag pour-over meh. Synth schlitz
+    snackwave, ramps ugh photo booth biodiesel quinoa kale chips
+    kombucha. Disrupt gentrify raclette iPhone lumbersexual schlitz
+    irony, craft beer sartorial hammock helvetica paleo dreamcatcher
+    tacos deep v. Banjo church-key cray lyft four loko.</p>
+  </description>
+  <extends>cockpit.desktop</extends>
+  <launchable type="cockpit-package">app-extension</launchable>
+</component>

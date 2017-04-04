@@ -1,0 +1,21 @@
+#! /bin/sh
+
+PKGS="\
+  app-extension \
+"
+
+for p in $PKGS; do
+  ./dir2rpm $p
+done
+
+rm -rf repodata
+createrepo .
+cat >/etc/yum.repos.d/mock.repo <<EOF
+[mock]
+name=Mock Repo
+baseurl=file://$PWD
+enabled=1
+gpgcheck=0
+EOF
+
+./install-collection-metainfo mock $PKGS

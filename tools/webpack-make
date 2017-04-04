@@ -133,6 +133,7 @@ function generateDeps(makefile, stats) {
         var install = output;
 	if (!endsWith(output, "manifest.json") &&
             !endsWith(output, "override.json") &&
+            !endsWith(output, "override.exec") &&
             !endsWith(output, "shell/index.html") &&
             !endsWith(output, "shell/stub.html") &&
             !endsWith(output, "shell/simple.html") &&

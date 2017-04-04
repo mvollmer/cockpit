@@ -1,0 +1,241 @@
+#! /usr/bin/python3
+
+import os
+import sys
+import time
+
+import gzip
+import xml.etree.ElementTree as ET
+import watchdog.observers
+import watchdog.events
+import json
+
+def element(xml, tag, lang = None):
+    if lang:
+        for elt in xml.iter(tag):
+            if elt.attrib['xml:lang'] == lang:
+                return elt
+    return xml.find(tag)
+
+def element_value(xml, tag, lang = None):
+    elt = element(xml, tag, lang)
+    return elt.text if elt is not None else None
+
+def convert_description(xml):
+    # XXX
+    return ''.join(list(xml.itertext()))
+
+def convert_cached_icon(dir, origin, xml):
+    if 'width' in xml.attrib and 'height' in xml.attrib:
+        width = xml.attrib['width']
+        height = xml.attrib['height']
+    else:
+        width = "64"
+        height = "64"
+
+    return os.path.join(dir, "..", "icons", origin, width+"x"+height, xml.text)
+
+def convert_remote_icon(xml):
+    return xml.text
+
+def find_and_convert_icon(dir, origin, xml):
+    # We want the biggest one that isn't larger than 64x64
+    height = 0
+    icon = None
+    for ic in xml.iter('icon'):
+        h = int(ic.attrib['height'])
+        if h <= 64 and (h > height or icon is None):
+            icon = ic
+            height = h
+
+    if icon is not None:
+        if icon.attrib['type'] == "cached":
+            return convert_cached_icon(dir, origin, icon)
+        elif icon.attrib['type'] == "remote":
+            return convert_remote_icon(icon)
+
+    return None
+
+def convert_screenshots(xml):
+    if xml is None:
+        return [ ]
+
+    shots = [ ]
+    for sh in xml.iter('screenshot'):
+        for img in sh.iter('image'):
+            if img.attrib['type'] == "source":
+                shots.append({ 'full': img.text })
+
+    return shots
+
+def convert_launchables(xml):
+    ables = [ ]
+
+    for elt in xml.iter('launchable'):
+        type = elt.attrib['type']
+        if type == "service" or type == "cockpit-package":
+            ables.append({ "name": elt.text, "type": type })
+
+    return ables
+
+def convert_collection_component(dir, origin, xml):
+    id = element_value(xml, 'id')
+    pkgname = element_value(xml, 'pkgname')
+    launchables = convert_launchables(xml)
+
+    if not id or not pkgname or len(launchables) == 0:
+        return None
+
+    return {
+        "id": id,
+        "pkgname": pkgname,
+        "name": element_value(xml, 'name'),
+        "summary": element_value(xml, 'summary'),
+        "description": convert_description(element(xml, 'description')),
+        "icon": find_and_convert_icon(dir, origin, xml),
+        "screenshots": convert_screenshots(element(xml, 'screenshots')),
+        "launchables": launchables
+    }
+
+def convert_upstream_component(xml):
+    if xml.tag != "component":
+        return None
+
+    launchables = convert_launchables(xml)
+    if len(launchables) ==  0:
+        return None
+
+    return {
+        "id": element_value(xml, 'id'),
+        "name": element_value(xml, 'name'),
+        "summary": element_value(xml, 'summary'),
+        "launchables": launchables,
+        "installed": True
+    }
+
+class MetainfoDB:
+    def __init__(self):
+        self.dumping = False
+        self.installed_by_file = { }
+        self.available_by_file = { }
+
+    def notice_installed(self, dir, file, xml_root):
+        if xml_root is not None:
+            comp = convert_upstream_component(xml_root)
+            if comp is not None:
+                self.installed_by_file[file] = comp;
+        elif file in self.installed_by_file:
+            del self.installed_by_file[file];
+        if self.dumping:
+            self.dump()
+
+    def notice_available(self, dir, file, xml_root):
+        if xml_root is not None:
+            info = { }
+            origin = xml_root.attrib['origin']
+            for xml_comp in xml_root.iter('component'):
+                comp = convert_collection_component(dir, origin, xml_comp)
+                if comp is not None:
+                    if comp['id'] in info:
+                        pass # warning: duplicate id
+                    else:
+                        info[comp['id']] = comp
+            self.available_by_file[file] = info
+        elif file in self.available_by_file:
+            del self.available_by_file[file]
+        if self.dumping:
+            self.dump()
+
+    def dump(self):
+        comps = { }
+        for file in self.installed_by_file:
+            comp = self.installed_by_file[file]
+            if comp['id'] in comps:
+                pass # warn dup
+            else:
+                comps[comp['id']] = comp;
+        for file in self.available_by_file:
+            for id in self.available_by_file[file]:
+                comp = self.available_by_file[file][id]
+                if not comp['id'] in comps:
+                    comps[comp['id']] = comp;
+                else:
+                    z = comps[comp['id']].copy()
+                    z.update(comp)
+                    comps[comp['id']] = z;
+        sys.stdout.write(json.dumps(comps) + "\n")
+        sys.stdout.flush()
+
+    def start_dumping(self):
+        self.dump()
+        self.dumping = True
+
+def notice_file(dir, file, callback):
+    if file.endswith(".xml"):
+        callback(dir, file, ET.parse(file).getroot())
+    elif file.endswith(".xml.gz"):
+        callback(dir, file, ET.parse(gzip.open(file)).getroot())
+
+def notice_file_gone(dir, file, callback):
+    if file.endswith(".xml") or file.endswith(".xml.gz"):
+        callback(dir, file, None)
+
+def load_directory(dir, callback):
+    for f in os.listdir(dir):
+        notice_file(dir, os.path.join(dir, f), callback)
+
+class Handler(watchdog.events.FileSystemEventHandler):
+    def __init__(self, dir, callback):
+        super(Handler, self).__init__()
+        self.dir = dir
+        self.callback = callback
+
+    def on_any_event(self, event):
+        if not event.is_directory:
+            if event.event_type == "deleted":
+                notice_file_gone(self.dir, event.src_path, self.callback)
+            elif event.event_type == "moved":
+                notice_file(self.dir, event.dest_path, self.callback)
+            else:
+                notice_file(self.dir, event.src_path, self.callback)
+
+def watch_db():
+    observer = watchdog.observers.Observer()
+
+    def watch_directory(dir, callback):
+        observer.schedule(Handler(dir, callback), dir)
+
+    db = MetainfoDB()
+
+    def installed_callback(dir, path, xml):
+        db.notice_installed(dir, path, xml)
+
+    def available_callback(dir, path, xml):
+        db.notice_available(dir, path, xml)
+
+    load_directory("/usr/share/metainfo",      installed_callback)
+    load_directory("/usr/share/app-info/xmls", available_callback)
+    load_directory("/var/cache/app-info/xmls", available_callback)
+
+    db.start_dumping()
+
+    watch_directory("/usr/share/metainfo",      installed_callback)
+    watch_directory("/usr/share/app-info/xmls", available_callback)
+    watch_directory("/var/cache/app-info/xmls", available_callback)
+
+    observer.start()
+
+    while True:
+        time.sleep(10000)
+
+def dump_metainfo(id):
+    file = os.path.join("/usr/share/metainfo", id + ".metainfo.xml")
+    if os.path.isfile(file):
+        comp = convert_upstream_component(ET.parse(file).getroot())
+        sys.stdout.write(json.dumps(comp) + "\n")
+        sys.stdout.flush()
+
+if len(sys.argv) == 2:
+    dump_metainfo(sys.argv[1])
+else:
+    watch_db()

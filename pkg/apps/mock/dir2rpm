@@ -1,0 +1,58 @@
+#! /bin/sh
+
+# dir2rpm -- Turn a directory into a RPM.  Installing the RPM will
+#            install the files from the directory into the filesystem.
+#
+# Usage: dir2rpm DIR
+#
+# The filename of the resulting rpm is printed on stdout.  It will be
+# noarch and have version 1 and release 0.
+
+set -eu
+
+dir=$1
+name=$(basename "$1")
+
+tmpdir=$(mktemp -d $PWD/dir2rpm.XXXXXX)
+tar czf "$tmpdir/$name.tar.gz" -C $(dirname "$dir") "$name"
+
+cat >"$tmpdir/$name.spec" <<EOF
+Name: $name
+Version: 1
+Release: 0
+Summary: A demo package
+License: Public Domain
+
+Source: $name.tar.gz
+BuildArch: noarch
+
+%define debug_package %{nil}
+
+%description
+A demo package
+
+%prep
+
+%build
+
+%install
+tar --strip-components=1 -xzf %{sources} -C %{buildroot}
+find %{buildroot} -type f >> files.list
+sed -i "s|%{buildroot}||" *.list
+
+%files -f files.list
+
+EOF
+
+rpmbuild -bb \
+         --quiet \
+         --define "_sourcedir $tmpdir" \
+         --define "_specdir $tmpdir" \
+         --define "_builddir $tmpdir" \
+         --define "_srcrpmdir `pwd`" \
+         --define "_rpmdir $tmpdir/output" \
+         --define "_buildrootdir $tmpdir/.build" \
+         "$tmpdir/$name.spec"
+
+find $tmpdir/output -name '*.rpm' -printf '%f\n' -exec mv {} . \;
+rm -rf $tmpdir
