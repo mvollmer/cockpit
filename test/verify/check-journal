@@ -303,5 +303,30 @@ s.send("PRIORITY=3\\nFOO=bar\\n")'
 
         b.wait_text("#journal-entry-message", "[no data]")
 
+    def testAbrtSegv(self):
+        b = self.browser
+        m = self.machine
+
+        # Only root can see ABRT problem data
+        b.default_user = "root"
+
+        self.login_and_go("/system/logs")
+
+        m.execute("setenforce 0; ulimit -c unlimited; python -c 'import os; os.kill(os.getpid(), 11)' || true")
+
+        sel = "#journal-box .cockpit-logline .cockpit-log-message:contains('crashed in posix_kill')"
+        b.wait_present(sel)
+        b.wait_visible(sel)
+        b.click(sel)
+
+        def wait_field(name, value):
+            row_sel = "#journal-entry-fields tr:contains('" + name + "')"
+            b.wait_present(row_sel + " td:nth-child(2):contains('" + value + "')")
+
+        wait_field("SYSLOG_IDENTIFIER", "abrt-notification")
+
+        b.click("li:contains(Problem info)")
+        wait_field("crash_function", "posix_kill")
+
 if __name__ == '__main__':
     test_main()
