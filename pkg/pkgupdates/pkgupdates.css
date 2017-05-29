@@ -1,0 +1,58 @@
+/* override default cockpit CSS, as this doesn't fit our table */
+table.listing-ct thead th:last-child {
+    text-align: left;
+}
+
+tr.listing-ct-item td:last-child {
+    text-align: left;
+}
+
+tr.listing-ct-item th {
+    vertical-align: top;
+}
+
+tr.listing-ct-item td {
+    vertical-align: top;
+}
+
+tr.listing-ct-item td.narrow {
+    max-width: 18ex;
+    word-wrap: break-word;
+}
+
+tr.listing-ct-item td.changelog {
+    white-space: pre-wrap;
+}
+
+tr.security {
+    background-color: #fbf0f0;
+}
+
+.security-label {
+    color: darkred;
+}
+
+.security-label-text {
+    color: darkred;
+    font-weight: 600;
+}
+
+/* don't let the install progress bar get too wide */
+.progress {
+    max-width: 60rem;
+}
+
+/* stolen from pkg/systemd/host.css */
+.content-header-extra {
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 20px;
+    width: 100%;
+    position: fixed;
+    z-index: 900;
+    top: 0;
+}
+
+.container-fluid {
+    margin-top: 5em;
+}

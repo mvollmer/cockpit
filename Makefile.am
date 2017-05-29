@@ -152,6 +152,7 @@ WEBPACK_PACKAGES = \
 	networkmanager \
 	ostree \
 	pcp \
+	pkgupdates \
 	playground \
 	realmd \
 	selinux \
