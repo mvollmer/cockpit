@@ -114,8 +114,11 @@ class TestUpdates(MachineCase):
         m = self.machine
 
         # just changelog
-        self.createPackage("norefs", "1", "1", install=True)
-        self.createPackage("norefs", "2", "1", severity="enhancement", changes="Now 10% more unicorns")
+        self.createPackage("norefs-bin", "1", "1", install=True)
+        self.createPackage("norefs-bin", "2", "1", severity="enhancement", changes="Now 10% more unicorns")
+        # binary from same source
+        self.createPackage("norefs-doc", "1", "1", install=True)
+        self.createPackage("norefs-doc", "2", "1", severity="enhancement", changes="Now 10% more unicorns")
         # bug fixes
         self.createPackage("buggy", "2", "1", install=True)
         self.createPackage("buggy", "2", "2", changes="Fixit", bugs=[123, 456])
@@ -164,8 +167,8 @@ class TestUpdates(MachineCase):
         self.assertEqual(b.text("#app .listing-ct tbody:nth-of-type(3) td:nth-of-type(2)"), "123, 456")
         self.assertIn("Fixit", b.text("#app .listing-ct tbody:nth-of-type(3) td:nth-of-type(3)"))
 
-        # norefs: just changelog
-        self.assertEqual(b.text("#app .listing-ct tbody:nth-of-type(4) th span"), "norefs")
+        # norefs: just changelog, also show the lib package
+        self.assertEqual(b.text("#app .listing-ct tbody:nth-of-type(4) th span"), "norefs-bin, norefs-doc")
         self.assertEqual(b.text("#app .listing-ct tbody:nth-of-type(4) td:nth-of-type(1)"), "2-1")
         self.assertEqual(b.text("#app .listing-ct tbody:nth-of-type(4) td:nth-of-type(2)"), "")  # no bugs
         self.assertIn("Now 10% more unicorns", b.text("#app .listing-ct tbody:nth-of-type(4) td:nth-of-type(3)"))
@@ -180,7 +183,7 @@ class TestUpdates(MachineCase):
         # should have succeeded; 2 non-security updates left
         b.wait_in_text("#state", "2 updates")
         b.wait_in_text(".container-fluid h2", "Available Packages")
-        b.wait_in_text("table.listing-ct", "norefs")
+        b.wait_in_text("table.listing-ct", "norefs-doc")
         self.assertIn("buggy", b.text("table.listing-ct"))
         self.assertNotIn("secdeclare", b.text("table.listing-ct"))
         self.assertNotIn("secparse", b.text("table.listing-ct"))
@@ -188,7 +191,7 @@ class TestUpdates(MachineCase):
         # new security versions are now installed
         m.execute("test -f /stamp-secdeclare-3-4.b1 && test -f /stamp-secparse-4-2")
         # but the two others are untouched
-        m.execute("test -f /stamp-buggy-2-1 && test -f /stamp-norefs-1-1")
+        m.execute("test -f /stamp-buggy-2-1 && test -f /stamp-norefs-bin-1-1 && test -f /stamp-norefs-doc-1-1")
 
     def testNoPackageKit(self):
         b = self.browser

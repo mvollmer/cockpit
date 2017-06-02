@@ -127,7 +127,7 @@ function UpdateItem(props) {
             <tr className={'listing-ct-item' + (info.security ? ' security' : '')}>
                 <th>
                   <Tooltip tip={info.summary}>
-                    <span>{id_fields[0]}</span>
+                    <span>{info.packageNames ? commaJoin(info.packageNames.sort()) : id_fields[0]}</span>
                   </Tooltip>
                 </th>
                 <td className='narrow'>{id_fields[1]}</td>
@@ -260,20 +260,39 @@ class OsUpdates extends React.Component {
     }
 
     loadUpdateDetails(pkg_ids) {
+        // PackageKit doesn't expose source package names, so group packages with the same version and changelog
+        // create a reverse version+changes → id map on iteration
+        var sameUpdate = {};
+
         pkTransaction()
             .done(transProxy => {
                 $(transProxy).on('UpdateDetail', (event, packageId, updates, obsoletes, vendor_urls,
                                                   bug_urls, cve_urls, restart, update_text, changelog
                                                   /* state, issued, updated */) => {
-                    var u = this.state.updates[packageId];
+                    let u = this.state.updates[packageId];
                     u.vendor_urls = vendor_urls;
                     u.bug_urls = deduplicate(bug_urls);
                     u.description = this.formatDescription(update_text || changelog);
-                    // many backends don't support this; parse CVEs from description as a fallback
-                    u.cve_urls = deduplicate(cve_urls && cve_urls.length > 0 ? cve_urls : parseCVEs(u.description));
-                    if (u.cve_urls && u.cve_urls.length > 0)
-                        u.security = true;
-                    // u.restart = restart; // broken (always '1') at least in Fedora
+
+                    // did we already see the same version and description? then merge
+                    let id_fields = packageId.split(';');
+                    let hash = id_fields[1] + u.description;
+                    let seenId = sameUpdate[hash];
+                    if (seenId) {
+                        this.state.updates[seenId].packageNames.push(id_fields[0]);
+                        delete this.state.updates[packageId];
+                    } else {
+                        // this is a new update
+                        sameUpdate[hash] = packageId;
+                        u.packageNames = [id_fields[0]];
+
+                        // many backends don't support this; parse CVEs from description as a fallback
+                        u.cve_urls = deduplicate(cve_urls && cve_urls.length > 0 ? cve_urls : parseCVEs(u.description));
+                        if (u.cve_urls && u.cve_urls.length > 0)
+                            u.security = true;
+                        // u.restart = restart; // broken (always '1') at least in Fedora
+                    }
+
                     this.setState({updates: this.state.updates, haveSecurity: this.state.haveSecurity || u.security});
                 });
 
