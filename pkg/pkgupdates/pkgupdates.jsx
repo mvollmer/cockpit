@@ -342,7 +342,7 @@ class OsUpdates extends React.Component {
                 });
 
                 $(transProxy).on('ErrorCode', (event, code, details) => {
-                    this.state.ErrorMessages.push(details);
+                    this.state.errorMessages.push(details);
                     this.setState({state: 'loadError'});
                 });
 
