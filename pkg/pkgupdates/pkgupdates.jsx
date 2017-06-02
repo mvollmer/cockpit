@@ -102,42 +102,6 @@ function HeaderBar(props) {
     );
 }
 
-class CVELink extends React.Component {
-    constructor() {
-        super();
-        this.state = {summary: _('No information available')};
-    }
-
-    componentDidMount() {
-        cockpit.http(80, {address: 'cve.circl.lu'}).get('/api/cve/' + this.props.cve)
-            .done(res => {
-                if (res)
-                    res = JSON.parse(res);
-                if (res && res.summary)
-                    this.setState({summary: res.summary});
-            })
-            .fail(ex => console.warn('Could not retrieve summary for', this.props.cve, ':', ex));
-    }
-
-    render() {
-        return (
-            <Tooltip tip={this.state.summary}>
-                <a href={this.props.url} rel='noopener' referrerpolicy='no-referrer' target='_blank'>{this.props.cve}</a>
-            </Tooltip>
-        );
-    }
-}
-
-// multiple packages might refer to the same CVEs, so cache/reuse the components to avoid redundant lookups
-var cveLinkCache = { };
-
-function makeCVELink(url) {
-    var cve = url.match(/[^/=]+$/);
-    if (!(cve in cveLinkCache))
-        cveLinkCache[cve] = <CVELink cve={cve} url={url}/>;
-    return cveLinkCache[cve];
-}
-
 function UpdateItem(props) {
     const info = props.info;
     const id_fields = props.id.split(';');
@@ -153,7 +117,7 @@ function UpdateItem(props) {
             <p>
                 <span className='fa fa-bug security-label'> </span>
                 <span className='security-label-text'>{_('Security Update') + (info.cve_urls.length ? ': ' : '')}</span>
-                {commaJoin(info.cve_urls.map(u => makeCVELink(u)))}
+                {commaJoin(info.cve_urls.map(u => <a href={u} rel='noopener' referrerpolicy='no-referrer' target='_blank'>{u.match(/[^/=]+$/)}</a>))}
             </p>
         );
     }
