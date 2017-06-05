@@ -171,39 +171,16 @@ class ApplyUpdates extends React.Component {
     }
 
     componentDidMount() {
-        pkTransaction()
-            .done(transProxy =>  {
-                $(transProxy).on('Package', (event, info, packageId) => {
-                    var pfields = packageId.split(';');
-                    // info: see PK_STATUS_* at https://github.com/hughsie/PackageKit/blob/master/lib/packagekit-glib2/pk-enum.h
-                    this.setState({curPackage: pfields[0] + ' ' + pfields[1],
-                                   curStatus: info,
-                                   percentage: transProxy.Percentage <= 100 ? transProxy.Percentage : null,
-                                   timeRemaining: transProxy.RemainingTime > 0 ? transProxy.RemainingTime : null});
-                });
+        var transProxy = this.props.transaction;
 
-                $(transProxy).on('ErrorCode', (event, code, details) => {this.props.onError(details)});
-                $(transProxy).on('Finished', (event, exit) => {
-                    if (exit == PK_EXIT_ENUM_SUCCESS)
-                        this.props.onFinished();
-                    else
-                        this.props.onError(exit != PK_EXIT_ENUM_FAILED ? ('Error code ' +  exit) : '');
-                });
-
-                // not working/being used in at least Fedora
-                $(transProxy).on('RequireRestart', (event, type, packageId) => {
-                    console.log('update RequireRestart', type, packageId);
-                });
-
-                var ids = Object.keys(this.props.updates);
-                if (this.props.securityOnly)
-                    ids = ids.filter(id => this.props.updates[id].security);
-
-                // returns immediately without value
-                transProxy.UpdatePackages(0, ids)
-                    .fail(this.props.onError);
-            })
-            .fail(this.props.onError);
+        $(transProxy).on('Package', (event, info, packageId) => {
+            var pfields = packageId.split(';');
+            // info: see PK_STATUS_* at https://github.com/hughsie/PackageKit/blob/master/lib/packagekit-glib2/pk-enum.h
+            this.setState({curPackage: pfields[0] + ' ' + pfields[1],
+                           curStatus: info,
+                           percentage: transProxy.Percentage <= 100 ? transProxy.Percentage : null,
+                           timeRemaining: transProxy.RemainingTime > 0 ? transProxy.RemainingTime : null});
+        });
     }
 
     render() {
@@ -353,6 +330,37 @@ class OsUpdates extends React.Component {
             .fail(ex => {console.warn('failed to get time of last refresh: ' + ex.message)});
     }
 
+    apply_updates(securityOnly) {
+        pkTransaction()
+            .done(transProxy =>  {
+                this.setState({state: 'applying', apply_transaction: transProxy});
+
+                $(transProxy).on('ErrorCode', (event, code, details) => { this.handleError(details) });
+                $(transProxy).on('Finished', (event, exit) => {
+                    if (exit == PK_EXIT_ENUM_SUCCESS) {
+                        this.setState({state: 'loading', haveSecurity: false});
+                        this.componentDidMount();
+                    } else {
+                        this.handleError(exit != PK_EXIT_ENUM_FAILED ? ('Error code ' +  exit) : '');
+                    }
+                });
+
+                // not working/being used in at least Fedora
+                $(transProxy).on('RequireRestart', (event, type, packageId) => {
+                    console.log('update RequireRestart', type, packageId);
+                });
+
+                var ids = Object.keys(this.state.updates);
+                if (securityOnly)
+                    ids = ids.filter(id => this.state.updates[id].security);
+
+                // returns immediately without value
+                transProxy.UpdatePackages(0, ids)
+                          .fail(this.handleError);
+            })
+            .fail(this.handleError);
+    }
+
     renderContent() {
         switch (this.state.state) {
             case 'loading':
@@ -366,11 +374,17 @@ class OsUpdates extends React.Component {
                                 <td><h2>{_('Available Packages')}</h2></td>
                                 <td className='text-right'>
                                     { this.state.haveSecurity
-                                        ?  <button className='btn btn-default' onClick={() => this.setState({state: 'applying', securityOnly: true})}>{_('Install security updates')}</button>
-                                        : null
+                                      ? <button className='btn btn-default'
+                                                 onClick={() => { this.apply_updates(true); }}>
+                                            {_('Install security updates')}
+                                         </button>
+                                      : null
                                     }
-                    &nbsp; &nbsp;
-                                    <button className='btn btn-primary' onClick={() => this.setState({state: 'applying', securityOnly: false})}>{_('Install all updates')}</button>
+                                    &nbsp; &nbsp;
+                                    <button className='btn btn-primary'
+                                            onClick={() => { this.apply_updates(false); }}>
+                                        {_('Install all updates')}
+                                    </button>
                                 </td>
                             </tr>
                         </table>
@@ -383,13 +397,7 @@ class OsUpdates extends React.Component {
                 return this.state.errorMessages.map(m => <pre>{m}</pre>);
 
             case 'applying':
-                return <ApplyUpdates updates={this.state.updates}
-                                     securityOnly={this.state.securityOnly}
-                                     onFinished={() => {
-                                         this.setState({state: 'loading', haveSecurity: false});
-                                         this.componentDidMount();
-                                     }}
-                                     onError={this.handleError} />
+                return <ApplyUpdates transaction={this.state.apply_transaction}/>
 
             default:
                 return null;
