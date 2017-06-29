@@ -26,10 +26,9 @@ export function spawnProcess({ cmd, args = [], stdin, failHandler }) {
 
     return spawn(cockpit.spawn(spawnArgs, { err: "message", environ: ['LC_ALL=C'] })
         .input(stdin))
-        .fail((exception, data) => {
+        .catch((exception, data) => {
             if (failHandler) {
-                failHandler({exception, data});
-                return ;
+                return failHandler({exception, data, spawnArgs});
             }
             console.error(`spawn '${cmd}' process returned error: "${JSON.stringify(exception)}", data: "${JSON.stringify(data)}"`);
         });

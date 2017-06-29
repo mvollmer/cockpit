@@ -120,6 +120,7 @@ LIBVIRT_PROVIDER = {
 
         const canFailHandler = ({exception, data}) => {
             console.info(`The 'virsh' command failed, as expected: "${JSON.stringify(exception)}", data: "${JSON.stringify(data)}"`);
+            return cockpit.resolve();
         };
 
         return dispatch => {
