@@ -40,6 +40,7 @@ var PVolTab         = require("./pvol-tabs.jsx").PVolTab;
 var MDRaidMemberTab = require("./pvol-tabs.jsx").MDRaidMemberTab;
 var PartitionTab    = require("./part-tab.jsx").PartitionTab;
 var SwapTab         = require("./swap-tab.jsx").SwapTab;
+var VdoTab          = require("./vdo-tab.jsx").VdoTab;
 var UnrecognizedTab = require("./unrecognized-tab.jsx").UnrecognizedTab;
 
 var _ = cockpit.gettext;
@@ -73,6 +74,7 @@ function create_tabs(client, target, is_partition) {
     var block = endsWith(target.iface, ".Block")? target : null;
     var block_lvm2 = block && client.blocks_lvm2[block.path];
     var block_pvol = block && client.blocks_pvol[block.path];
+    var vdo = block && client.vdo_overlay.find_dev(target);
 
     var lvol = (endsWith(target.iface, ".LogicalVolume")?
                 target :
@@ -92,6 +94,7 @@ function create_tabs(client, target, is_partition) {
                   client: client,
                   block: block,
                   lvol: lvol,
+                  vdo: vdo
               }
             });
     }
@@ -152,6 +155,10 @@ function create_tabs(client, target, is_partition) {
         add_tab(_("Swap"), SwapTab);
     } else if (block) {
         add_tab(_("Unrecognized Data"), UnrecognizedTab);
+    }
+
+    if (vdo) {
+        add_tab(_("VDO"), VdoTab);
     }
 
     var tab_actions = [ ];
@@ -231,7 +238,7 @@ function create_tabs(client, target, is_partition) {
     function delete_() {
         var block_part;
 
-        /* This is called only for logical volumes and partitions
+        /* This is called only for logical volumes, partitions, and vdo volumes
          */
 
         if (block)
@@ -242,6 +249,9 @@ function create_tabs(client, target, is_partition) {
         if (lvol) {
             name = utils.lvol_name(lvol);
             danger = _("Deleting a logical volume will delete all data in it.");
+        } else if (vdo) {
+            name = vdo.name;
+            danger = _("Deleting a VDO volume will delete all data in it.");
         } else if (block_part) {
             name = utils.block_name(block);
             danger = _("Deleting a partition will delete all data in it.");
@@ -269,11 +279,11 @@ function create_tabs(client, target, is_partition) {
                                   return utils.teardown_active_usage(client, usage).
                                                then(function () {
                                                    if (lvol)
-                                                       return lvol.Delete({ 'tear-down': { t: 'b', v: true }
-                                                       });
+                                                       return lvol.Delete({ 'tear-down': { t: 'b', v: true } });
+                                                   else if (vdo)
+                                                       return cockpit.reject("Not yet");
                                                    else if (block_part)
-                                                       return block_part.Delete({ 'tear-down': { t: 'b', v: true }
-                                                       });
+                                                       return block_part.Delete({ 'tear-down': { t: 'b', v: true } });
                                                });
                               }
                           }
@@ -281,7 +291,7 @@ function create_tabs(client, target, is_partition) {
         }
     }
 
-    if (is_partition || lvol) {
+    if (is_partition || lvol || vdo) {
         var excuse = null;
         if (client.is_old_udisks2 && is_crypto && client.blocks_cleartext[block.path])
             excuse = _("Can't delete while unlocked");
@@ -573,6 +583,17 @@ var MDRaid = React.createClass({
 });
 
 function append_logical_volume_block(client, rows, level, block, lvol) {
+    var vdo = client.vdo_overlay.find_block(block);
+
+    if (vdo) {
+        if (client.vdo_overlay.is_primary(vdo, block)) {
+            var vdo_block = client.slashdevs_block["mapper/" + vdo.name];
+            if (vdo_block)
+                append_device(client, rows, level, vdo_block);
+        }
+        return;
+    }
+
     var tabs, desc;
     if (client.blocks_ptable[block.path]) {
         desc = {

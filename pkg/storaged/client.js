@@ -404,6 +404,87 @@
         return utils.compare_versions(this.manager.Version, version) < 0;
     };
 
+    function vdo_overlay() {
+        var self = {
+            volumes: [ ],
+
+            by_mount: { },
+            by_dev: { },
+            by_lvol: { },
+
+            find_block: find_block,
+            find_dev: find_dev,
+            is_primary: is_primary
+        };
+
+        var file = cockpit.file("/etc/vdoconf.xml", { syntax: { parse: $.parseXML } });
+        file.watch(function (content, tag, error) {
+            var albs = { };
+
+            self.by_mount = { };
+            self.by_dev = { };
+            self.by_lvol = { };
+
+            $(content).find("albserver").each(function (index, alb) {
+                albs[$(alb).attr("uri")] = {
+                    lvm_vol: $(alb).find("logicalVolumePath").text(),
+                    mount: $(alb).find("indexPath").text(),
+                    size: $(alb).find("size").text()
+                };
+            });
+
+            self.volumes = $(content).find("vdo").map(function (index, vol) {
+                var alb = albs[$(vol).find("server").text()];
+                var v = { name: $(vol).attr("name"),
+                          lvols: [ $(vol).find("logicalVolumePath").text(), alb.lvm_vol ],
+                          mounts: [ alb.mount ],
+                          physical_size: $(vol).find("physicalSize").text(),
+                          alb_size: alb.size
+                        };
+                self.by_dev["/dev/mapper/" + v.name] = v;
+                v.lvols.forEach(function (lv) { self.by_lvol[lv] = v; });
+                v.mounts.forEach(function (m) { self.by_mount[m] = v; });
+
+                return v;
+            }).get();
+
+            // We trigger a change on the client right away and not
+            // just on the vdo_overlay since this data is used all
+            // over the place...
+
+            $(client).triggerHandler("changed");
+        });
+
+        function some(array, func) {
+            var i;
+            for (i = 0; i < array.length; i++) {
+                var val = func(array[i]);
+                if (val)
+                    return val;
+            }
+            return null;
+        }
+
+        function find_block(block) {
+            function check(encoded) { return self.by_lvol[utils.decode_filename(encoded)]; }
+            return check(block.Device) || some(block.Symlinks, check);
+        }
+
+        function find_dev(block) {
+            function check(encoded) { return self.by_dev[utils.decode_filename(encoded)]; }
+            return check(block.Device) || some(block.Symlinks, check);
+        }
+
+        function is_primary(vdo, block) {
+            function check(encoded) { return vdo.lvols[0] == utils.decode_filename(encoded); }
+            return check(block.Device) || some(block.Symlinks, check);
+        }
+
+        return self;
+    }
+
+    client.vdo_overlay = vdo_overlay();
+
     function init_manager() {
         /* Storaged 2.6 and later uses the UDisks2 API names, but try the
          * older storaged API first as a fallback.

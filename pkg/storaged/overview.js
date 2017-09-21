@@ -240,7 +240,8 @@
                         block.MDRaid == "/" &&
                         (!block_lvm2 || block_lvm2.LogicalVolume == "/") &&
                         !block.HintIgnore &&
-                        block.Size > 0);
+                        block.Size > 0 &&
+                        !client.vdo_overlay.find_dev(block));
             }
 
             function make_other(path) {
@@ -272,7 +273,8 @@
             function is_mount(path) {
                 var block = client.blocks[path];
                 var fsys = client.blocks_fsys[path];
-                return fsys && block.IdUsage == "filesystem" && block.IdType != "mpath_member" && !block.HintIgnore;
+                return (fsys && block.IdUsage == "filesystem" && block.IdType != "mpath_member" &&
+                        !block.HintIgnore && !client.vdo_overlay.find_block(block));
             }
 
             function cmp_mount(path_a, path_b) {

@@ -206,8 +206,13 @@
             } else if (client.blocks_crypto[path] && client.blocks[client.blocks_crypto[path].CryptoBackingDevice]) {
                 is_crypt = true;
                 path = client.blocks_crypto[path].CryptoBackingDevice;
-            } else
-                break;
+            } else {
+                var vdo = client.blocks[path] && client.vdo_overlay.find_dev(client.blocks[path]);
+                if (vdo)
+                    path = client.slashdevs_block[vdo.lvols[0].replace("/dev/", "")].path;
+                else
+                    break;
+            }
         }
 
         if (client.blocks_lvm2[path] && client.lvols[client.blocks_lvm2[path].LogicalVolume])
