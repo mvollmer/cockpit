@@ -374,6 +374,13 @@ AC_ARG_WITH(appstream-data-packages,
             [with_appstream_data_packages='[[]]'])
 AC_SUBST(with_appstream_data_packages)
 
+AC_ARG_WITH(nfs-client-packages,
+            AC_HELP_STRING([--with-nfs-client-packages=JSON],
+                           [Packages that are necessary for NFS clients]),
+            [],
+            [with_nfs_client_packages='[[]]'])
+AC_SUBST(with_nfs_client_packages)
+
 # Address sanitizer
 
 AC_MSG_CHECKING([for asan flags])

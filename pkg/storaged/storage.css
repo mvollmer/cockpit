@@ -626,3 +626,13 @@ td.storage-action {
 .modal-title {
     word-break: break-all;
 }
+
+.package-list {
+    margin: 1em 0 0;
+    columns: 3 20ch;
+}
+
+.panel-heading .spinner-inline {
+    vertical-align: middle;
+    margin-left: 0.5ex;
+}

@@ -117,6 +117,15 @@
         return cockpit.format(_("${size} ${desc}"), { size: utils.fmt_size(size), desc: text});
     };
 
+    // TODO - generalize this to arbitrary number of arguments (when needed)
+    utils.format_to_array = function format_to_array(fmt, arg) {
+        var index = fmt.indexOf("$0");
+        if (index >= 0)
+            return [ fmt.slice(0, index), arg, fmt.slice(index + 2) ];
+        else
+            return [ fmt ];
+    };
+
     utils.validate_lvm2_name = function validate_lvm2_name(name) {
         if (name === "")
             return _("Name cannot be empty.");
@@ -675,6 +684,15 @@
                              mdraid_remove(usage.raw.filter(function(use) { return use.usage == "mdraid-member"; })),
                              pvol_remove(usage.raw.filter(function(use) { return use.usage == "pvol"; }))
                            ]);
+    };
+
+    utils.get_config = function get_config(name, def) {
+        if (cockpit.manifests["storage"] && cockpit.manifests["storage"]["config"]) {
+            var val = cockpit.manifests["storage"]["config"][name];
+            return val !== undefined? val : def;
+        } else {
+            return def;
+        }
     };
 
     module.exports = utils;
