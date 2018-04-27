@@ -21,6 +21,7 @@
 import parent
 from testlib import *
 from storagelib import *
+from packagelib import *
 
 @skipImage("NetworkManager and NFS don't work together", "ubuntu-1604")
 class TestStorage(StorageCase):
@@ -199,6 +200,46 @@ class TestStorage(StorageCase):
         self.dialog_apply()
 
         b.wait_present("#detail-header button:contains(Mount)")
+
+@skipImage("NetworkManager and NFS don't work together", "ubuntu-1604")
+class TestStoragePackages(StorageCase, PackageCase):
+
+    def testNfsMissingPackages(self):
+        m = self.machine
+        b = self.browser
+
+        # Override configuration so that we don't have to remove the
+        # real package.
+
+        self.machine.write("/usr/share/cockpit/storaged/override.json",
+                           """{ "config": { "nfs_client_packages": [ "fake-nfs-utils" ] } }""")
+
+        self.createPackage("fake-nfs-utils", "1.0", "1")
+        # self.enableRepo()
+
+        def fake_not_installed():
+            m.execute("mv /usr/sbin/mount.nfs /usr/sbin/mount.nfs.off")
+
+        def fake_installed():
+            m.execute("mv /usr/sbin/mount.nfs.off /usr/sbin/mount.nfs")
+
+        fake_not_installed()
+
+        self.login_and_go("/storage")
+
+        m.execute("mkdir /home/foo /home/bar")
+        m.write("/etc/exports", "/home/foo 127.0.0.0/24(rw)\n/home/bar 127.0.0.0/24(rw)\n")
+        m.execute("systemctl restart nfs-server")
+
+        b.wait_present("button:contains('Install NFS Support')")
+        b.click("button:contains('Install NFS Support')")
+        self.dialog_wait_open()
+        b.wait_in_text("#dialog", "fake-nfs-utils will be installed")
+        self.dialog_apply()
+        self.dialog_wait_close()
+
+        b.wait_present("#nfs-mounts button .fa-plus")
+        b.snapshot("xxx")
 
 if __name__ == '__main__':
     test_main()
