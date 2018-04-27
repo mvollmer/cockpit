@@ -244,7 +244,9 @@ export function cancellableTransaction(method, arglist, progress_cb, signalHandl
                         // avoid calling progress_cb after ending the transaction, to avoid flickering cancel buttons
                         ErrorCode: (code, detail) => {
                             progress_cb = null;
-                            reject({ detail, code: cancelled ? "cancelled" : code });
+                            reject({ detail, code: cancelled ? "cancelled" : code,
+                                     toString: () => detail });
+
                         },
                         Finished: (exit, runtime) => {
                             progress_cb = null;
