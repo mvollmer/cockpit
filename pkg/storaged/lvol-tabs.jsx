@@ -19,11 +19,13 @@
 
 "use strict";
 
+var React = require("react");
+var createReactClass = require('create-react-class');
 var cockpit = require("cockpit");
+
 var dialog = require("./dialog");
 var utils = require("./utils.js");
 
-var React = require("react");
 var StorageControls = require("./storage-controls.jsx");
 
 var StorageButton = StorageControls.StorageButton;
@@ -199,7 +201,7 @@ function lvol_shrink(client, lvol, info) {
     });
 }
 
-var BlockVolTab = React.createClass({
+var BlockVolTab = createReactClass({
     render: function () {
         var self = this;
         var client = self.props.client;
@@ -336,7 +338,7 @@ var BlockVolTab = React.createClass({
     },
 });
 
-var PoolVolTab = React.createClass({
+var PoolVolTab = createReactClass({
     render: function () {
         var self = this;
 

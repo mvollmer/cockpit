@@ -21,6 +21,7 @@
 
 var React = require('react');
 var PropTypes = require("prop-types");
+var createReactClass = require('create-react-class');
 
 require('./listing.less');
 
@@ -48,7 +49,7 @@ require('./listing.less');
  * initiallyExpanded optional: the entry will be initially rendered as expanded, but then behaves normally
  * expandChanged optional: callback will be used if the row is either expanded or collapsed passing single `isExpanded` boolean argument
  */
-var ListingRow = React.createClass({
+var ListingRow = createReactClass({
     propTypes: {
         rowId: PropTypes.string,
         columns: PropTypes.array.isRequired,
@@ -282,7 +283,7 @@ var ListingRow = React.createClass({
  *                     receives the column index as argument
  * - actions: additional listing-wide actions (displayed next to the list's title)
  */
-var Listing = React.createClass({
+var Listing = createReactClass({
     propTypes: {
         title: PropTypes.string,
         fullWidth: PropTypes.bool,
@@ -292,7 +293,7 @@ var Listing = React.createClass({
                 PropTypes.string,
                 PropTypes.element,
             ])),
-        columnTitleClick: PropTypes.func,
+        columnTitleClick: PropTypes.func, // eslint-disable-line react/no-unused-prop-types
         actions: PropTypes.arrayOf(PropTypes.node)
     },
     getDefaultProps: function () {

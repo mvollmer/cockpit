@@ -19,11 +19,13 @@
 
 "use strict";
 
+var React = require("react");
+var createReactClass = require('create-react-class');
 var cockpit = require("cockpit");
+
 var dialog = require("./dialog");
 var utils = require("./utils.js");
 
-var React = require("react");
 var CockpitListing = require("cockpit-components-listing.jsx");
 var StorageControls = require("./storage-controls.jsx");
 var FormatDialog = require("./format-dialog.jsx");
@@ -625,7 +627,7 @@ function vgroup_rows(client, vgroup) {
     return rows;
 }
 
-var VGroup = React.createClass({
+var VGroup = createReactClass({
     render: function () {
         var self = this;
         var vgroup = this.props.vgroup;
