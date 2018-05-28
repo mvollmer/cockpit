@@ -23,6 +23,7 @@
     const cockpit = require("cockpit");
     const React = require("react");
     const ReactDOM = require("react-dom");
+    const PropTypes = require("prop-types");
 
     require("page.css");
 
@@ -135,11 +136,11 @@
     }
 
     StatelessSelect.propTypes = {
-        selected: React.PropTypes.string,
-        onChange: React.PropTypes.func,
-        id: React.PropTypes.string,
-        enabled: React.PropTypes.bool,
-        extraClass: React.PropTypes.string,
+        selected: PropTypes.string,
+        onChange: PropTypes.func,
+        id: PropTypes.string,
+        enabled: PropTypes.bool,
+        extraClass: PropTypes.string,
     };
 
     class Select extends React.Component {
@@ -176,11 +177,11 @@
     }
 
     Select.propTypes = {
-        initial: React.PropTypes.string,
-        onChange: React.PropTypes.func,
-        id: React.PropTypes.string,
-        enabled: React.PropTypes.bool,
-        extraClass: React.PropTypes.string,
+        initial: PropTypes.string,
+        onChange: PropTypes.func,
+        id: PropTypes.string,
+        enabled: PropTypes.bool,
+        extraClass: PropTypes.string,
     };
 
     /* Entry class for the select component
@@ -218,7 +219,7 @@
     };
 
     SelectEntry.propTypes = {
-        data: React.PropTypes.string.isRequired,
+        data: PropTypes.string.isRequired,
     };
 
     module.exports = {

@@ -20,6 +20,7 @@
 "use strict";
 
 var React = require('react');
+var PropTypes = require("prop-types");
 
 require('./listing.less');
 
@@ -49,17 +50,17 @@ require('./listing.less');
  */
 var ListingRow = React.createClass({
     propTypes: {
-        rowId: React.PropTypes.string,
-        columns: React.PropTypes.array.isRequired,
-        tabRenderers: React.PropTypes.array,
-        navigateToItem: React.PropTypes.func,
-        listingDetail: React.PropTypes.node,
-        listingActions: React.PropTypes.arrayOf(React.PropTypes.node),
-        selectChanged: React.PropTypes.func,
-        selected: React.PropTypes.bool,
-        initiallyExpanded: React.PropTypes.bool,
-        expandChanged: React.PropTypes.func,
-        initiallyActiveTab: React.PropTypes.bool,
+        rowId: PropTypes.string,
+        columns: PropTypes.array.isRequired,
+        tabRenderers: PropTypes.array,
+        navigateToItem: PropTypes.func,
+        listingDetail: PropTypes.node,
+        listingActions: PropTypes.arrayOf(PropTypes.node),
+        selectChanged: PropTypes.func,
+        selected: PropTypes.bool,
+        initiallyExpanded: PropTypes.bool,
+        expandChanged: PropTypes.func,
+        initiallyActiveTab: PropTypes.bool,
     },
     getDefaultProps: function () {
         return {
@@ -283,16 +284,16 @@ var ListingRow = React.createClass({
  */
 var Listing = React.createClass({
     propTypes: {
-        title: React.PropTypes.string,
-        fullWidth: React.PropTypes.bool,
-        emptyCaption: React.PropTypes.string.isRequired,
-        columnTitles: React.PropTypes.arrayOf(
-            React.PropTypes.oneOfType([
-                React.PropTypes.string,
-                React.PropTypes.element,
+        title: PropTypes.string,
+        fullWidth: PropTypes.bool,
+        emptyCaption: PropTypes.string.isRequired,
+        columnTitles: PropTypes.arrayOf(
+            PropTypes.oneOfType([
+                PropTypes.string,
+                PropTypes.element,
             ])),
-        columnTitleClick: React.PropTypes.func,
-        actions: React.PropTypes.arrayOf(React.PropTypes.node)
+        columnTitleClick: PropTypes.func,
+        actions: PropTypes.arrayOf(PropTypes.node)
     },
     getDefaultProps: function () {
         return {

@@ -19,7 +19,8 @@
 
 // @flow
 
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import cockpit from 'cockpit';
 
 import type { Vm, PersistenVolume } from '../types.jsx';
