@@ -293,7 +293,7 @@ export const SelectOne = (tag, title, options, choices) => {
         tag: tag,
         title: title,
         options: options,
-        initial_value: choices[0].value,
+        initial_value: options.value || choices[0].value,
 
         render: (val, change) => {
             return (
