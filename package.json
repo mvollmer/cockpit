@@ -3,7 +3,7 @@
   "description": "...",
   "private": true,
   "dependencies": {
-    "@patternfly/react-console": "1.4.11",
+    "@patternfly/react-console": "1.5.4",
     "jquery": "3.2.1"
   }
 }
