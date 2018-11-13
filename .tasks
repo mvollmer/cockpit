@@ -30,6 +30,7 @@ if [ $chance -gt 9 ]; then
     bots/npm-trigger
     bots/naughty-trigger
     bots/learn-trigger
+    bots/flake-refresh
 fi
 
 # Any tasks related to issues
