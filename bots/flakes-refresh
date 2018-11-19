@@ -178,7 +178,7 @@ def run(context, verbose=False, **kwargs):
                 return True
         return False
 
-    def failure_description(f, logs):
+    def failure_description(name, f, logs):
         return ("%s%% on %s" % (int(f[0]*100), f[1]) +
                 "\n".join(get_failure_logs(logs, name, f[1])))
 
