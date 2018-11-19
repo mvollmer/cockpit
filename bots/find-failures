@@ -29,31 +29,39 @@ import json
 
 sys.dont_write_bytecode = True
 
-host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST")
-if not host:
-    raise RuntimeError("no learn host environment variable: $COCKPIT_LEARN_SERVICE_HOST")
-port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "8080")
-url = "http://{0}:{1}/active/".format(host, port)
+def slurp_failure_logs():
+    host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST")
+    if not host:
+        raise RuntimeError("no learn host environment variable: $COCKPIT_LEARN_SERVICE_HOST")
+    port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "8080")
+    url = "http://{0}:{1}/active/".format(host, port)
 
-def try_one(n, name):
-    items_url = url + str(n) + "/items.jsonl"
-    try:
-        req = urllib.request.Request(items_url)
-        with urllib.request.urlopen(req) as f:
-            for line in f.readlines():
-                try:
-                    record = json.loads(line.decode('utf-8'))
-                    if record["test"] == name:
-                        print(record["url"])
-                except ValueError as ex:
-                    sys.stderr.write("{0}: {1}\n".format(url, ex))
-    except (ConnectionResetError, urllib.error.URLError, socket.gaierror) as ex:
-        sys.stderr.write("{0}: {1}\n".format(items_url, ex))
-        return False
-    return True
+    logs = { }
 
-name = sys.argv[1]
-print("Looking for %s" % name)
-n = 0
-while try_one(n, name):
-    n = n + 1
+    def try_one(url, n, logs):
+        items_url = url + str(n) + "/items.jsonl"
+        try:
+            req = urllib.request.Request(items_url)
+            with urllib.request.urlopen(req) as f:
+                for line in f.readlines():
+                    try:
+                        record = json.loads(line.decode('utf-8'))
+                        urls = logs.get(record["test"], [ ])
+                        urls.append(record["url"])
+                    except ValueError as ex:
+                        sys.stderr.write("{0}: {1}\n".format(url, ex))
+        except (ConnectionResetError, urllib.error.URLError, socket.gaierror) as ex:
+            print(ex.code)
+            sys.stderr.write("{0}: {1}\n".format(items_url, ex))
+            return False
+        return True
+
+    n = 0
+    while try_one(url, n, logs):
+        n = n + 1
+
+    return logs
+
+failure_logs = slurp_failure_logs()
+
+print(failure_logs[sys.argv[1]])
