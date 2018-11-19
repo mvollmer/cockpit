@@ -58,6 +58,48 @@ def count(record, field, only):
         return count
     return 0
 
+# For linking flakes to test logs
+
+def slurp_one(url, n, logs):
+    items_url = url + str(n) + "/items.jsonl"
+    try:
+        req = urllib.request.Request(items_url)
+        with urllib.request.urlopen(req) as f:
+            for line in f.readlines():
+                try:
+                    record = json.loads(line.decode('utf-8'))
+                    urls = logs.get(record["test"], [ ])
+                    logs[record["test"]] = urls
+                    urls.append(record["url"])
+                except ValueError as ex:
+                    sys.stderr.write("{0}: {1}\n".format(url, ex))
+    except (ConnectionResetError, urllib.error.URLError, socket.gaierror) as ex:
+        if ex.code != 404:
+            sys.stderr.write("{0}: {1}\n".format(items_url, ex))
+        return False
+    return True
+
+def slurp_failure_logs():
+    host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST")
+    if not host:
+        raise RuntimeError("no learn host environment variable: $COCKPIT_LEARN_SERVICE_HOST")
+    port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "8080")
+    url = "http://{0}:{1}/active/".format(host, port)
+
+    logs = { }
+
+    n = 0
+    while slurp_one(url, n, logs):
+        n = n + 1
+
+    return logs
+
+def get_failure_logs(failure_logs, name, context):
+    match = context.replace("/", "-")
+    return sorted(filter(lambda url: match in url, failure_logs[name]), reverse=True)[0:10]
+
+# Main
+
 def run(context, verbose=False, **kwargs):
     api = task.github.GitHub()
 
@@ -77,6 +119,8 @@ def run(context, verbose=False, **kwargs):
     url = "http://{0}:{1}/active/statistics.jsonl".format(host, port)
 
     statistics = [ ]
+
+    failure_logs = slurp_failure_logs()
 
     # Retrieve the URL
     try:
@@ -134,6 +178,10 @@ def run(context, verbose=False, **kwargs):
                 return True
         return False
 
+    def failure_description(f, logs):
+        return ("%s%% on %s" % (int(f[0]*100), f[1]) +
+                "\n".join(get_failure_logs(logs, f[0], f[1])))
+
     scores.sort(reverse=True)
     for score, name, failures in scores:
         if find_in_issues(open_issues, name) or find_in_issues(closed_issues, name):
@@ -144,11 +192,12 @@ def run(context, verbose=False, **kwargs):
         source = "<details><summary>Source material</summary>\n\n```json\n%s\n```\n</details>\n" % "\n".join(map(lambda f: json.dumps(f[2], indent=2), failures))
         data = {
             "title": "%s is flaky" % name,
-            "body": ("\n".join(map(lambda f: "%s%% on %s" % (int(f[0]*100), f[1]), failures)) +
+            "body": ("\n".join(map(lambda f: failure_description(f, failure_logs), failures)) +
                      "\n\n" + source),
             "labels": [ "flake" ]
         }
-        api.post("issues", data)
+        print(data)
+        # api.post("issues", data)
         create_count -= 1
         if create_count == 0:
             break
