@@ -51,6 +51,5 @@ def try_one(n):
         return False
 
 n = 0
-while True:
-    try_one(n)
+while try_one(n):
     n = n + 1
