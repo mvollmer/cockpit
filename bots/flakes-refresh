@@ -202,7 +202,8 @@ def run(context, verbose=False, **kwargs):
                      "\n\n" + source),
             "labels": [ "flake" ]
         }
-        api.post("issues", data)
+        print(data)
+        # api.post("issues", data)
         create_count -= 1
         if create_count == 0:
             break
