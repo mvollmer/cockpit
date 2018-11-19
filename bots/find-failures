@@ -69,4 +69,5 @@ def get_failure_logs(name, context):
     match = context.replace("/", "-")
     return sorted(filter(lambda url: match in url, failure_logs[name]), reverse=True)[0:10]
 
-print(get_failure_logs(sys.argv[1], sys.argv[2]))
+for url in get_failure_logs(sys.argv[1], sys.argv[2]):
+    print(url)
