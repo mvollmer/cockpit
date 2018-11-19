@@ -43,8 +43,8 @@ def slurp_one(url, n, logs):
                 except ValueError as ex:
                     sys.stderr.write("{0}: {1}\n".format(url, ex))
     except (ConnectionResetError, urllib.error.URLError, socket.gaierror) as ex:
-        print(ex.code)
-        sys.stderr.write("{0}: {1}\n".format(items_url, ex))
+        if ex.code != 404:
+            sys.stderr.write("{0}: {1}\n".format(items_url, ex))
         return False
     return True
 
