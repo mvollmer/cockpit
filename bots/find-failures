@@ -49,6 +49,7 @@ def try_one(n):
     except (ConnectionResetError, urllib.error.URLError, socket.gaierror) as ex:
         sys.stderr.write("{0}: {1}\n".format(url, ex))
         return False
+    return True
 
 n = 0
 while try_one(n):
