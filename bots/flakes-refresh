@@ -178,9 +178,14 @@ def run(context, verbose=False, **kwargs):
                 return True
         return False
 
+    def url_desc(url):
+        m = re.search("pull-[0-9]+", url)
+        return m.group(0) if m else url
+
     def failure_description(name, f, logs):
         return ("%s%% on %s\n" % (int(f[0]*100), f[1]) +
-                "".join(map(lambda url: " - " + url + "\n", get_failure_logs(logs, name, f[1]))))
+                "".join(map(lambda url: " - [%s](%s)\n" % (url_desc(url), url),
+                            get_failure_logs(logs, name, f[1]))))
 
     scores.sort(reverse=True)
     for score, name, failures in scores:
