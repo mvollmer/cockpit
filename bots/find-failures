@@ -67,6 +67,6 @@ failure_logs = slurp_failure_logs()
 
 def get_failure_logs(name, context):
     match = context.replace("/", "-")
-    return failure_logs[name].filter(lambda url: match in url).sort()
+    return filter(lambda url: match in url, failure_logs[name]).sort()
 
 print(get_failure_logs(sys.argv[1], sys.argv[2]))
