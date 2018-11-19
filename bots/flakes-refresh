@@ -25,6 +25,7 @@ import os
 import urllib
 import socket
 import json
+import re
 
 sys.dont_write_bytecode = True
 
