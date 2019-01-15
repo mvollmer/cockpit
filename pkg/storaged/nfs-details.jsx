@@ -23,7 +23,7 @@ import cockpit from "cockpit";
 import React from "react";
 import moment from "moment";
 
-import { dialog_open, TeardownMessage, TextInput, TextInputChecked, ComboBox, CheckBox } from "./dialog.jsx";
+import { dialog_open, TeardownMessage, TextInput, ComboBox, FieldSet } from "./dialog.jsx";
 import * as format from "./format-dialog.jsx";
 import { format_fsys_usage } from "./utils.js";
 
@@ -99,12 +99,12 @@ export function nfs_fstab_dialog(client, entry) {
 
     function mounting_options(vals) {
         var opts = [ ];
-        if (!vals.mount_auto)
+        if (!vals.mount_options.auto)
             opts.push("noauto");
-        if (vals.mount_ro)
+        if (vals.mount_options.ro)
             opts.push("ro");
-        if (vals.mount_extra_options !== false)
-            opts = opts.concat(format.parse_options(vals.mount_extra_options));
+        if (vals.mount_options.extra !== false)
+            opts = opts.concat(format.parse_options(vals.mount_options.extra));
         return format.unparse_options(opts);
     }
 
@@ -157,7 +157,7 @@ export function nfs_fstab_dialog(client, entry) {
                                                        return _("Path on server must start with \"/\".");
                                                },
                                                disabled: busy,
-                                               choices: [ ]
+                                               choices: [ ],
                                              }),
                                     TextInput("dir", _("Local Mount Point"),
                                               { value: entry ? entry.fields[1] : "",
@@ -169,14 +169,19 @@ export function nfs_fstab_dialog(client, entry) {
                                                 },
                                                 disabled: busy
                                               }),
-                                    CheckBox("mount_auto", _("Mount at boot"),
-                                             { row_title: _("Mount Options"),
-                                               value: opt_auto
-                                             }),
-                                    CheckBox("mount_ro", _("Mount read only"),
-                                             { value: opt_ro }),
-                                    TextInputChecked("mount_extra_options", _("Custom mount option"),
-                                                     { value: extra_options === "" ? false : extra_options })
+                                    FieldSet("mount_options", _("Mount Options"),
+                                             { fields: [
+                                                 { title: _("Mount at boot"), tag: "auto", type: "checkbox" },
+                                                 { title: _("Mount read only"), tag: "ro", type: "checkbox" },
+                                                 { title: _("Mount extra options"), tag: "extra", type: "checkboxWithInput" },
+                                             ],
+                                               value: {
+                                                   auto: opt_auto,
+                                                   ro: opt_ro,
+                                                   extra: extra_options === "" ? false : extra_options
+                                               }
+                                             },
+                                    ),
                                 ],
                                 update: (dlg, vals, trigger) => {
                                     if (trigger === "server")

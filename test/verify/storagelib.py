@@ -199,7 +199,7 @@ class StorageCase(MachineCase):
             if self.browser.is_present(sel + " input[type=checkbox]:not(:checked)"):
                 return False
             else:
-                return self.browser.val(sel + " input[type=text]")
+                return self.browser.val(sel + "+ input[type=text]")
         elif ftype == "select":
             return self.browser.attr(sel, "data-value")
         else:
@@ -229,7 +229,7 @@ class StorageCase(MachineCase):
                 self.browser.set_checked(sel + " input[type=checkbox]", False)
             else:
                 self.browser.set_checked(sel + " input[type=checkbox]", True)
-                self.browser.set_input_text(sel + " input[type=text]", val)
+                self.browser.set_input_text(sel + "+ input[type=text]", val)
         elif ftype == "combobox":
             self.browser.set_input_text(sel + " input[type=text]", val)
         else:

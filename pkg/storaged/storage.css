@@ -240,12 +240,6 @@
     padding-right: 0.75em;
 }
 
-.form-table-ct .checkbox,
-.form-table-ct .radio {
-    margin-top: 0px;
-    margin-bottom: 0px;
-}
-
 .arming-zone .needs-arming {
     display: none;
 }
@@ -621,7 +615,7 @@ td.storage-action {
     padding-right: 10px;
 }
 
-.form-table-ct .combobox-container .input-group {
+.combobox-container .input-group {
     width: 100%;
 }
 
@@ -735,12 +729,6 @@ td.storage-action {
 
 .modal-dialog .slot-warning {
     color: #a30000; /* pf-red-200 */
-}
-
-/* Reset line-height for help texts inside form-table-ct
- */
-.form-table-ct td .help-block {
-    line-height: 1.666666;
 }
 
 .modal-dialog .key-source .radio-horizontal {
