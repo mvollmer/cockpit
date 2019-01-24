@@ -617,7 +617,7 @@ export const SelectSpaces = (tag, title, options) => {
                 return <span className="text-danger">{options.empty_warning}</span>;
 
             return (
-                <ul className="list-group available-disks-group dialog-list-ct"
+                <ul className="list-group dialog-list-ct"
                     data-field={tag} data-field-type="select-spaces">
                     { options.spaces.map(spc => {
                         let selected = (val.indexOf(spc) >= 0);
@@ -660,7 +660,7 @@ export const SelectSpace = (tag, title, options) => {
                 return <span className="text-danger">{options.empty_warning}</span>;
 
             return (
-                <ul className="list-group available-disks-group dialog-list-ct"
+                <ul className="list-group dialog-list-ct"
                     data-field={tag} data-field-type="select-spaces">
                     { options.spaces.map(spc => {
                         const on_change = (event) => {
@@ -740,6 +740,7 @@ export const FieldSet = (tag, title, options) => {
                                               tag={ftag}
                                               val={fval}
                                               title={field.title}
+                                              options={options}
                                               update_function={fchange} />;
                 else if (field.type == "checkboxWithInput")
                     return <TextInputCheckedComponent key={`checkbox-with-text-${ftag}`}

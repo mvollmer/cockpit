@@ -311,33 +311,27 @@ export class NFSDetails extends React.Component {
                     </span>
                 </div>
                 <div className="panel-body">
-                    <table className="info-table-ct">
-                        <tbody>
-                            <tr>
-                                <td>{_("Server")}</td>
-                                <td>{entry.fields[0]}</td>
-                            </tr>
-                            <tr>
-                                <td>{_("Mount Point")}</td>
-                                <td>{entry.fields[1]}</td>
-                            </tr>
-                            <tr>
-                                <td>{_("Size")}</td>
-                                <td>
-                                    { entry.mounted
-                                        ? <StorageUsageBar stats={fsys_size} critical={0.95} />
-                                        : _("--")
-                                    }
-                                </td>
-                                <td>
-                                    { entry.mounted && fsys_size
-                                        ? format_fsys_usage(fsys_size[0], fsys_size[1])
-                                        : null
-                                    }
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div className="ct-form-layout">
+                        <label className="control-label">{_("Server")}</label>
+                        <div>{entry.fields[0]}</div>
+
+                        <label className="control-label">{_("Mount Point")}</label>
+                        <div>{entry.fields[1]}</div>
+
+                        <label className="control-label">{_("Size")}</label>
+                        <div className="ct-form-layout-split">
+                            { entry.mounted
+                                ? <StorageUsageBar stats={fsys_size} critical={0.95} />
+                                : _("--")
+                            }
+                        </div>
+                        <div className="ct-form-layout-split">
+                            { entry.mounted && fsys_size
+                                ? format_fsys_usage(fsys_size[0], fsys_size[1])
+                                : null
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         );

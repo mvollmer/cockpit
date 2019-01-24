@@ -126,7 +126,7 @@ class TestStorage(StorageCase):
         b.wait_visible("#storage-detail")
 
         def wait_info_field_value(name, value):
-            return b.wait_text('#detail-header tr:contains("%s") td:nth-child(2)' % name, value)
+            return b.wait_text('#detail-header label:contains("%s") + div' % name, value)
 
         wait_info_field_value("Serial Number", "MYDISK")
 
@@ -174,31 +174,31 @@ class TestStorage(StorageCase):
         def wait_not_checked(field):
             b.wait_present(self.dialog_field(field) + ":not(:checked)")
 
-        wait_checked("crypto_options_auto")
-        wait_checked("mount_auto")
-        wait_not_checked("crypto_options_ro")
-        wait_not_checked("mount_ro")
+        wait_checked("crypto_options.auto")
+        wait_checked("mount_options.auto")
+        wait_not_checked("crypto_options.ro")
+        wait_not_checked("mount_options.ro")
 
         # Uncheck crypto auto.  This gets propagated to mount auto.
-        self.dialog_set_val("crypto_options_auto", False)
-        wait_not_checked("mount_auto")
+        self.dialog_set_val("crypto_options.auto", False)
+        wait_not_checked("mount_options.auto")
 
         # Check crypto ro.  This gets propagated to mount ro.
-        self.dialog_set_val("crypto_options_ro", True)
-        wait_checked("mount_ro")
+        self.dialog_set_val("crypto_options.ro", True)
+        wait_checked("mount_options.ro")
 
         # Check mount auto.  This gets propagated to crypto auto.
-        self.dialog_set_val("mount_auto", True)
-        wait_checked("crypto_options_auto")
+        self.dialog_set_val("mount_options.auto", True)
+        wait_checked("crypto_options.auto")
 
         # Uncheck mount ro.  This gets propagated to crypto ro.
-        self.dialog_set_val("mount_ro", False)
-        wait_not_checked("crypto_options_ro")
+        self.dialog_set_val("mount_options.ro", False)
+        wait_not_checked("crypto_options.ro")
 
         # Uncheck crypto auto and check crypto_ro again to verify that
         # they have the expected effect.
-        self.dialog_set_val("crypto_options_auto", False)
-        self.dialog_set_val("crypto_options_ro", True)
+        self.dialog_set_val("crypto_options.auto", False)
+        self.dialog_set_val("crypto_options.ro", True)
 
         # Set extra options.
         self.dialog_set_val("crypto_options.extra", "foo")
