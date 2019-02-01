@@ -105,9 +105,9 @@ class StorageCase(MachineCase):
         tab_btn = self.content_row_tbody(row_index) + " .listing-ct-head li:nth-child(%d) a" % tab_index
         tab = self.content_row_tbody(row_index) + " .listing-ct-body:nth-child(%d)" % (tab_index + 1)
         self.content_row_expand(row_index)
-        self.browser.wait_present(tab_btn)
+        self.browser.wait_visible(tab_btn)
         self.browser.click(tab_btn)
-        self.browser.wait_present(tab)
+        self.browser.wait_visible(tab)
         return tab
 
     def content_tab_action(self, row_index, tab_index, title):
