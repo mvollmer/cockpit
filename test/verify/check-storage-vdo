@@ -39,6 +39,9 @@ class TestStorage(StorageCase):
         # HACK - https://bugzilla.redhat.com/show_bug.cgi?id=1616247
         m.execute("depmod")
 
+        # HACK - https://bugzilla.redhat.com/show_bug.cgi?id=1684249
+        m.execute("echo 'devices/scan_lvs = 1' >>/etc/lvm/lvm.conf")
+
         b.wait_visible("#vdos")
 
         # Make a logical volume for use as the backing device.
