@@ -59,6 +59,10 @@ class StorageCase(MachineCase):
 
         self.browser.wait(step)
 
+    def devices_dropdown(self, title):
+        self.browser.click("#devices .dropdown .dropdown-toggle")
+        self.browser.click("#devices .dropdown a:contains('%s')" % title)
+
     # Content
 
     def content_row_tbody(self, index):
