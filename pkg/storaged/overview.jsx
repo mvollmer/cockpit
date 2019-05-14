@@ -91,38 +91,32 @@ export class OverviewSidePanelRow extends React.Component {
             return this.props.go();
         };
 
-        let job_spinner = (client.path_jobs[job_path]
-            ? <span className="spinner spinner-sm" />
-            : null);
+        let decoration = null;
+        if (this.props.actions)
+            decoration = this.props.actions;
+        else if (client.path_jobs[job_path])
+            decoration = <div className="spinner spinner-sm" />;
+        else if (client.path_warnings[job_path])
+            decoration = <div className="pficon pficon-warning-triangle-o" />;
 
-        let warning_triangle = (client.path_warnings[job_path]
-            ? <span className="pficon pficon-warning-triangle-o" />
-            : null);
+        let stats = null;
+        if (this.props.stats)
+            stats = <div>R: {fmt_rate(this.props.stats[0])}&emsp;W: {fmt_rate(this.props.stats[1])}</div>;
+
+        let devname = null;
+        if (this.props.devname)
+            devname = <div className="pull-right">{this.props.devname}</div>;
 
         return (
             <tr data-testkey={this.props.testkey}
                 onClick={this.props.go ? go : null} className={this.props.highlight ? "highlight-ct" : ""}>
-                <td className="storage-icon">
-                    { this.props.kind !== false
-                        ? <img src={"images/storage-" + (this.props.kind || "disk") + ".png"} />
-                        : null
-                    }
-                </td>
-                <td className="row storage-disk-info">
-                    <h3 className="storage-disk-name">{this.props.name}</h3>
-                    <div className="storage-disk-size">{this.props.detail}</div>
-                    { this.props.stats
-                        ? <div className="storage-disk-rates">
-                            <div className="storage-disk-rate-read"><abbr title="read">R</abbr>: {fmt_rate(this.props.stats[0])}</div>
-                            { "\n" }
-                            { "\n" }
-                            <div className="storage-disk-rate-write"><abbr title="write">W</abbr>: {fmt_rate(this.props.stats[1])}</div>
-                        </div>
-                        : null
-                    }
-                </td>
-                <td className="storage-icon storage-disk-extended">
-                    { this.props.actions || job_spinner || warning_triangle }
+                <td className={"sidepanel-row " + (this.props.highlight ? "highlight-ct" : "")}>
+                    <div>
+                        <div><strong>{this.props.name}</strong></div>
+                        <div>{devname} {this.props.detail}</div>
+                        {stats}
+                    </div>
+                    {decoration}
                 </td>
             </tr>
         );

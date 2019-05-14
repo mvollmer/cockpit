@@ -732,3 +732,35 @@ td.storage-action {
 .ct-form-box {
     margin-bottom: 1em;
 }
+
+/* Overview side panels */
+
+#storage .storage-sidebar .table {
+    table-layout: fixed;
+}
+
+.sidepanel-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.sidepanel-row :nth-child(1) {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidepanel-row :nth-child(2) {
+    align-self: center;
+    white-space: nowrap;
+}
+
+.sidepanel-row .spinner {
+    display: inline-block;
+}
+
+.sidepanel-row .rate {
+    width: 15c;
+    margin-right: 5px;
+}
