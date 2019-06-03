@@ -13,7 +13,7 @@
 
 .axis path, .axis line {
     fill: none;
-    stroke: #000;
+    stroke: var(--color-text);
     shape-rendering: crispEdges;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .tick text {
-    fill: #545454;
+    fill: var(--color-gray-9);
     font-size: 12px;
 }
 
@@ -79,7 +79,7 @@ path.line.highlight {
 }
 
 .dashboard-list.editable tr:hover td {
-    background-color: #FFF;
+    background-color: var(--color-bg);
     cursor: auto;
 }
 
@@ -164,7 +164,7 @@ input.adjust-replica {
 }
 
 .app-name {
-    color: #333333;
+    color: var(--color-gray-11);
     margin-top: 10px;
     text-align: left;
 }
@@ -180,13 +180,13 @@ input.adjust-replica {
 
 .console-ct pre {
     background-color: #fcfcfc;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--color-light-gray);
 }
 
 pre.dialog {
     height: 200px;
     width: 500px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--color-light-gray);
 }
 
 .action-menu {

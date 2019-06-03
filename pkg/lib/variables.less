@@ -1,7 +1,7 @@
 @import (less) "../../node_modules/bootstrap/less/variables.less";
 @import (less) "../../node_modules/patternfly/dist/less/variables.less";
 
-@metadata-color: #888;
+@metadata-color: var(--color-subtle-copy);
 
 @listing-ct-hover: #edf8ff;
 @listing-ct-active: #65bedf;
@@ -11,8 +11,8 @@
 @listing-ct-open-width: 3px;
 @listing-ct-metadata: @metadata-color;
 @listing-ct-warning-color: #fbc7c7;
-@listing-ct-border: #ccc;
-@listing-ct-border-light: #eee;
+@listing-ct-border: var(--color-light-gray);
+@listing-ct-border-light: var(--color-gray-2);
 @listing-ct-border-maybe: #ddd;
 
 @screen-lg-max: (@screen-xlg-min - 1);

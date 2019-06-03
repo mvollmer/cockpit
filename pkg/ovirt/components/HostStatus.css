@@ -10,6 +10,6 @@
 
 .ovirt-host-status-label {
     text-align: right;
-    color: #888888;
+    color: var(--color-subtle-copy);
     font-weight: 600;
 }

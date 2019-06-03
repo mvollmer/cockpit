@@ -7,13 +7,13 @@
 }
 
 .nav-item-pf-header {
-    color: #fff;
+    color: var(--color-gray-1);
     font-size: 16px;
     margin: 18px 20px 10px 20px;
 }
 
 .area-ct-subnav {
-    background: #393f44;
+    background: var(--color-alert-success-text);
     border-right: 1px solid #292e34;
     -webkit-flex: none;
     flex: none;
@@ -50,7 +50,7 @@
             z-index: 3;
 
             a {
-                color: #fff;
+                color: var(--color-gray-1);
             }
         }
 
@@ -59,7 +59,7 @@
         }
 
         &.active {
-            background: #4d5258;
+            background: var(--color-gray-11);
 
             a {
                 font-weight: 600;
@@ -97,13 +97,13 @@
     }
 
     .dropdown-toggle:after {
-        background: linear-gradient(to bottom, #393f44, rgba(57, 63, 68, 0));
+        background: linear-gradient(to bottom, var(--color-alert-success-text)f44, rgba(57, 63, 68, 0));
         margin-top: 1px;
         bottom: -2rem; // Move down by the same size as the height
     }
 
     &:after {
-        background: linear-gradient(to top, #393f44, rgba(57, 63, 68, 0));
+        background: linear-gradient(to top, var(--color-alert-success-text)f44, rgba(57, 63, 68, 0));
         bottom: 0;
         height: 4rem;
     }
@@ -114,7 +114,7 @@
         display: block;
 
         &:not(.active) .fa {
-            color: #72767b !important;
+            color: var(--color-subtle-copy) !important;
         }
     }
 }
@@ -137,7 +137,7 @@
         right: 0;
         bottom: 0;
         height: 1px;
-        background: #4d5258;
+        background: var(--color-gray-11);
     }
 }
 
@@ -530,7 +530,7 @@
                 z-index: 2;
 
                 a {
-                    background: #393f44 !important;
+                    background: var(--color-alert-success-text)f44 !important;
 
                     &:before {
                         bottom: 0 !important;
@@ -647,7 +647,7 @@
                 position: absolute;
                 bottom: 0.25rem;
                 right: -1.5rem;
-                color: #fff;
+                color: var(--color-gray-1);
                 opacity: 0.5;
                 transition: all 300ms;
             }

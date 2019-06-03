@@ -29,13 +29,13 @@
 }
 
 .panel-title > a {
-    color: #0088ceff; /* pf-blue-400 */
+    color: var(--color-link);
     display: inline-block;
 }
 
 .panel-title > a:hover,
 .panel-title > a:focus {
-    color: #00659c; /* pf-blue-500 */
+    color: var(--alert-info-text);
 }
 
 /* Allow children in the title to wrap */
@@ -80,8 +80,8 @@
     .panel {
         /* Background fade */
         --hi-color: #d1d1d1;
-        --hi-color2: #eee;
-        --bg-color: #fff;
+        --hi-color2: var(--color-gray-2);
+        --bg-color: var(--color-gray-1);
         --hi-width: 20px;
         --hi-width3: calc(var(--hi-width) * 3);
         --transparent: rgba(255,255,255,0); /* WebKit needs white transparent */
@@ -145,7 +145,7 @@
 /* Override the heavy patternfly headers */
 .table > thead {
     background-image: none;
-    background-color: #fff;
+    background-color: var(--color-gray-1);
 }
 
 /* Make things line up */
@@ -229,7 +229,7 @@
 .form-table-ct td.header {
     font-weight: bold;
     text-align: left;
-    color: #4D5258;
+    color: var(--color-gray-11);
     padding: 20px 0 10px 0;
 }
 

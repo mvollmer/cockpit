@@ -16,11 +16,11 @@ html, body {
 }
 
 .black-theme {
-    background-color: #000000;
+    background-color: var(--color-text);
 }
 
 .dark-theme {
-    background-color: #002b36;
+    background-color: var(--color-dark-blue);
 }
 
 .light-theme {
@@ -28,7 +28,7 @@ html, body {
 }
 
 .white-theme {
-    background-color: #ffffff;
+    background-color: var(--color-bg);
 }
 
 #terminal {
