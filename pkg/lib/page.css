@@ -435,6 +435,8 @@ input[type=number] {
     --color-cta-accent         : #0066cc;
     --color-cta-accent-hover   : #0066cc;
 
+    --color-button-text           : #ffffff;
+    --color-button-text-dark      : #151515;
     --color-button-default        : #151515;
     --color-button-default-hover  : #151515;
     --color-button-primary        : #0066cc;
