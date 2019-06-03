@@ -297,8 +297,9 @@ input[type=number] {
     --color-ct-light-red-1: #f8cccc;
     --color-ct-light-red-2: #f8acac;
     --color-ct-light-red-3: #f98383;
-    --color-ct-brick-gold: #ffa763;
-    --color-ct-brick-red: #a53131;
+    --color-ct-brick-gold : #ffa763;
+    --color-ct-brick-red  : #a53131;
+    --color-ct-nav-sub    : #393f44;
 
     /* Red Hat Digital Design System 2019 named colors */
     --color-red-hat-red : #ee0000;
