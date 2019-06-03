@@ -293,6 +293,78 @@ input[type=number] {
 }
 
 :root {
+    /* Red Hat Digital Design System 2019 named colors */
+    --color-red-hat-red : #ee0000;
+    --color-red-1       : #cc0000;
+    --color-red-2       : #a30000;
+    --color-red-3       : #820000;
+    --color-dark-red-4  : #5a0000;
+    --color-dark-red-5  : #460000;
+    --color-dark-red-6  : #320000;
+    --color-black       : #000000;
+    --color-white       : #ffffff;
+    --color-dark-blue   : #004153;
+    --color-light-blue  : #a3dbe8;
+    --color-dark-gray   : #4c4c4c;
+    --color-light-gray  : #dcdcdc;
+    --color-purple      : #3b0083;
+    --color-gold        : #f0ab00;
+    --color-teal        : #007987;
+    --color-blue        : #00b9e4;
+    --color-green       : #92d400;
+    --color-storage     : #ec7a08;
+    --color-infra       : #0088ce;
+    --color-app-dev     : #3f9c35;
+    --color-light-blue-1: #e8f6f9;
+    --color-light-blue-2: #d1edf4;
+    --color-light-blue-3: #b6e2ec;
+    --color-dark-blue-1 : #80a0a9;
+    --color-dark-blue-2 : #4e7a86;
+    --color-dark-blue-3 : #1b5764;
+    --color-blue-1      : #d9f5fb;
+    --color-blue-2      : #c0edf7;
+    --color-blue-3      : #9ae4f3;
+    --color-blue-4      : #82ddf1;
+    --color-blue-5      : #68d6ee;
+    --color-blue-6      : #38c8e8;
+    --color-teal-1      : #d9ebed;
+    --color-teal-2      : #cbe4f1;
+    --color-teal-3      : #b3d7db;
+    --color-teal-4      : #9acacf;
+    --color-teal-5      : #68afb6;
+    --color-teal-6      : #36959e;
+    --color-green-1     : #eaf5cd;
+    --color-green-2     : #dff1b4;
+    --color-green-3     : #d4ec9c;
+    --color-green-4     : #cae883;
+    --color-green-5     : #b5df56;
+    --color-green-6     : #aadb40;
+    --color-gold-1      : #fcedcd;
+    --color-gold-2      : #fae5b4;
+    --color-gold-3      : #f9dc9c;
+    --color-gold-4      : #f8d384;
+    --color-gold-5      : #f5c255;
+    --color-gold-6      : #f2b22d;
+    --color-purple-1    : #e2daec;
+    --color-purple-2    : #cdc0df;
+    --color-purple-3    : #b09bcc;
+    --color-purple-4    : #9c82c0;
+    --color-purple-5    : #8869b3;
+    --color-purple-6    : #7551a6;
+    --color-gray-1      : #f0f0f0;
+    --color-gray-2      : #e6e6e6;
+    --color-gray-3      : #d2d2d2;
+    --color-gray-4      : #bebebe;
+    --color-gray-5      : #aaaaaa;
+    --color-gray-6      : #969696;
+    --color-gray-7      : #828282;
+    --color-gray-8      : #6e6e6e;
+    --color-gray-9      : #5a5a5a;
+    --color-gray-10     : #464646;
+    --color-gray-11     : #323232;
+    --color-gray-12     : #1e1e1e;
+
+    /* Semantic colors */
     --color-link             : #0066cc;
     --color-link-visited     : #0066cc;
     --color-link-hover       : #004080;
