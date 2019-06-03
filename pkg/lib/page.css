@@ -291,3 +291,131 @@ input[type=number] {
 .ct-select option {
     background-color: #fff;
 }
+
+:root {
+    --color-link: #0066cc;
+    --color-link-visited: #0066cc;
+    --color-link-hover: #004080;
+    --color-link-focus: #004080;
+    --color-link-dark: #73bcf7;
+    --color-link-visited-dark: #73bcf7;
+    --color-link-hover-dark: #2b9af3;
+    --color-link-focus-dark: #2b9af3;
+
+    --color-heading: #151515;
+    --color-heading-dark: #ffffff;
+    --color-body-copy: #151515;
+    --color-body-copy-dark: #cccccc;
+    --color-body-copy-dark-color: rbga(255,255,255,0.8);
+    --color-subtle-copy: #72767b;
+    --color-subtle-text-dark: #cccccc;
+
+    --color-alert-success-bg: #ffffff;
+    --color-alert-sucess-icon: #92d400;
+    --color-alert-sucess-border: #92d400;
+    --color-alert-success-text: #486b00;
+    --color-alert-info-bg: #ffffff;
+    --color-alert-info-icon: #39a5dc;
+    --color-alert-info-border: #39a5dc;
+    --color-alert-info-text: #004368;
+    --color-alert-warning-bg: #ffffff;
+    --color-alert-warning-icon: #f0ab00;
+    --color-alert-warning-border: #f0ab00;
+    --color-alert-warning-text: #795600;
+    --color-alert-danger-bg: #ffffff;
+    --color-alert-danger-icon: #c9190b;
+    --color-alert-danger-border: #c9190b;
+    --color-alert-danger-text: #7d1007;
+
+    --color-low-severity-background: #ffffff;
+    --color-low-severity-icon: #72767b;
+    --color-low-severity-border: #72767b;
+    --color-low-severity-text: #151515;
+    --color-moderate-severity-background: #ffffff;
+    --color-moderate-severity-icon: #f0ab00;
+    --color-moderate-severity-border: #f0ab00;
+    --color-moderate-severity-text: #795600;
+    --color-important-severity-background: #ffffff;
+    --color-important-severity-icon: #df7409;
+    --color-important-severity-border: #df7409;
+    --color-important-severity-text: #8f4c09;
+    --color-critical-severity-background: #ffffff;
+    --color-critical-severity-icon: #c9190b;
+    --color-critical-severity-border: #c9190b;
+    --color-critical-severity-text: #7d1007;
+
+    --color-cta-default: #0066cc;
+    --color-cta-default-hover: #004080;
+    --color-cta-primary: #ee0000;
+    --color-cta-primary-hover: #d40000;
+    --color-cta-secondary: #151515;
+    --color-cta-secondary-hover: #151515;
+    --color-cta-accent: #0066cc;
+    --color-cta-accent-hover: #0066cc;
+
+    --color-button-default: #151515;
+    --color-button-default-hover: #151515;
+    --color-button-primary: #0066cc;
+    --color-button-primary-hover: #004080;
+    --color-button-secondary: #0066cc;
+    --color-button-secondary-hover: #0066cc;
+
+    --color-button-disabled: #d2d2d2;
+    --color-button-disabled-text: #72767b;
+
+    --color-border-lighter: #d2d2d2;
+    --color-border-default: #d2d2d2;
+    --color-border-darker: #d2d2d2;
+
+    --color-potential-band-color: #f0f0f0;
+    --color-ui-hover-bg: #ededed;
+    --color-ui-alternate-row-bg: #ededed;
+
+    --color-label: #151515;
+    --color-form-field-bottom-border: #8b8d8f;
+    --color-form-field-border: #0066cc;
+    --color-form-field-focus: #0066cc;
+    --color-form-field-bg: #ffffff;
+    --color-form-field-text: #151515;
+    --color-form-field-error-border: #a30000;
+    --color-form-field-error-bg: #ffffff;
+    --color-form-field-error-text: #a30000;
+    --color-form-field-active-border: #0066cc;
+    --color-select-dropdown-bottom-border: #8b8d8f;
+    --color-select-dropdown-bg: #ffffff;
+    --color-select-dropdown-arrow-color: #151515;
+    --color-select-dropdown-text-color: #151515;
+
+    --color-breadcrumb-link: #0066cc;
+    --color-breadcrumb-link-hover: #004080;
+    --color-breadcrumb-text: #151515;
+
+    --color-pagination-current-text: #393f44;
+
+    --color-chips: #72767b;
+    --color-chips-secondary: #72767b;
+    --color-chips-hover: #72767b;
+
+    --color-tab-link: #007bba;
+    --color-tab-text: #007bba;
+    --color-tab-indicator-color: #007bba;
+
+    --color-tab-bg: #ffffff;
+    --color-tab-border: #ededed;
+    --color-tab-selected-text: #007bba;
+    --color-tab-selected-indicator-color: #007bba;
+    --color-tab-selected-bg: #ffffff;
+    --color-tab-selected-border: #ededed;
+    --color-tooltips-bg: #ffffff;
+    --color-tooltips-text: #151515;
+    --color-modal-bg: #ffffff;
+    --color-modal-header-bg: #151515;
+
+    --color-table-header-bg: #ffffff;
+    --color-table-header-text: #393f44;
+    --color-table-header-border: #ededed;
+    --color-table-header-border-bottom: #ededed;
+    --color-table-border: #ededed;
+    --color-table-border-bottom: #ededed;
+    --color-table-text: #393f44;
+}
