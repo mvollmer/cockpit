@@ -193,11 +193,11 @@ body {
 }
 
 .server-graph-legend .cpu-io-wait i {
-    color: #cc0000;
+    color: var(--color-red-1);
 }
 
 .server-graph-legend .cpu-kernel i {
-    color: #f5c12e;
+    color: var(--color-gold);
 }
 
 .server-graph-legend .cpu-user i {
@@ -205,11 +205,11 @@ body {
 }
 
 .server-graph-legend .cpu-nice i {
-    color: var(--color-app-dev);
+    color: var(--color-green);
 }
 
 .server-graph-legend .memory-swap i {
-    color: #cc0000;
+    color: var(--color-red-1);
 }
 
 .server-graph-legend .memory-cached i {
@@ -217,11 +217,11 @@ body {
 }
 
 .server-graph-legend .memory-used i {
-    color: var(--color-link);
+    color: var(--color-blue);
 }
 
 .server-graph-legend .memory-free i {
-    color: var(--color-alert-success-text);
+    color: var(--color-green);
 }
 
 #cpu_status_title {

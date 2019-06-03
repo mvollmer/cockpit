@@ -679,7 +679,7 @@ td.storage-action {
 }
 
 .modal-dialog .slot-warning {
-    color: #a30000;
+    color: var(--color-form-field-error-text);
 }
 
 .modal-dialog .key-source .radio-horizontal {
