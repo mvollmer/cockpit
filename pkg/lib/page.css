@@ -322,6 +322,7 @@ input[type=number] {
     --color-ct-list-active-text    : var(--color-link-focus);
     --color-ct-list-active-bg      : var(--color-blue-1);
     --color-ct-list-active-border  : var(--color-blue-2);
+    --color-ct-list-critical-bg    : var(--color-ct-light-red-1);
 
     /* --color-link-hover-bg: var(--color-link-hover-bg); */
     --color-link-hover-bg  : var(--color-light-blue-2);
