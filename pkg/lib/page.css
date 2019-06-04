@@ -75,7 +75,7 @@ a.disabled:hover {
 }
 
 .highlight-ct {
-    background-color: #edf8ff;
+    background-color: var(--color-link-hover-bg);
 }
 
 /* Well and Blankslate */
@@ -91,7 +91,7 @@ a.disabled:hover {
     margin-bottom: 0px;
     border: none;
     border-radius: 0px;
-    background-color: #FAFAFA;
+    background-color: var(--color-gray-1);
 }
 
 .well.blank-slate-pf {
@@ -243,7 +243,7 @@ input[type=number] {
 
 .ct-select {
     --dropdown-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2237%22 height=%2224%22 viewBox=%220 0 9.487 6%22%3E%3Cpath fill=%22%234d5258%22 d=%22M5.623 2.831l-.09-.09c-.02-.02-.063-.02-.083 0l-.706.707-.707-.708c-.02-.02-.063-.018-.082.001l-.091.09c-.02.02-.02.063 0 .082l.838.838c.02.02.063.02.082 0l.84-.837c.02-.02.019-.063-.001-.083z%22/%3E%3C/svg%3E%0A");
-    --dropdown-background: linear-gradient(#fafafa, #ededed);
+    --dropdown-background: linear-gradient(var(--color-gray-1), var(--color-gray-2));
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -269,7 +269,7 @@ input[type=number] {
 
 .ct-select:hover,
 .ct-select:active {
-    --dropdown-background: #f1f1f1;
+    --dropdown-background: var(--color-gray-1);
 }
 
 .ct-select:hover {
@@ -308,15 +308,24 @@ input[type=number] {
     --color-ct-nav-hover      : rgba(77, 82, 88, 0.5);
     --color-ct-nav-border     : #030303;
 
-    --color-ct-list-text           : var(--color-link);
+    --color-ct-list-text           : var(--color-fg);
+    --color-ct-list-link           : var(--color-link);
     --color-ct-list-bg             : var(--color-bg);
     --color-ct-list-border         : var(--color-gray-1);
-    --color-ct-list-hover-text     : var(--color-ct-list-text);
-    --color-ct-list-hover-bg       : var(--color-ct-list-bg);
+    --color-ct-list-hover-text     : var(--color-link-hover);
+    --color-ct-list-hover-bg       : var(--color-light-blue-1);
     --color-ct-list-hover-border   : var(--color-ct-list-bg);
+    --color-ct-list-hover-icon     : var(--color-blue);
     --color-ct-list-selected-text  : var(--color-link-focus);
     --color-ct-list-selected-bg    : var(--color-blue-1);
     --color-ct-list-selected-border: var(--color-blue-2);
+    --color-ct-list-active-text    : var(--color-link-focus);
+    --color-ct-list-active-bg      : var(--color-blue-1);
+    --color-ct-list-active-border  : var(--color-blue-2);
+
+    /* --color-link-hover-bg: var(--color-link-hover-bg); */
+    --color-link-hover-bg  : var(--color-light-blue-2);
+    --color-link-hover-icon: var(--color-blue-5);
 
     /* Red Hat Digital Design System 2019 named colors */
     --color-red-hat-red : #ee0000;

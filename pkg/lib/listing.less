@@ -74,7 +74,7 @@ tbody > tr.listing-ct-item.listing-ct-warning {
 }
 
 tbody.open > tr.listing-ct-item {
-    background-color: @color-pf-blue-50;
+    background-color: @listing-ct-active;
     border-bottom: none;
     border-top: none;
     border-left: 1px solid @listing-ct-border;
@@ -116,7 +116,7 @@ tbody:not(.open) > tr.listing-ct-item:not(.listing-ct-nonavigate):hover {
 
 /* if we can't navigate to a row but expand is available, highlight the caret */
 tbody:not(.open) > tr.listing-ct-item.listing-ct-nonavigate:hover td.listing-ct-toggle {
-    color: @listing-ct-active;
+    color: @listing-ct-hover-icon;
 }
 
 /* use hover color expanded rows even if navigation isn't available */

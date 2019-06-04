@@ -502,7 +502,7 @@ div.spinner {
 }
 
 .drives-panel-body table tr:hover {
-    background-color: #edf8ff;
+    background-color: var(--color-link-hover-bg);
 }
 
 .drives-panel-body table tr td {

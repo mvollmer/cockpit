@@ -13,7 +13,7 @@
 }
 
 .cockpit-account:hover {
-    background-color: #edf8ff;
+    background-color: var(--color-link-hover-bg);
     cursor: pointer;
 }
 
@@ -55,7 +55,7 @@
 }
 
 #dashboard_setup_address_discovered li:hover {
-    background-color: #edf8ff;
+    background-color: var(--color-link-hover-bg);
 }
 
 #account-pic {
