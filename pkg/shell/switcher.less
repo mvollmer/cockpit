@@ -50,16 +50,16 @@
             z-index: 3;
 
             a {
-                color: var(--color-gray-1);
+                color: var(--color-ct-nav-text);
             }
         }
 
         &:hover {
-            background: rgba(77, 82, 88, 0.5);
+            background: var(--color-ct-nav-hover);
         }
 
         &.active {
-            background: var(--color-gray-11);
+            background: var(--color-ct-nav-active);
 
             a {
                 font-weight: 600;
@@ -69,7 +69,7 @@
         a {
             padding: 10px 15px;
             display: block;
-            color: #d1d1d1;
+            color: var(--color-ct-nav-text);
             text-decoration: none;
             transition: all 300ms
         }
@@ -242,7 +242,7 @@
         height: 100%;
         transition: all 150ms ease-out;
         box-shadow: 0 0;
-        background: linear-gradient(to left, #030303, #292e34 1px);
+        background: linear-gradient(to left, var(--color-ct-nav-border), #292e34 1px);
 
         span.first-letter {
             font-size: 0px !important;
@@ -443,13 +443,13 @@
 
     .navbar-header {
         grid-area: header;
-        background: #292e34;
+        background: var(--color-ct-nav);
     }
 
     .navbar-collapse {
         grid-area: menu;
         align-self: end;
-        background: #292e34;
+        background: var(--color-ct-nav);
     }
 
     .navbar-brand {
@@ -488,7 +488,7 @@
         max-width: 100%;
         overflow: hidden;
         overflow-x: auto;
-        background: linear-gradient(to bottom, #030303, #292e34 1px);
+        background: linear-gradient(to bottom, var(--color-ct-nav-border), var(--color-ct-nav) 1px);
 
         ul, li {
             padding: 0;
@@ -549,7 +549,7 @@
                         right: 0;
                         bottom: 0;
                         left: 0;
-                        border: 1px solid black;
+                        border: 1px solid var(--color-ct-nav-border);
                         border-width: 0 1px;
                         pointer-events: none;
                         opacity: 0.5;

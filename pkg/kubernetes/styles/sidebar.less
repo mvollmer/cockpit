@@ -4,7 +4,7 @@
 
 
 .nav-sidebar {
-    background: var(--color-alert-success-text);
+    background: var(--color-ct-nav-sub);
     width: unit(@sidebar-width-xl, px);
     height: 100%;
     position: fixed;
@@ -13,7 +13,7 @@
     overflow-x: hidden;
     overflow-y: auto;
 
-    border-right: 1px solid #292e34;
+    border-right: 1px solid var(--color-ct-nav);
     border-bottom: none;
     border-top: none;
     border-left: none;
@@ -29,7 +29,7 @@
 }
 
 .nav-item-pf-header {
-	color: var(--color-bg);
+	color: var(--color-ct-nav-active-text);
 	font-size: 16px;
     margin: 18px 20px 10px 20px;
 }
@@ -43,8 +43,8 @@
     border: none;
 }
 
-.nav-sidebar .list-group-item.active {
-    background-color: var(--color-gray-11);
+.nav-sidebar .list-group-item.active{
+    background-color: var(--color-ct-nav-active);
 }
 .nav-sidebar > .list-group > .list-group-item.active > a {
     background-color: inherit;
@@ -52,7 +52,7 @@
 
 .nav-sidebar .list-group-item a {
     display: block;
-    color: #d1d1d1;
+    color: var(--color-ct-nav-text);
 }
 
 #content {

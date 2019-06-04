@@ -299,9 +299,24 @@ input[type=number] {
     --color-ct-light-red-3: #f98383;
     --color-ct-brick-gold : #ffa763;
     --color-ct-brick-red  : #a53131;
-    --color-ct-nav        : #4d5258;
-    --color-ct-nav-sub    : #393f44;
-    --color-ct-nav-text   : #ffffff;
+
+    --color-ct-nav            : #292e34;
+    --color-ct-nav-sub        : #393f44;
+    --color-ct-nav-text       : var(--color-body-copy-dark);
+    --color-ct-nav-active     : #4d5258;
+    --color-ct-nav-active-text: #fff;
+    --color-ct-nav-hover      : rgba(77, 82, 88, 0.5);
+    --color-ct-nav-border     : #030303;
+
+    --color-ct-list-text           : var(--color-link);
+    --color-ct-list-bg             : var(--color-bg);
+    --color-ct-list-border         : var(--color-gray-1);
+    --color-ct-list-hover-text     : var(--color-ct-list-text);
+    --color-ct-list-hover-bg       : var(--color-ct-list-bg);
+    --color-ct-list-hover-border   : var(--color-ct-list-bg);
+    --color-ct-list-selected-text  : var(--color-link-focus);
+    --color-ct-list-selected-bg    : var(--color-blue-1);
+    --color-ct-list-selected-border: var(--color-blue-2);
 
     /* Red Hat Digital Design System 2019 named colors */
     --color-red-hat-red : #ee0000;
