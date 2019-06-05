@@ -133,7 +133,7 @@
 .table-hover > tbody > tr:hover > td,
 .table-hover > tbody > tr:hover > th,
 .dialog-list-ct .list-group-item:hover:not(.active) {
-    background-color: var(--color-link-hover-bg);
+    background-color: var(--color-ct-list-hover-bg);
 }
 
 /* Override patternfly to fit buttons and such */

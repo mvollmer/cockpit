@@ -171,7 +171,7 @@ h1 .onoff-ct {
 
 #networking-firewall-summary:hover {
     cursor: pointer;
-    background-color: var(--color-blue-1);
+    background-color: var(--color-ct-list-hover-bg);
 }
 
 /* set min-height to the same as max-height, so that the list doesn't shrink
