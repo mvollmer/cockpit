@@ -3,7 +3,7 @@
 /* Navigation base, used for both desktop & mobile navigation */
 
 .nav-sidebar .dashboard-link:not(.active) a:hover {
-    background: rgba(57, 63, 68, 0.5) !important;
+    background: var(--color-ct-nav-main-hover) !important;
 }
 
 .nav-item-pf-header {
@@ -14,7 +14,7 @@
 
 .area-ct-subnav {
     background: var(--color-ct-nav-sub);
-    border-right: 1px solid #292e34;
+    border-right: 1px solid var(--color-ct-nav-border);
     -webkit-flex: none;
     flex: none;
     display: -webkit-flex;
@@ -44,34 +44,37 @@
             transition: all 150ms; // Speed up animation on hover
         }
 
+        a {
+            padding: 10px 15px;
+            display: block;
+            color: var(--color-ct-nav-text);
+            text-decoration: none;
+            transition: all 300ms;
+            border-left: 3px solid transparent;
+        }
+
         &:hover,
         &.active {
             /* Move hover & selected above overflow fade */
             z-index: 3;
-
-            a {
-                color: var(--color-ct-nav-active-text);
-            }
         }
 
         &:hover {
             background: var(--color-ct-nav-hover);
+
+            a {
+                border-color: var(--pf-global--hover-color--100);
+                color: var(--color-ct-nav-hover-text);
+            }
         }
 
         &.active {
             background: var(--color-ct-nav-active);
 
             a {
-                font-weight: 600;
+                border-color: var(--pf-global--active-color--100);
+                color: var(--color-ct-nav-active-text);
             }
-        }
-
-        a {
-            padding: 10px 15px;
-            display: block;
-            color: var(--color-ct-nav-text);
-            text-decoration: none;
-            transition: all 300ms
         }
     }
 
@@ -242,7 +245,7 @@
         height: 100%;
         transition: all 150ms ease-out;
         box-shadow: 0 0;
-        background: linear-gradient(to left, var(--color-ct-nav-border), #292e34 1px);
+        background: var(--pf-global--BackgroundColor--300);
 
         span.first-letter {
             font-size: 0px !important;
@@ -664,6 +667,30 @@
         &:not(.active) .pficon-container-node:after {
             opacity: 0;
         }
+    }
+}
+
+/* Apply Cockpit colors to main nav */
+.main-navbar .list-group-item {
+    border-color: var(--color-ct-nav-main-border);
+
+    > a {
+        color: var(--color-ct-nav-main-text);
+        background: var(--color-ct-nav-main);
+
+        > span {
+            font-weight: 400;
+        }
+    }
+
+    &:hover > a {
+        background: var(--color-ct-nav-main-hover);
+        color: var(--color-ct-nav-main-hover-text);
+    };
+
+    &.active > a {
+        background: var(--color-ct-nav-main-active);
+        color: var(--color-ct-nav-main-active-text);
     }
 }
 
