@@ -103,7 +103,7 @@
 
 .modal-header {
   background: var(--pf-global--BackgroundColor--100);
-  padding: 0 0 0.5rem;
+  padding: 0 0 1.5rem;
 }
 
 .modal-title {
@@ -115,7 +115,7 @@
 }
 
 .modal-body {
-  padding: 1rem 1rem;
+  padding: 0;
 }
 
 .listing-ct-head .btn,
@@ -126,15 +126,21 @@
 }
 
 @media screen and (min-width: 768px) {
+  .page-ct,
   .container,
   .container-fluid {
     margin: 1.5rem;
   }
 }
 
-.label, .list-group-item-heading, label{
+.help-block,
+.label, .list-group-item-heading, .control-label {
   font-weight: 400;
   font-size: var(--font-size-s);
+}
+
+.panel {
+  box-shadow: var(--pf-global--BoxShadow--sm);
 }
 
 :root {
