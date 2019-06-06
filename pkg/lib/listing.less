@@ -3,8 +3,13 @@
 @import "./variables.less";
 
 table.listing-ct {
-    margin-top: @listing-ct-spacing * 3;
+    margin-top: @listing-ct-spacing;
     min-width: 65%;
+    font-size: var(--font-size-s);
+
+    + .listing-ct {
+        margin-top: @listing-ct-spacing * 2;
+    }
 }
 
 table.listing-ct > caption,
