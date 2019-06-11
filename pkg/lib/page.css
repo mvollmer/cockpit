@@ -316,7 +316,7 @@ input[type=number] {
     --color-ct-nav-text       : var(--pf-global--Color--100);
     --color-ct-nav-active     : var(--color-light-blue-2);
     --color-ct-nav-active-text: var(--pf-global--Color--dark-100);
-    --color-ct-nav-hover      : var(--pf-global--BackgroundColor--dark-150);
+    --color-ct-nav-hover      : var(--pf-global--BackgroundColor--150);
     --color-ct-nav-hover-text : var(--color-link);
     --color-ct-nav-border     : #999;
     --color-ct-nav-cover-up   : linear-gradient(to bottom, var(--color-ct-nav-sub), rgba(255,255,255, 0));
