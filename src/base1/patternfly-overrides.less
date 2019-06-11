@@ -142,6 +142,44 @@
   }
 }
 
+.form-control {
+  border-color: var(--pf-global--BorderColor--300);
+  border-bottom-color: var(--pf-global--Color--200);
+  box-shadow: none !important;
+  padding: 0 0.5rem;
+
+  &::placeholder {
+    color: var(--pf-global--Color--dark-200);
+  }
+
+  &:hover, &:focus {
+    border-color: var(--pf-global--BorderColor--300);
+    border-bottom-color: var(--pf-global--primary-color--100);
+  }
+
+  &:focus {
+    border-bottom-width: 2px;
+  }
+
+  &:disabled {
+    background-color: var(--pf-global--disabled-color--300);
+    border-color: var(--pf-global--disabled-color--300);
+    color: var(--pf-global--disabled-color--100);
+    cursor: not-allowed;
+    font-style: normal;
+  }
+
+  .has-error &,
+  &.has-error {
+    position: relative;
+
+    &, &:hover, &:focus {
+      border-color: var(--pf-global--BorderColor--300);
+      border-bottom: 2px solid var(--pf-global--danger-color--100);
+    }
+  }
+}
+
 .modal-content {
   padding: 2rem;
 }
