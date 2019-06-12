@@ -141,8 +141,8 @@ export class Overview extends React.Component {
         var client = this.props.client;
 
         return (
-            <div>
-                <div className="col-md-8 col-lg-9 page-ct">
+            <div className="container-fluid">
+                <div className="col-md-8 col-lg-9">
                     <StoragePlots client={client} onHover={(dev) => this.setState({ highlight: dev })} />
                     <br />
                     <FilesystemsPanel client={client} />
@@ -150,7 +150,7 @@ export class Overview extends React.Component {
                     <JobsPanel client={client} />
                     <StorageLogsPanel />
                 </div>
-                <div className="col-md-4 col-lg-3 storage-sidebar page-ct">
+                <div className="col-md-4 col-lg-3 storage-sidebar">
                     <MDRaidsPanel client={client} />
                     <VGroupsPanel client={client} />
                     <VDOsPanel client={client} />
