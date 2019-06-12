@@ -86,13 +86,73 @@
 @line-height-base: 1.5;
 @font-size-base  : 16px;
 
-.btn {
+// Restyle inputs & dropdowns
+.dropdown-toggle,
+.form-control {
   background-image: unset !important;
   border-radius: 3px;
+  border-color: var(--pf-global--BorderColor--300);
+  border-bottom-color: var(--pf-global--Color--200);
+  color: var(--pf-global--Color--100);
+  box-shadow: none !important;
+  padding: 1px 0.5rem;
+
+  .caret {
+    /*
+    top: 0.5rem;
+    right: 0.75rem;
+    */
+
+    &::before {
+      content: "\f0d7";
+    }
+  }
+
+  &::placeholder {
+    color: var(--pf-global--Color--dark-200);
+    font-style: normal;
+  }
+
+  &:hover, &:focus {
+    border-color: var(--pf-global--BorderColor--300);
+    border-bottom-color: var(--pf-global--primary-color--100);
+  }
+
+  &:focus {
+    // Take 1px from the padding and add it to the border
+    padding-bottom: 0;
+    border-bottom-width: 2px;
+  }
+
+  &:disabled {
+    background-color: var(--pf-global--disabled-color--300);
+    border-color: var(--pf-global--disabled-color--300);
+    color: var(--pf-global--disabled-color--100);
+    cursor: not-allowed;
+  }
+
+  .has-error &,
+  &.has-error {
+    position: relative;
+
+    &, &:hover, &:focus {
+      border-color: var(--pf-global--BorderColor--300);
+      border-bottom: 2px solid var(--pf-global--danger-color--100);
+    }
+  }
+}
+
+// Restyle buttons
+.btn {
   padding: 0.375rem 1rem;
 
-  &:not(:hover):not(:focus) {
-    box-shadow: unset !important;
+  &:not(.dropdown-toggle):not(.dropdown):not(.bootstrap-select) {
+    background-image: unset !important;
+    border-radius: 3px;
+
+    &:not(:hover):not(:focus) {
+      box-shadow: unset !important;
+    }
   }
 
   &:hover, &:focus {
@@ -140,105 +200,125 @@
       box-shadow: none;
     }
   }
-}
 
-.form-control {
-  border-color: var(--pf-global--BorderColor--300);
-  border-bottom-color: var(--pf-global--Color--200);
-  box-shadow: none !important;
-  padding: 0 0.5rem;
-
-  &::placeholder {
-    color: var(--pf-global--Color--dark-200);
+  // Center-align icon buttons
+  &.fa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  &:hover, &:focus {
-    border-color: var(--pf-global--BorderColor--300);
-    border-bottom-color: var(--pf-global--primary-color--100);
+  // Shrink embedded buttons
+  .content-header-extra &,
+  .content-filter &,
+  .listing-ct-head &,
+  .listing-ct-item &,
+  .ct-form-layout &,
+  .action &,
+  .panel-heading & {
+    padding: 0.125rem 0.5rem;
   }
 
-  &:focus {
-    border-bottom-width: 2px;
-  }
+  // Restyle button dropdowns to have button borders
+  .btn-group > & + .dropdown-toggle {
+    border-color: var(--pf-global--primary-color--100);
 
-  &:disabled {
-    background-color: var(--pf-global--disabled-color--300);
-    border-color: var(--pf-global--disabled-color--300);
-    color: var(--pf-global--disabled-color--100);
-    cursor: not-allowed;
-    font-style: normal;
-  }
-
-  .has-error &,
-  &.has-error {
-    position: relative;
-
-    &, &:hover, &:focus {
-      border-color: var(--pf-global--BorderColor--300);
-      border-bottom: 2px solid var(--pf-global--danger-color--100);
+    &:hover, &:focus {
+      border-width: 1px;
     }
   }
 }
 
-.modal-content {
-  padding: 2rem;
-}
+// Restyle modals
+.modal {
+  &-header {
+    background: var(--pf-global--BackgroundColor--100);
+    padding: 0 0 1.5rem;
+  }
 
-.modal-footer > .btn {
-  padding: 0.375rem 1rem;
-}
+  &-title {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
 
-.modal-header {
-  background: var(--pf-global--BackgroundColor--100);
-  padding: 0 0 1.5rem;
-}
+  &-content {
+    padding: 2rem;
+  }
 
-.modal-title {
-  font-size: 1.5rem;
-  line-height: 1.3;
-}
+  &-footer {
+    padding: 1rem 0 0;
 
-.modal-footer {
-  padding: 1rem 0 0;
-}
+    > .btn {
+      padding: 0.375rem 1rem;
+    }
+  }
 
-.modal-body {
-  padding: 0;
-}
-
-.listing-ct-head .btn,
-.listing-ct-item .btn,
-.ct-form-layout .btn,
-.action .btn,
-.panel-heading .btn {
-  padding: 0.125rem 0.5rem;
-}
-
-@media screen and (min-width: 768px) {
-  .page-ct,
-  .container,
-  .container-fluid {
-    padding: 1rem 1.5rem;
+  &-body {
+    padding: 0;
   }
 }
 
+// Adjust list group font sizes
+.list-group {
+  font-size: var(--pf-global--FontSize--sm);
+
+  &-item > p {
+    font-size: var(--pf-global--FontSize--md);
+  }
+}
+
+// Standardize small font size to PF4 small font
+small {
+	font-size: var(--pf-global--FontSize--sm);
+}
+
+@media screen and (min-width: 768px) {
+  // Add PF4 padding to desktop mode
+  .content,
+  .page-ct,
+  .container,
+  .container-fluid {
+    padding: 2rem 3rem;
+
+    .breadcrumb {
+      padding-top: 0;
+    }
+  }
+
+  // Rely on page-ct padding; don't duplicate
+  .page-ct .container,
+  .page-ct .container-fluid {
+    padding: 0;
+  }
+
+  // Remove excess padding from dialogs
+  .modal-dialog .content {
+    padding: 0;
+  }
+}
+
+// Change label size & weight to match PF4
 .help-block,
 .label, .list-group-item-heading, .control-label {
   font-weight: 400;
   font-size: var(--font-size-s);
 }
 
+// Adjust tab sizes
 .nav-tabs {
   font-size: var(--font-size-s);
-}
-.nav-tabs > li > a {
-  padding: 0.75rem 1rem;
+
+  > li > a {
+    padding: 0.75rem 1rem;
+  }
 }
 
+// Add a PF4 shadow to panels
 .panel {
   box-shadow: var(--pf-global--BoxShadow--sm);
 }
 
+// Change breadcrumb font size
 .breadcrumb {
   padding: 1rem 0;
   font-size: var(--pf-global--FontSize--sm);
