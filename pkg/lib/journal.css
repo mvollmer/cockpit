@@ -25,10 +25,6 @@
     background-color: var(--color-gray-11);
     border-color: var(--color-gray-11);
     color: var(--color-bg);
-    padding-left: 10px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    height: auto;
 }
 
 .cockpit-log-panel .panel-body {
