@@ -90,7 +90,7 @@
 .input-group-addon,
 .bootstrap-select.btn-group .btn,
 .dropdown-toggle,
-.form-control {
+.form-control:not(.ct-select) {
   background-image: unset !important;
   border-radius: 3px;
   border-color: var(--pf-global--BorderColor--300);
@@ -172,7 +172,7 @@
 .btn {
   padding: 0.375rem 1rem;
 
-  &:not(.dropdown-toggle):not(.dropdown):not(.bootstrap-select) {
+  &:not(.dropdown-toggle):not(.dropdown):not(.bootstrap-select):not(.ct-select) {
     background-image: unset !important;
     border-radius: 3px;
 
