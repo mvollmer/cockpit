@@ -330,9 +330,9 @@ html.index-page body {
 
     .dropdown-menu {
         width: unit(@sidebar-width-full, px);
-        top: 6rem;
+        top: 4rem;
         /* Align to arrow: 50% width + button padding + arrow width */
-        right: ~"calc(-50% + 15px + 10px)";
+        right: ~"calc(-50% + 3rem + 10px)";
         left: auto;
         overflow: visible;
         padding: 0;
@@ -343,10 +343,9 @@ html.index-page body {
             position: relative;
 
             > .form-control-feedback {
-                color: var(--color-ct-list-border);
-                margin: 11px;
-                padding: 0.5em 0 0;
-                left: 0;
+                color: var(--color-subtle-copy);
+                left: 10px;
+                top: 1rem
             }
         }
 
@@ -400,7 +399,7 @@ html.index-page body {
         padding: 0 15px;
         margin: 0;
         line-height: 64px;
-        color: inherit;
+        color: var(--color-ct-nav-text);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -427,17 +426,24 @@ html.index-page body {
         }
     }
 
+    .dropdown-menu:before,
     .dropdown-menu:after {
         border: 10px solid transparent;
         border-top-width: 0;
         border-bottom-color: var(--color-bg);
-        top: -10px;
+        top: -8px;
         content: '';
         height: 0;
         left: 50%;
         margin: 0 0 0 -5px;
         position: absolute;
         width: 0;
+        z-index: 10;
+    }
+
+    .dropdown-menu:after {
+        border-bottom-color: var(--color-border);
+        top: -10px;
     }
 
     input {
