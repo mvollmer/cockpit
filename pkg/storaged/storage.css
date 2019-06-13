@@ -37,6 +37,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    vertical-align: middle;
 }
 
 @media (max-width: 1200px) {
@@ -308,6 +309,7 @@ span.rate-gap {
 
 div.progress {
     width: 100%;
+    height: var(--font-size-xs);
 }
 
 #detail-header div.progress {
