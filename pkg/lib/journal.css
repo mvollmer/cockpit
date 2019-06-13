@@ -54,14 +54,13 @@
     border-right: 1px var(--color-border) solid;
     background-color: var(--color-bg);
     font-size: var(--font-small);
-    font-family: unset;
     padding: 0.5rem 1rem;
     display: flex;
     align-items: baseline;
 }
 
 .cockpit-logline > .row > div:first-child {
-    padding-left: 20px;
+    width: 2.5rem;
 }
 
 .cockpit-log-panel > .cockpit-logline:hover {
@@ -82,20 +81,30 @@
 
 .cockpit-log-warning {
     display: inline-block;
-    width: 20px;
     vertical-align: middle;
+    min-width: 24px;
 }
 
-.cockpit-log-warning > i {
-    color: black;
+.cockpit-log-warning > .fa-times-circle-o {
+    color: var(--pf-global--danger-color--200);
+}
+.cockpit-log-warning > .fa-exclamation-triangle {
+    color: var(--pf-global--warning-color--100);
+}
+
+.cockpit-log-time,
+.cockpit-log-service {
+    color: var(--pf-global--Color--200);
 }
 
 .cockpit-log-time {
-    min-width: 4em;
+    min-width: 6em;
     font-family: monospace;
     display: inline-block;
-    width: 40px;
     vertical-align: middle;
+    padding: 0 1rem;
+    color: var(--pf-global--Color--200);
+    font-size: var(--pf-global--FontSize--sm);
 }
 
 .cockpit-log-service {
