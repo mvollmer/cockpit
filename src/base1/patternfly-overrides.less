@@ -362,6 +362,22 @@ small {
   font-size: var(--pf-global--FontSize--sm);
 }
 
+// Adjust modal dialog sizes
+.modal {
+  &-dialog {
+    width: auto;
+    max-width: 45rem;
+  }
+
+  &-sm {
+    max-width: 35rem;
+  }
+
+  &-lg {
+    max-width: 60rem;
+  }
+}
+
 :root {
   font-size: @font-size-base;
 
