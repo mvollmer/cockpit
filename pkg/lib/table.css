@@ -1,3 +1,7 @@
+.panel .table {
+    font-size: var(--font-size-s);
+}
+
 /* Panels don't draw borders between them */
 .panel > .table > tbody:first-child td {
     border-top: 1px solid rgb(221, 221, 221);
