@@ -97,8 +97,11 @@
   border-bottom-color: var(--pf-global--Color--200);
   color: var(--pf-global--Color--100);
   box-shadow: none !important;
-  padding: 1px 0.5rem;
   min-height: 2.25rem;
+
+  &:not(.bootstrap-select):not(.dropdown-form-control) {
+    padding: 1px 0.5rem;
+  }
 
   .caret {
     /*
@@ -164,7 +167,11 @@
   > .dropdown-toggle {
     display: flex;
     width: auto;
-    align-items: center;
+    align-items: stretch;
+  }
+
+  > .input-group-btn > .btn {
+    min-width: 2.5rem;
   }
 }
 
