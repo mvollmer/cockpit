@@ -89,6 +89,7 @@
 // Restyle inputs & dropdowns
 .input-group-addon,
 .bootstrap-select.btn-group .btn,
+.content-header-extra .dropdown-toggle,
 .dropdown-toggle,
 .form-control:not(.ct-select) {
   background-image: unset !important;
@@ -251,15 +252,6 @@
   .action &,
   .panel-heading & {
     padding: 0.125rem 0.5rem;
-  }
-
-  // Adjust buttons in forms to compensate for reduced size
-  .ct-form-layout > &,
-  .ct-form-layout > &-group {
-    &:not(.bootstrap-select):not(.dropdown-form-control) {
-      /* 0.25rem = 0.375rem - 0.125rem */
-      margin-top: 0.25rem;
-    }
   }
 
   // Restyle button dropdowns to have button borders
