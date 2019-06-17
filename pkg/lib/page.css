@@ -252,7 +252,7 @@ input[type=number] {
     */
     --dropdown-background: var(--pf-global--BackgroundColor--100);
     max-width: 100%;
-    padding: 0.125rem 2.5rem calc(0.125rem - 1px) 0.5rem;
+    padding: 0.25rem 2.5rem calc(0.25rem - 1px) 0.5rem;
     border: 1px solid var(--pf-global--BorderColor--300);
     border-bottom-color: var(--pf-global--Color--200);
     background: var(--dropdown-image) no-repeat 100% 50%, var(--dropdown-background);
@@ -281,7 +281,7 @@ input[type=number] {
 .ct-select:active,
 .ct-select:focus {
     border-bottom-width: 2px;
-    padding-bottom: calc(0.125rem - 2px);
+    padding-bottom: calc(0.25rem - 2px);
 }
 
 .ct-select:disabled {
