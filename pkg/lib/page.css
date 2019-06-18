@@ -296,6 +296,11 @@ input[type=number] {
     background-color: var(--color-bg);
 }
 
+.ct-select option:checked {
+    background-color: var(--pf-global--active-color--100);
+    color: var(--pf-global--Color--light-100);
+}
+
 :root {
     /* Custom font aliases */
     --font-family: var(--pf-global--FontFamily--sans-serif);
