@@ -20,8 +20,6 @@
 import cockpit from "cockpit";
 import React from "react";
 
-import { fmt_rate } from "./utils.js";
-
 import { StoragePlots } from "./plot.jsx";
 
 import { FilesystemsPanel } from "./fsys-panel.jsx";
@@ -99,10 +97,6 @@ export class OverviewSidePanelRow extends React.Component {
         else if (client.path_warnings[job_path])
             decoration = <div className="pficon pficon-warning-triangle-o" />;
 
-        let stats = null;
-        if (this.props.stats)
-            stats = <div>R: {fmt_rate(this.props.stats[0])}&emsp;W: {fmt_rate(this.props.stats[1])}</div>;
-
         let devname = null;
         if (this.props.devname)
             devname = <div className="pull-right">{this.props.devname}</div>;
@@ -114,7 +108,6 @@ export class OverviewSidePanelRow extends React.Component {
                     <div>
                         <div><strong>{this.props.name}</strong></div>
                         <div>{devname} {this.props.detail}</div>
-                        {stats}
                     </div>
                     {decoration}
                 </td>

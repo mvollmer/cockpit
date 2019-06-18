@@ -27,19 +27,6 @@ const _ = cockpit.gettext;
 const C_ = cockpit.gettext;
 
 export class DrivesPanel extends React.Component {
-    constructor () {
-        super();
-        this.on_io_samples = () => { this.setState({}) };
-    }
-
-    componentDidMount() {
-        this.props.client.blockdev_io.addEventListener("changed", this.on_io_samples);
-    }
-
-    componentWillUnmount() {
-        this.props.client.blockdev_io.removeEventListener("changed", this.on_io_samples);
-    }
-
     render() {
         var props = this.props;
         var client = props.client;
@@ -75,7 +62,6 @@ export class DrivesPanel extends React.Component {
                 return null;
 
             var dev = decode_filename(block.Device).replace(/^\/dev\//, "");
-            var io = client.blockdev_io.data[dev];
 
             var name = drive_name(drive);
             var classification = classify_drive(drive);
@@ -100,7 +86,6 @@ export class DrivesPanel extends React.Component {
                                       name={name}
                                       devname={block_name(block)}
                                       detail={desc}
-                                      stats={io}
                                       highlight={dev == props.highlight}
                                       go={() => cockpit.location.go([ dev ])}
                                       job_path={path}
