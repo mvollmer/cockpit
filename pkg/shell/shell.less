@@ -147,7 +147,7 @@ html.index-page body {
 
 #dashboard-toolbar > div.ct-select,
 #dashboard-toolbar > div.dropdown {
-    display: inline-block;
+    display: inline-flex;
 }
 
 #dashboard-toolbar .dropdown-toggle span {
@@ -172,7 +172,14 @@ html.index-page body {
 }
 
 .show-zoom-controls .zoom-controls {
-    display: block;
+    display: grid;
+    grid-auto-flow: column;
+    grid-gap: 0.5rem;
+    align-items: stretch;
+}
+
+.show-zoom-controls > .dropdown {
+    display: inline-flex;
 }
 
 .show-zoom-cursor .zoomable-plot {
