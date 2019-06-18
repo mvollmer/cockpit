@@ -232,14 +232,6 @@
     }
   }
 
-
-  // Center-align icon buttons
-  &.fa {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   // Shrink embedded buttons
   .ct-form-layout &,
   .content-header-extra &,
@@ -259,6 +251,20 @@
     &:hover, &:focus {
       border-width: 1px;
     }
+  }
+
+  // Center-align icon buttons
+  &.fa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Fix up panel action buttons
+  .panel-actions & {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
   }
 }
 
