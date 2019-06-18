@@ -93,7 +93,8 @@
 }
 
 .cockpit-log-time,
-.cockpit-log-service {
+.cockpit-log-service,
+.cockpit-log-service-reduced {
     color: var(--pf-global--Color--200);
 }
 
@@ -134,4 +135,3 @@
     white-space: nowrap;
     vertical-align: middle;
 }
-
