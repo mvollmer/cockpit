@@ -109,7 +109,7 @@ class VGroupSidebar extends React.Component {
             return (
                 <tr key={pvol.path}>
                     <td className="storage-icon">
-                        img src="images/storage-disk.png" /
+                        <img src="images/storage-disk.png" />
                     </td>
                     <td>
                         <StorageBlockNavLink client={client} block={ client.blocks[pvol.path] } />
