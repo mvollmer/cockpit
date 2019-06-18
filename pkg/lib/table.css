@@ -144,7 +144,7 @@
 .table > thead > tr > th,
 .table > tbody > tr > td {
     padding: 0.5rem;
-    vertical-align: middle;
+    vertical-align: baseline;
 }
 
 /* Override the heavy patternfly headers */
