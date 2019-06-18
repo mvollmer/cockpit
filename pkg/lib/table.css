@@ -216,10 +216,14 @@
 }
 
 .form-table-ct td:first-child {
+    font-size: var(--pf-global--FontSize--sm);
+    margin-top: calc(var(--pf-global--FontSize--md) - var(--pf-global--FontSize--sm));
+    vertical-align: baseline;
     text-align: right;
     white-space: nowrap;
-    font-weight: 600;
     width: 5px; /* will be expanded by nowrap */
+    padding-right: 1rem;
+    min-height: 2.25rem;
 }
 
 
