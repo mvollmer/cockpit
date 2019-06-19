@@ -368,9 +368,21 @@ label {
 
 // Change label size & weight to match PF4
 .help-block,
-.label, .list-group-item-heading, .control-label {
+.label,
+.list-group-item-heading,
+.control-label,
+th > label {
   font-weight: 400;
   font-size: var(--font-size-s);
+}
+
+// Adjust labels in tables
+// (used in accounts)
+td > label,
+th > label {
+  vertical-align: baseline;
+  // Fake spacing (not quite right, but close)
+  padding: 0.125rem 0.25rem 0 0.5rem;
 }
 
 // Adjust tab sizes
