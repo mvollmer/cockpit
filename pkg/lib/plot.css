@@ -35,6 +35,7 @@
     grid-auto-flow: column;
     grid-gap: 0.5rem;
     justify-content: end;
+    margin: 0 0 0.5rem 0;
     position: relative;
     /* Put size constraints on the first column, the dropdown */
     grid-template-columns: minmax(9rem, max-content);
