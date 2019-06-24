@@ -317,26 +317,24 @@ div.spinner {
 }
 
 .content-filter {
-    background: #f5f5f5;
-    border-bottom: 1px solid #ddd;
+    background: var(--pf-global--BackgroundColor--150);
+    border-bottom: 1px solid var(--color-border);
     padding: 0.75rem 1.25rem;
     position: sticky;
     display: flex;
     align-items: baseline;
-    flex-flow: wrap;
+    min-height: 4rem; /* Align height with host dropdown */
 }
 
 .content-filter input[type="text"] {
-    display: inline-block;
     margin-left: 0.5rem;
-    margin-top: 2px;
-    max-width: 40vw;
     flex: auto;
-    vertical-align: middle;
+    max-width: 50%;
 }
 
-.content-filter .bootstrap-select {
-    margin-top: 2px;
+.content-filter .ct-select {
+    flex: none;
+    max-width: 50%;
 }
 
 .content-filter h3 {
