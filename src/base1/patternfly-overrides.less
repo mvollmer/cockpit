@@ -234,7 +234,6 @@
 
   // Shrink embedded buttons
   .ct-form-layout &,
-  .content-header-extra &,
   .content-filter &,
   .listing-ct-head &,
   .listing-ct-item &,
@@ -362,18 +361,18 @@ small {
   }
 }
 
+// Change label size & weight to match PF4
 label {
   font-weight: normal;
 }
 
-// Change label size & weight to match PF4
 .help-block,
 .label,
 .list-group-item-heading,
 .control-label,
 .info-table-ct > tbody > tr > td:first-child,
 th > label {
-  font-weight: 400;
+  font-weight: normal;
   font-size: var(--font-size-s);
 }
 
@@ -426,6 +425,24 @@ th > label {
 // Bump down graph text size
 .server-graph {
   font-size: var(--pf-global--FontSize--xs);
+}
+
+// Restyle nav tabs (in content header only, for services)
+// in Cockpit, nav-tabs are also used in lists
+// and Cockpit's lists use underlines, not overlines
+.content-header-extra > .nav-tabs > li {
+  position: relative;
+
+  &.active::after {
+    position: absolute;
+    background: var(--pf-global--primary-color--100);
+    content: "";
+    height: 2px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+  }
 }
 
 :root {
