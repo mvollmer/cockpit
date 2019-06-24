@@ -36,11 +36,24 @@ html, body {
 }
 
 .terminal-group {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-gap: 0.5rem;
+    grid-template-columns: 1fr repeat(3, auto);
+    align-content: center;
+    align-items: baseline;
 }
 
-#theme-select {
+@media (min-width: 640px) {
+    .terminal-group {
+        min-height: 4rem;
+    }
+}
+
+.terminal-group > .btn {
+    align-self: stretch;
+}
+
+.theme-select {
     margin-left: 5px;
     margin-right: 5px;
     width: auto;
