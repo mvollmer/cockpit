@@ -106,8 +106,8 @@ export class OverviewSidePanelRow extends React.Component {
                 onClick={this.props.go ? go : null} className={this.props.highlight ? "highlight-ct" : ""}>
                 <td className={"sidepanel-row " + (this.props.highlight ? "highlight-ct" : "")}>
                     <div>
-                        <div><strong>{this.props.name}</strong></div>
-                        <div>{devname} {this.props.detail}</div>
+                        <div>{this.props.name}</div>
+                        <div className="sidepanel-detail">{devname} {this.props.detail}</div>
                     </div>
                     {decoration}
                 </td>
@@ -127,7 +127,7 @@ export class Overview extends React.Component {
 
         return (
             <div className="container-fluid">
-                <div className="col-md-8 col-lg-9">
+                <div className="col-md-7 col-lg-8">
                     <StoragePlots client={client} onHover={(dev) => this.setState({ highlight: dev })} />
                     <br />
                     <FilesystemsPanel client={client} />
@@ -135,7 +135,7 @@ export class Overview extends React.Component {
                     <JobsPanel client={client} />
                     <StorageLogsPanel />
                 </div>
-                <div className="col-md-4 col-lg-3 storage-sidebar">
+                <div className="col-md-5 col-lg-4 storage-sidebar">
                     <MDRaidsPanel client={client} />
                     <VGroupsPanel client={client} />
                     <VDOsPanel client={client} />

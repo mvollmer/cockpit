@@ -26,6 +26,7 @@
     text-align: center;
     margin: 5px;
     color: var(--color-gray-9);
+    font-size: var(--pf-global--FontSize--sm);
 }
 
 #storage .storage-mounts .table {
@@ -763,4 +764,8 @@ td.storage-action {
 .sidepanel-row .rate {
     width: 15c;
     margin-right: 5px;
+}
+
+.sidepanel-detail {
+    font-size: var(--pf-global--FontSize--xs);
 }
