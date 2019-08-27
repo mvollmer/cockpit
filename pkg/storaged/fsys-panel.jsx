@@ -21,7 +21,7 @@ import cockpit from "cockpit";
 import React from "react";
 
 import { StorageUsageBar } from "./storage-controls.jsx";
-import { decode_filename, block_name, fmt_size, format_fsys_usage, go_to_block } from "./utils.js";
+import { decode_filename, block_name, fmt_size, format_fsys_usage, go_to_block, array_find } from "./utils.js";
 
 const _ = cockpit.gettext;
 
@@ -56,11 +56,9 @@ export class FilesystemsPanel extends React.Component {
 
         function make_mount(path) {
             var block = client.blocks[path];
-            var fsys = client.blocks_fsys[path];
-            var mount_points = fsys.MountPoints.map(decode_filename);
-            var fsys_size;
-            for (var i = 0; i < mount_points.length && !fsys_size; i++)
-                fsys_size = client.fsys_sizes.data[mount_points[i]];
+            var config = array_find(block.Configuration, function (c) { return c[0] == "fstab" });
+            var mount_point = config && decode_filename(config[1].dir.v);
+            var fsys_size = client.fsys_sizes.data[mount_point];
 
             function go(event) {
                 if (!event || event.button !== 0)
@@ -72,13 +70,10 @@ export class FilesystemsPanel extends React.Component {
                 <tr onClick={go} key={path}>
                     <td>{ block.IdLabel || block_name(block) }</td>
                     <td>
-                        { fsys.MountPoints.length > 0
-                            ? fsys.MountPoints.map((mp) => <div key={mp}>{decode_filename(mp)}</div>)
-                            : "-"
-                        }
+                        { mount_point || "-" }
                     </td>
                     <td>
-                        { fsys.MountPoints.length > 0
+                        { fsys_size
                             ? <StorageUsageBar stats={fsys_size} critical={0.95} />
                             : null
                         }
