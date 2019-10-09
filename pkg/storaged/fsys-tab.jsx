@@ -151,9 +151,11 @@ export class FilesystemTab extends React.Component {
             <div>
                 <div className="ct-form">
                     <label className="control-label">{_("Name")}</label>
-                    <StorageLink onClick={rename_dialog}>
-                        {this.props.block.IdLabel || "-"}
-                    </StorageLink>
+                    <div>
+                        <StorageLink onClick={rename_dialog}>
+                            {this.props.block.IdLabel || "-"}
+                        </StorageLink>
+                    </div>
                     <label className="control-label">{_("Mount Point")}</label>
                     <div>
                         <StorageLink onClick={mounting_dialog}>
@@ -167,9 +169,11 @@ export class FilesystemTab extends React.Component {
                     { old_opts && (
                         <>
                             <label className="control-label">{_("Mount Options")}</label>
-                            <StorageLink onClick={mounting_dialog}>
-                                {old_opts}
-                            </StorageLink>
+                            <div>
+                                <StorageLink onClick={mounting_dialog}>
+                                    {old_opts}
+                                </StorageLink>
+                            </div>
                         </>
                     )}
 

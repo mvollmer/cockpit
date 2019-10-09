@@ -396,7 +396,9 @@ export class BlockVolTab extends React.Component {
                 </div>
                 <div className="ct-form">
                     <label className="control-label">{_("Name")}</label>
-                    <StorageLink onClick={rename}>{this.props.lvol.Name}</StorageLink>
+                    <div>
+                        <StorageLink onClick={rename}>{this.props.lvol.Name}</StorageLink>
+                    </div>
                     { !unused_space &&
                     <>
                         <label className="control-label">{_("Size")}</label>
@@ -450,7 +452,7 @@ export class PoolVolTab extends React.Component {
         return (
             <div className="ct-form">
                 <label className="control-label">{_("Name")}</label>
-                <StorageLink onClick={rename}>{this.props.lvol.Name}</StorageLink>
+                <div><StorageLink onClick={rename}>{this.props.lvol.Name}</StorageLink></div>
 
                 <label className="control-label">{_("Size")}</label>
                 <div>

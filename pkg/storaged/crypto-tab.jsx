@@ -129,7 +129,9 @@ export class CryptoTab extends React.Component {
                         <StorageButton onClick={edit_stored_passphrase}>{_("Edit")}</StorageButton>
                     </div>
                     <label className="control-label">{_("Options")}</label>
-                    <StorageLink onClick={edit_options}>{old_options || _("(none)")}</StorageLink>
+                    <div>
+                        <StorageLink onClick={edit_options}>{old_options || _("(none)")}</StorageLink>
+                    </div>
                 </div>
                 <br />
                 <CryptoKeyslots client={client} block={block} />

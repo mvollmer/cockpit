@@ -160,12 +160,9 @@ class StorageCase(MachineCase):
         tab = self.content_tab_expand(row_index, tab_index)
         return tab + " div.ct-form label:contains(%s)" % title
 
-    def content_tab_info_action(self, row_index, tab_index, title, wrapped=False):
+    def content_tab_info_action(self, row_index, tab_index, title):
         label = self.content_tab_info_label(row_index, tab_index, title)
-        if wrapped:
-            link = label + " + div button.link-button"
-        else:
-            link = label + " + button.link-button"
+        link = label + " + div button.link-button"
         self.browser.click(link)
 
     # Dialogs
