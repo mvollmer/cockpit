@@ -257,7 +257,7 @@ export class StorageMenuItem extends React.Component {
 export class StorageBarMenu extends React.Component {
     render() {
         function toggle(excuse) {
-            const classes = "btn btn-primary dropdown-toggle" + (excuse ? " disabled" : "");
+            const classes = "btn btn-primary" + (excuse ? " disabled" : "");
             return (
                 <button className={classes} type="button" data-toggle="dropdown">
                     <span className="fa fa-bars" />
