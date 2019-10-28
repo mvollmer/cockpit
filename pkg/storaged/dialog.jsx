@@ -161,6 +161,19 @@
    This function is called whenever the values of fields are changed.  The
    "trigger" argument is the tag of the field that has just been changed.
 
+   ON-DEMAND FEATURE INSTALLATION
+
+   As a special service, a dialog can check for missing packages and
+   install them as part of the main action execution.  You ask for
+   this by specifying a description of the feature:
+
+       dialog_show({ ...
+                     feature: { is_enabled: ..., ... },
+                     ... })
+
+   See the documentation of OptionalPanel for details of the feature
+   description object.
+
    DEFINING NEW FIELD TYPES
 
    To define a new field type, just define a new function that follows
@@ -218,8 +231,10 @@ import { OverlayTrigger, Tooltip, TypeAheadSelect } from "patternfly-react";
 
 import { show_modal_dialog } from "cockpit-components-dialog.jsx";
 import { StatelessSelect, SelectEntry } from "cockpit-components-select.jsx";
+import * as PK from "packagekit";
 
 import { fmt_size, block_name, format_size_and_text } from "./utils.js";
+import { fmt_to_fragments } from "./utilsx.jsx";
 import client from "./client.js";
 
 import "form-layout.less";
@@ -275,7 +290,71 @@ function is_visible(field, values) {
     return !field.options || field.options.visible == undefined || field.options.visible(values);
 }
 
-const Body = ({ body, fields, values, errors, onChange }) => {
+class Revealer extends React.Component {
+    constructor() {
+        super();
+        this.state = { revealed: false };
+    }
+
+    render() {
+        return (
+            <div>
+                <a onClick={event => { if (event.button == 0) this.setState({ revealed: !this.state.revealed }); }}>
+                    {this.props.summary}
+                </a> <i className={this.state.revealed ? "fa fa-angle-down" : "fa fa-angle-right"} />
+                <br />
+                {this.state.revealed && this.props.children}
+            </div>
+        );
+    }
+}
+
+function install_data_summary(data) {
+    if (!data || data.missing_names.length == 0)
+        return null;
+
+    let summary;
+    if (data.extra_names.length == 0)
+        summary = fmt_to_fragments(_("The $0 package will be installed."), <strong>{data.missing_names[0]}</strong>);
+    else
+        summary = fmt_to_fragments(cockpit.ngettext(_("The $0 package and $1 other package will be installed."),
+                                                    _("The $0 package and $1 other packages will be installed."),
+                                                    data.extra_names.length), <strong>{data.missing_names[0]}</strong>, data.extra_names.length);
+    if (data.remove_names.length > 0) {
+        summary = <>
+            {summary}
+            <br />
+            <span className="pficon pficon-warning-triangle-o" />{ "\n" }
+            {cockpit.format(cockpit.ngettext(_("$0 package needs to be removed."),
+                                             _("$0 packages need to be removed."),
+                                             data.remove_names.length),
+                            data.remove_names.length)}
+        </>;
+    }
+    if (data.extra_names.length > 0 || data.remove_names.length > 0) {
+        let extra_details = null;
+        let remove_details = null;
+        if (data.extra_names.length > 0)
+            extra_details = (
+                <div>
+                    {_("Additional packages:")}
+                    <ul className="package-list-ct">{data.extra_names.map(id => <li key={id}>{id}</li>)}</ul>
+                </div>
+            );
+        if (data.remove_names.length > 0)
+            remove_details = (
+                <div>
+                    {_("Removals:")}
+                    <ul className="package-list">{data.remove_names.map(id => <li key={id}>{id}</li>)}</ul>
+                </div>
+            );
+        summary = <><p>{summary}</p><Revealer summary={_("Details")}>{extra_details}{remove_details}</Revealer></>;
+    }
+
+    return <><br />{summary}</>;
+}
+
+const Body = ({ body, fields, values, errors, feature_install_data, onChange }) => {
     function make_row(field, index) {
         if (field.length !== undefined)
             return make_rows(field, index);
@@ -307,6 +386,7 @@ const Body = ({ body, fields, values, errors, onChange }) => {
         <div className="modal-body">
             { body || null }
             { make_rows(fields) }
+            { install_data_summary(feature_install_data) }
         </div>
     );
 };
@@ -315,10 +395,50 @@ function flatten(arr1) {
     return arr1.reduce((acc, val) => Array.isArray(val) ? acc.concat(flatten(val)) : acc.concat(val), []);
 }
 
+function update_checking_progress(update_progress) {
+    return p => {
+        let pm = null;
+        if (p.waiting)
+            pm = _("Waiting for other software management operations to finish");
+        else
+            pm = _("Checking installed software");
+        update_progress(pm, p.cancel);
+    };
+}
+
+function update_install_progress(update_progress) {
+    return p => {
+        var text = null;
+        if (p.waiting) {
+            text = _("Waiting for other software management operations to finish");
+        } else if (p.package) {
+            var fmt;
+            if (p.info == PK.Enum.INFO_DOWNLOADING)
+                fmt = _("Downloading $0");
+            else if (p.info == PK.Enum.INFO_REMOVING)
+                fmt = _("Removing $0");
+            else
+                fmt = _("Installing $0");
+            text = fmt_to_fragments(fmt, <strong>{p.package}</strong>);
+        }
+        update_progress(text, p.cancel);
+    };
+}
+
+function install_feature(feature, install_data, update_progress) {
+    return PK.install_missing_packages(install_data, update_install_progress(update_progress))
+            .then(() => {
+                if (feature)
+                    feature.enable();
+                update_progress(null, null);
+            });
+}
+
 export const dialog_open = (def) => {
     const nested_fields = def.Fields || [];
     const fields = flatten(nested_fields);
     const values = { };
+    let feature_install_data = null;
 
     fields.forEach(f => { values[f.tag] = f.initial_value });
 
@@ -340,23 +460,24 @@ export const dialog_open = (def) => {
             body: <Body body={def.Body}
                         fields={nested_fields}
                         values={values}
+                        feature_install_data={feature_install_data}
                         errors={errors}
                         onChange={trigger => update(null, trigger)} />
         };
     };
 
-    const update_footer = (running_title, running_promise) => {
-        dlg.setFooterProps(footer_props(running_title, running_promise));
+    const update_footer = (running_title, cancel) => {
+        dlg.setFooterProps(footer_props(running_title, cancel));
     };
 
-    const footer_props = (running_title, running_promise) => {
+    const footer_props = (running_title, cancel) => {
         let actions = [];
         if (def.Action) {
             actions = [
                 {
                     caption: def.Action.Title,
                     style: (def.Action.Danger || def.Action.DangerButton) ? "danger" : "primary",
-                    disabled: running_promise != null,
+                    disabled: running_title || running_title === "",
                     clicked: function (progress_callback) {
                         const func = () => {
                             return validate()
@@ -366,7 +487,8 @@ export const dialog_open = (def) => {
                                             if (is_visible(f, values))
                                                 visible_values[f.tag] = values[f.tag];
                                         });
-                                        return def.Action.action(visible_values, progress_callback);
+                                        return install_feature(def.feature, feature_install_data, progress_callback)
+                                                .then(() => def.Action.action(visible_values, progress_callback));
                                     })
                                     .catch(error => {
                                         if (error.toString() != "[object Object]") {
@@ -389,14 +511,15 @@ export const dialog_open = (def) => {
         </div>;
 
         return {
-            idle_message: (running_promise
+            idle_message: (running_title || running_title === ""
                 ? <>
                     <div className="spinner spinner-sm" /><span>{running_title}</span>
                 </>
                 : null),
             extra_element: extra,
             actions: actions,
-            cancel_caption: def.Action ? _("Cancel") : _("Close")
+            cancel_caption: def.Action ? _("Cancel") : _("Close"),
+            dialog_done: f => { if (!f && cancel) cancel(); }
         };
     };
 
@@ -418,8 +541,12 @@ export const dialog_open = (def) => {
 
     const self = {
         run: (title, promise) => {
-            update_footer(title, promise);
-            promise.then(
+            self.run_action(update_progress => { update_progress(title, null); return promise });
+        },
+
+        run_action: callback => {
+            update_footer("", null);
+            callback(update_footer).then(
                 () => {
                     update_footer(null, null);
                 },
@@ -452,6 +579,20 @@ export const dialog_open = (def) => {
         },
 
     };
+
+    if (def.feature && !def.feature.is_enabled()) {
+        self.run_action(update_progress => {
+            return PK.check_missing_packages([def.feature.package], update_checking_progress(update_progress))
+                    .then(data => {
+                        if (data.unavailable_names.length > 0)
+                            return Promise.reject(cockpit.format(_("The $0 package is not available from any repository."),
+                                                                 data.unavailable_names[0]));
+                        feature_install_data = data;
+                        update(null, null);
+                        update_footer(null, null);
+                    });
+        });
+    }
 
     return self;
 };
