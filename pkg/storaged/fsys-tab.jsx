@@ -214,10 +214,6 @@ export function mounting_dialog(client, block, mode) {
                 }));
     }
 
-    function remove() {
-        dlg.run(null, maybe_update_config("", "").then(() => dlg.close()));
-    }
-
     let fields = null;
     if (mode == "mount" || mode == "update")
         fields = [
@@ -239,20 +235,27 @@ export function mounting_dialog(client, block, mode) {
                        },
             ),
         ];
+    else if (mode == "unmount")
+        fields = [
+            CheckBoxes("unmount_options", "",
+                       {
+                           value: {
+                               rm: false,
+                           },
+                           fields: [
+                               { title: _("Clear mount point configuration"), tag: "rm" }
+                           ]
+                       }
+            )
+        ];
 
     let footer = null;
-    const show_clear_button = false;
-    if (old_dir && mode == "update" && show_clear_button)
-        footer = <div className="modal-footer-teardown"><a onClick={remove}>{_("Clear mount point configuration")}</a></div>;
     if (!is_filesystem_mounted && block_fsys.MountPoints.length > 0)
         footer = (
-            <>
-                {footer}
-                <div className="modal-footer-teardown">
-                    <p>{cockpit.format(_("The filesystem is already mounted at $0.  Proceeding will unmount it."),
-                                       utils.decode_filename(block_fsys.MountPoints[0]))}</p>
-                </div>
-            </>);
+            <div className="modal-footer-teardown">
+                <p>{cockpit.format(_("The filesystem is already mounted at $0.  Proceeding will unmount it."),
+                                   utils.decode_filename(block_fsys.MountPoints[0]))}</p>
+            </div>);
 
     const mode_title = {
         mount: _("Mount Filesystem"),
@@ -266,31 +269,25 @@ export function mounting_dialog(client, block, mode) {
         update: _("Apply")
     };
 
-    function do_unmount() {
-        var opts = [];
-        opts.push("noauto");
-        if (opt_ro)
-            opts.push("ro");
-        opts = opts.concat(extra_options);
-        return maybe_update_config(old_dir, unparse_options(opts));
-    }
-
-    if (mode == "unmount") {
-        client.run(do_unmount).catch(error => dialog_open({ Title: _("Error"), Body: error.toString() }));
-        return;
-    }
-
-    const dlg = dialog_open({
+    dialog_open({
         Title: mode_title[mode],
         Fields: fields,
         Footer: footer,
         Action: {
             Title: mode_action[mode],
             action: function (vals) {
+                var opts = [];
                 if (mode == "unmount") {
-                    return do_unmount();
+                    if (vals.unmount_options.rm) {
+                        return maybe_update_config("", "");
+                    } else {
+                        opts.push("noauto");
+                        if (opt_ro)
+                            opts.push("ro");
+                        opts = opts.concat(extra_options);
+                        return maybe_update_config(old_dir, unparse_options(opts));
+                    }
                 } else if (mode == "mount" || mode == "update") {
-                    var opts = [];
                     if (mode == "update" && opt_noauto)
                         opts.push("noauto");
                     if (vals.mount_options.ro)
