@@ -481,6 +481,12 @@ PageServer.prototype = {
                 return;
             }
 
+            if (self.os_updates == false) {
+                // some error, don't show anything
+                $("#system_information_updates").toggle(false);
+                return;
+            }
+
             var infos = Object.keys(self.os_updates || {}).sort();
             if (infos.length === 0) {
                 $("#system_information_updates_text").text(_("System Up To Date"));
@@ -526,13 +532,12 @@ PageServer.prototype = {
                         os_updates[info] = (os_updates[info] || 0) + 1;
                     }
                 })
-                    .then(refresh_os_updates_state)
                     .catch(function(ex) {
-                        // if PackageKit is not available, hide the table line
+                    // if PackageKit is not available, hide the table line
                         console.warn("Checking for available updates failed:", ex.toString());
-                        self.os_updates_icon.className = "";
-                        $("#system_information_updates_text").toggle(false);
-                    });
+                        self.os_updates = false;
+                    })
+                    .then(refresh_os_updates_state);
         }
 
         // check for updates now and on page switches, in case they get applied on /updates or terminal
