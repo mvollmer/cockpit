@@ -320,8 +320,7 @@ on_other_control (CockpitTransport *transport,
         }
 
       /* If we have info we can respond to basic authorize challenges.
-         This is used when troubleshooting connections to remote
-         machines.
+         This is used for remote machines.
       */
       else if (challenge && g_hash_table_contains (self->authorize_values, challenge))
         {
@@ -335,15 +334,18 @@ on_other_control (CockpitTransport *transport,
           g_bytes_unref (reply);
         }
 
-      /* Otherwise forward the authorize challenge on.  This is how we
-         use the login password for SSH to remote machines, and also
-         for root bridges on remote machines.
-      */
+      /* Don't pass on "authorize" messages.
+       */
       else
         {
-          g_hash_table_add (self->authorizes, g_strdup (cookie));
-          cockpit_transport_send (self->transport, NULL, payload);
+          reply = cockpit_transport_build_control ("command", "authorize",
+                                                   "cookie", cookie,
+                                                   "response", "",
+                                                   NULL);
+          cockpit_transport_send (transport, NULL, reply);
+          g_bytes_unref (reply);
         }
+
     }
 
   /* Otherwise we need an init message first */
