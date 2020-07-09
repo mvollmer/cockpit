@@ -10,7 +10,11 @@
     {{/available}}
 
     {{#available}}
-    <p translate="yes">Cockpit was unable to log into {{#strong}}{{host}}{{/strong}}. You can change your authentication credentials below. {{#can_sync}}You may prefer to {{#sync_link}}synchronize accounts and passwords{{/sync_link}}.{{/can_sync}}</p>
+    <p translate="yes">Cockpit was unable to log into
+    {{#strong}}{{host}}{{/strong}} automatically. You need to provide
+    your authentication credentials every time you connect to this
+    machine. You may want to set up your SSH keys for automatic
+    login.</p>
 
     <div>
         <table class="form-table-ct">
@@ -52,13 +56,6 @@
                 <td translate="yes" class="top">Password</td>
                 <td>
                     <input class="form-control" id="login-custom-password" type="password" />
-                </td>
-                <td>
-                    <a tabindex="0" role="button" data-toggle="popover"
-                        data-trigger="focus" data-placement="bottom" translate="data-content"
-                        data-content="Entering a different password here means you will need to retype it every time you reconnect to this machine">
-                        <span class="fa fa-lg fa-info-circle"></span>
-                    </a>
                 </td>
             </tr>
             {{/password}}

@@ -460,7 +460,7 @@ function MachinesIndex(index_options, machines, loader, mdialogs) {
                 title = _("Connecting to the machine");
                 message = "";
             } else {
-                title = _("Couldn't connect to the machine");
+                title = _("Not connected to the machine");
                 if (machine.problem == "not-found") {
                     message = _("Cannot connect to an unknown machine");
                 } else {
