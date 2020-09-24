@@ -1569,7 +1569,6 @@ class TestMachines(MachineCase, StorageHelpers, NetworkHelpers):
         # https://bugzilla.redhat.com/show_bug.cgi?id=1818089
         # After shutting it off virt-install will restart the domain and exit because of the above bug
         # Wait for virt-install to define the VM and then stop it in real
-        self.machine.execute("virsh destroy pxe-guest")
         wait(lambda: "pxe-guest" in self.machine.execute("virsh list --persistent"), delay=3)
         self.machine.execute("virsh destroy pxe-guest")
 
