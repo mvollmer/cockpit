@@ -50,6 +50,6 @@ class BasicTestSuite(SeleniumTest):
         self.wait_frame("network")
         self.wait_id("networking-interfaces")
 
-        self.click(self.wait_xpath("//tr[@data-interface='%s']" % out, cond=clickable))
-        self.wait_text("Carrier", element="td")
+        self.click(self.wait_css("tr[data-interface='%s'] button" % out, cond=clickable))
+        self.wait_text("Carrier", element="dt")
         self.mainframe()

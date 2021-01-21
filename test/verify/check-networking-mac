@@ -42,12 +42,12 @@ class TestNetworkingMAC(NetworkCase):
 
         mac = m.execute("cat /sys/class/net/%s/address" % iface).strip()
 
-        b.click("#networking-interfaces tr[data-interface='%s']" % iface)
+        self.select_iface(iface)
         b.wait_text("#network-interface-mac", mac.upper())
 
         if self.networkmanager_version >= [1, 4, 0]:
             new_mac = self.network.interface()["mac"]
-            b.click("#network-interface-mac a")
+            b.click("#network-interface-mac button")
             b.wait_popup("network-mac-settings-dialog")
             b.set_val('#network-mac-settings-input', new_mac)
             b.click("#network-mac-settings-apply")
@@ -57,7 +57,7 @@ class TestNetworkingMAC(NetworkCase):
             self.assertIn(new_mac.lower(), m.execute("ip link show '%s'" % iface))
 
         else:
-            b.wait_not_present("#network-interface-mac a")
+            b.wait_not_present("#network-interface-mac button")
 
     def testBondMac(self):
         b = self.browser
@@ -78,7 +78,7 @@ class TestNetworkingMAC(NetworkCase):
         b.click("#network-bond-settings-dialog button:contains('Apply')")
         b.wait_popdown("network-bond-settings-dialog")
 
-        b.click("#networking-interfaces tr[data-interface='tbond'] td:first-child")
+        self.select_iface('tbond')
         b.wait_visible("#network-interface")
 
         mac = m.execute("cat /sys/class/net/tbond/address").strip()
@@ -86,7 +86,7 @@ class TestNetworkingMAC(NetworkCase):
 
         if self.networkmanager_version >= [1, 6, 0]:
             new_mac = self.network.interface()["mac"]
-            b.click("#network-interface-mac a")
+            b.click("#network-interface-mac button")
             b.wait_popup("network-mac-settings-dialog")
             b.set_val('#network-mac-settings-input', new_mac)
             b.click("#network-mac-settings-apply")
@@ -96,7 +96,7 @@ class TestNetworkingMAC(NetworkCase):
             self.assertIn(new_mac.lower(), m.execute("ip link show tbond"))
 
         else:
-            b.wait_not_present("#network-interface-mac a")
+            b.wait_not_present("#network-interface-mac button")
 
 
 
