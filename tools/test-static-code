@@ -122,7 +122,7 @@ else
     # all normal files which are either:
     #   - filename is *.py
     #   - executable matching ^#!/usr/bin/python3
-    PYFILES="$(find . -type f '(' -name '*.py' -o -executable -execdir grep -q '^#!/usr/bin/python3' '{}' ';' ')'  -print)"
+    PYFILES="$(find . -type f -not -path './node_modules/*' -not -path './bots/*' '(' -name '*.py' -o -executable -execdir grep -q '^#!/usr/bin/python3' '{}' ';' ')'  -print)"
     # W504 and W503 are mutually exclusive (and both disabled by default)
     # explicitly giving '--ignore W504' here is actually more strict than the default
     # TODO: E402 should be fixed
@@ -130,10 +130,10 @@ else
     out=$(python3 -m "$PYTHON_STYLE_CHECKER" --max-line-length=415 --ignore E402,W504,W605 $PYFILES) || true
     if [ -n "$out" ]; then
         echo "$out" >&2
-        echo "not ok 7 $PYTHON_STYLE_CHECKER test"
+        echo "not ok 7 $PYTHON_STYLE_CHECKER"
         fail=1
     else
-        echo "ok 7 $PYTHON_STYLE_CHECKER test"
+        echo "ok 7 $PYTHON_STYLE_CHECKER"
     fi
 fi
 
