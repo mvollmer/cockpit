@@ -23,7 +23,7 @@ import React from "react";
 import {
     Card, CardBody, CardTitle, CardHeader, CardActions,
     DataListItem, DataListItemRow, DataListItemCells, DataListCell, DataList,
-    Text, TextVariants
+    Text, TextVariants, Stack, Form, Checkbox, FormGroup, TextInput as TextInputPF
 } from "@patternfly/react-core";
 import { EditIcon, MinusIcon, PlusIcon, ExclamationTriangleIcon } from "@patternfly/react-icons";
 
@@ -356,44 +356,39 @@ function edit_tang_adv(client, block, key, url, adv, passphrase) {
 }
 
 const RemovePassphraseField = (tag, key, dev) => {
+    function validate(val) {
+        if (val === "")
+            return _("Passphrase can not be empty");
+    }
+
     return {
         tag: tag,
-        title: <ExclamationTriangleIcon className="ct-icon-exclamation-triangle" size="lg" />,
-        options: { },
+        title: null,
+        options: { validate: validate },
         initial_value: "",
+        bare: true,
 
-        render: (val, change) => {
-            const key_slot = cockpit.format(_("key slot $0"), key.slot);
+        render: (val, change, validated, error) => {
             return (
-                <div data-field={tag}>
-                    <h3>
-                        { fmt_to_fragments(_("Remove passphrase in $0?"), <b>{key_slot}</b>) }
-                    </h3>
+                <Stack hasGutter>
                     <p>{ fmt_to_fragments(_("Passphrase removal may prevent unlocking $0."), <b>{dev}</b>) }</p>
-
-                    <div name="remove-passphrase" className="progressive-disclosure ct-form">
-                        <div className="form-group">
-                            <label>
-                                <input type="radio" checked={val !== false}
-                                       autoFocus
-                                       onChange={event => change("")} />
-                                {_("Confirm removal with passphrase")}
-                            </label>
-                            <input className="form-control" type="password" hidden={val === false}
-                                   value={val} onChange={event => change(event.target.value)} />
-                        </div>
-                        <div className="form-group">
-                            <label>
-                                <input type="radio" checked={val === false}
-                                       onChange={event => change(false)} />
-                                { fmt_to_fragments(_("Force remove passphrase in $0"), <b>{key_slot}</b>) }
-                            </label>
-                            <p className="slot-warning" hidden={val !== false}>
-                                Removing a passphrase without confirmation can be dangerous.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                    <Checkbox id="force-remove-passphrase"
+                              isChecked={val !== false}
+                              label={_("Confirm removal with an alternate passphrase")}
+                              onChange={checked => change(checked ? "" : false)}
+                              body={val === false
+                                    ? <p className="slot-warning">
+                                          {_("Removing a passphrase without confirmation of another passphrase may prevent unlocking or key management, if other passphrases are forgotten or lost.")}
+                                      </p>
+                                    : <FormGroup label={_("Passphrase from any other key slot")}
+                                                 validated={validated} helperTextInvalid={error}
+                                                 fieldId="remove-passphrase">
+                                          <TextInputPF id="remove-passphrase" type="password" value={val}
+                                                       onChange={value => change(value)} />
+                                      </FormGroup>
+                                   }
+                    />
+                </Stack>
             );
         }
     };
@@ -401,18 +396,16 @@ const RemovePassphraseField = (tag, key, dev) => {
 
 function remove_passphrase_dialog(block, key) {
     dialog_open({
-        Title: _("Remove passphrase"),
+        Title: <><ExclamationTriangleIcon className="ct-icon-exclamation-triangle" /> {cockpit.format(_("Remove passphrase in key slot $0"), key.slot)}</>,
         Fields: [
             RemovePassphraseField("passphrase", key, block_name(block))
         ],
+        isFormHorizontal: false,
         Action: {
             DangerButton: true,
             Title: _("Remove"),
             action: function (vals) {
-                if (vals.passphrase === false)
-                    return slot_remove(block, key.slot);
-                else
-                    return passphrase_remove(block, vals.passphrase);
+                console.log("ACTION", vals);
             }
         }
     });
