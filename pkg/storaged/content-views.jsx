@@ -409,52 +409,40 @@ function block_description(client, block) {
 }
 
 function append_row(client, rows, level, key, name, desc, tabs, job_object) {
-    // Except in a very few cases, we don't both have a button and
-    // a spinner in the same row, so we put them in the same
-    // place.
+    var menu = null;
+    if (tabs.menu_actions && tabs.menu_actions.length > 0)
+        menu = <StorageBarMenu id={"menu-" + name} menuItems={tabs.menu_actions.map(menuitem)} isKebab />;
 
-    var last_column = null;
+    var actions = <>{tabs.row_action}{tabs.actions}{"\n"}{menu}</>;
+
+    var info = null;
     if (job_object && client.path_jobs[job_object])
-        last_column = (
-            <Spinner isSVG size="md" />
-        );
-    if (tabs.row_action) {
-        if (last_column) {
-            last_column = <span>{last_column}{tabs.row_action}</span>;
-        } else {
-            last_column = tabs.row_action;
-        }
-    }
-
-    if (tabs.has_warnings) {
-        last_column = <span>{last_column}<ExclamationTriangleIcon className="ct-icon-exclamation-triangle" /></span>;
-    }
+        info = <Spinner isSVG size="md" />;
+    if (tabs.has_warnings)
+        info = <>{info}<ExclamationTriangleIcon className="ct-icon-exclamation-triangle" /></>;
+    if (info)
+        info = <>{"\n"}{info}</>;
 
     var cols = [
         {
-            title: <span key={name} className={"content-level-" + level}>
-                {utils.format_size_and_text(desc.size, desc.text)}
-            </span>
+            title: (
+                <span key={name} className={"content-level-" + level}>
+                    {utils.format_size_and_text(desc.size, desc.text)}
+                    {info}
+                </span>)
         },
         { title: name },
-        { title: last_column, props: { className: "content-action" } },
+        { title: actions, props: { className: "content-action" } }
     ];
 
     function menuitem(action) {
         return <StorageMenuItem key={action.title} onClick={action.func}>{action.title}</StorageMenuItem>;
     }
 
-    var menu = null;
-    if (tabs.menu_actions && tabs.menu_actions.length > 0)
-        menu = <StorageBarMenu id={"menu-" + name} menuItems={tabs.menu_actions.map(menuitem)} />;
-
-    var actions = <>{tabs.actions}{menu}</>;
-
     rows.push({
         props: { key },
         columns: cols,
-        expandedContent: <ListingPanel tabRenderers={tabs.renderers}
-                                       listingActions={actions} />
+        expandedContent: <ListingPanel tabRenderers={tabs.renderers} />
     });
 }
 
