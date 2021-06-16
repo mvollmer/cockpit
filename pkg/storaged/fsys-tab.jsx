@@ -518,18 +518,21 @@ export class FilesystemTab extends React.Component {
                     <DescriptionListGroup>
                         <DescriptionListTerm>{_("Name")}</DescriptionListTerm>
                         <DescriptionListDescription>
-                            <StorageLink onClick={rename_dialog}>
-                                {this.props.block.IdLabel || "-"}
-                            </StorageLink>
+                            {this.props.block.IdLabel || "-"} { "\n" }
+                            <StorageLink onClick={rename_dialog}>{_("edit")}</StorageLink>
                         </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptionListGroup>
                         <DescriptionListTerm>{_("Mount point")}</DescriptionListTerm>
                         <DescriptionListDescription>
                             { mount_point_text &&
-                            <StorageLink onClick={() => mounting_dialog(self.props.client, block, "update")}>
-                                { mount_point_text }
-                            </StorageLink> }
+                            <>
+                                { mount_point_text } { "\n" }
+                                <StorageLink onClick={() => mounting_dialog(self.props.client, block, "update")}>
+                                    {_("edit")}
+                                </StorageLink>
+                            </>
+                            }
                             { extra_text }
                         </DescriptionListDescription>
                     </DescriptionListGroup>

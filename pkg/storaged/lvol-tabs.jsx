@@ -414,7 +414,8 @@ export class BlockVolTab extends React.Component {
                     <DescriptionListGroup>
                         <DescriptionListTerm>{_("Name")}</DescriptionListTerm>
                         <DescriptionListDescription>
-                            <StorageLink onClick={rename}>{this.props.lvol.Name}</StorageLink>
+                            {this.props.lvol.Name} { "\n" }
+                            <StorageLink onClick={rename}>{_("edit")}</StorageLink>
                         </DescriptionListDescription>
                     </DescriptionListGroup>
                     { !unused_space &&
@@ -472,7 +473,8 @@ export class PoolVolTab extends React.Component {
                 <DescriptionListGroup>
                     <DescriptionListTerm>{_("Name")}</DescriptionListTerm>
                     <DescriptionListDescription>
-                        <StorageLink onClick={rename}>{this.props.lvol.Name}</StorageLink>
+                        {this.props.lvol.Name} { "\n" }
+                        <StorageLink onClick={rename}>{_("edit")}</StorageLink>
                     </DescriptionListDescription>
                 </DescriptionListGroup>
 
