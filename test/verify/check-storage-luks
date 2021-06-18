@@ -94,7 +94,7 @@ class TestStorageLuks(StorageCase):
         b.wait_visible("#storage-detail")
 
         # Unlock, this uses the stored passphrase
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.content_row_wait_in_col(2, 1, "ext4 file system")
 
         # Change options.  We keep trying until the stack has synched
@@ -119,7 +119,7 @@ class TestStorageLuks(StorageCase):
         b.wait_not_in_text("#detail-content", "ext4 file system")
 
         # Unlock, this tries the wrong passphrase but eventually prompts.
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.dialog({"passphrase": "vainu-reku-toma-rolle-kaja"})
         self.content_row_wait_in_col(2, 1, "ext4 file system")
 
@@ -135,7 +135,7 @@ class TestStorageLuks(StorageCase):
         b.wait_not_in_text("#detail-content", "ext4 file system")
 
         # Unlock, this asks for a passphrase
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.dialog({"passphrase": "vainu-reku-toma-rolle-kaja"})
         self.content_row_wait_in_col(2, 1, "ext4 file system")
 
@@ -175,7 +175,7 @@ class TestStorageLuks(StorageCase):
         b.click('.sidepanel-row:contains("MYDISK")')
         b.wait_visible("#storage-detail")
 
-        self.content_row_action(1, "Format")
+        self.content_dropdown_action(1, "Format")
         self.dialog({"type": "ext4",
                      "crypto": self.default_crypto_type,
                      "name": "ENCRYPTED",
@@ -218,7 +218,7 @@ class TestStorageLuks(StorageCase):
 
         # Unlock it.  This should succeed without prompting.
         #
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.content_row_wait_in_col(2, 1, "ext4 file system")
 
         # Edit the key, without providing an existing passphrase
@@ -258,7 +258,7 @@ class TestStorageLuks(StorageCase):
         b.click('.sidepanel-row:contains("MYDISK")')
         b.wait_visible("#storage-detail")
         # create volume and passphrase
-        self.content_row_action(1, "Format")
+        self.content_dropdown_action(1, "Format")
         self.dialog({"type": "ext4",
                      "crypto": "luks1",
                      "name": "ENCRYPTED",
@@ -285,13 +285,13 @@ class TestStorageLuks(StorageCase):
         # unlock with first passphrase
         self.content_dropdown_action(1, "Lock")
         b.wait_not_in_text("#detail-content", "ext4 file system")
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.dialog({"passphrase": "vainu-reku-toma-rolle-kaja"})
         self.content_row_wait_in_col(2, 1, "ext4 file system")
         # unlock with second passphrase
         self.content_dropdown_action(1, "Lock")
         b.wait_not_in_text("#detail-content", "ext4 file system")
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.dialog({"passphrase": "vainu-reku-toma-rolle-kaja-1"})
         self.content_row_wait_in_col(2, 1, "ext4 file system")
         # delete second key slot
@@ -307,7 +307,7 @@ class TestStorageLuks(StorageCase):
         # check that it is not possible to unlock with deleted passphrase
         self.content_dropdown_action(1, "Lock")
         b.wait_not_in_text("#detail-content", "ext4 file system")
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.dialog_wait_open()
         self.dialog_set_val("passphrase", "vainu-reku-toma-rolle-kaja-1")
         self.dialog_apply()
@@ -349,7 +349,7 @@ class TestStorageLuks(StorageCase):
         b.click("button:contains('Remove')")
         b.wait_not_present("#remove-passphrase")
         # check that it is not possible to unlock with deleted passphrase
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.dialog_wait_open()
         self.dialog_set_val("passphrase", "vainu-reku-toma-rolle-kaja")
         self.dialog_apply()
@@ -367,7 +367,7 @@ class TestStorageLuks(StorageCase):
         self.dialog_apply()
         self.dialog_wait_close()
         # unlock volume with the newly created passphrase
-        self.content_row_action(1, "Unlock")
+        self.content_dropdown_action(1, "Unlock")
         self.dialog({"passphrase": "vainu-reku-toma-rolle-kaja-8"})
         self.content_row_wait_in_col(2, 1, "ext4 file system")
 
@@ -383,7 +383,7 @@ class TestStorageLuks(StorageCase):
         b.click('.sidepanel-row:contains("MYDISK")')
         b.wait_visible("#storage-detail")
 
-        self.content_row_action(1, "Format")
+        self.content_dropdown_action(1, "Format")
         self.dialog({"type": "empty",
                      "crypto": self.default_crypto_type,
                      "passphrase": "vainu-reku-toma-rolle-kaja",
@@ -404,7 +404,7 @@ class TestStorageLuks(StorageCase):
         b.click('.sidepanel-row:contains("MYDISK")')
         b.wait_visible("#storage-detail")
 
-        self.content_row_action(1, "Format")
+        self.content_dropdown_action(1, "Format")
         self.dialog({"type": "ext4",
                      "crypto": self.default_crypto_type,
                      "crypto_options.auto": False,
@@ -426,7 +426,7 @@ class TestStorageLuks(StorageCase):
         self.assertIn("noauto", m.execute("grep /run/foo /etc/fstab || true"))
 
         # Mounting should also keep the "noauto", but it should not show up in the extra options
-        self.content_row_action(2, "Mount")
+        self.content_dropdown_action(2, "Mount")
         self.dialog_check({"mount_options.extra": False})
         self.dialog_apply()
         self.wait_mounted(2, 1)

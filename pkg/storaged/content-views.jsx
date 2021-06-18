@@ -152,8 +152,6 @@ function create_tabs(client, target, is_partition) {
         add_tab(_("Partition"), PartitionTab);
     }
 
-    let is_unrecognized = false;
-
     if (is_filesystem) {
         add_tab(_("Filesystem"), FilesystemTab, ["mismounted-fsys"]);
     } else if (is_crypto) {
@@ -169,16 +167,10 @@ function create_tabs(client, target, is_partition) {
     } else if (block && block.IdUsage == "other" && block.IdType == "swap") {
         add_tab(_("Swap"), SwapTab);
     } else if (block) {
-        is_unrecognized = true;
         add_tab(_("Unrecognized data"), UnrecognizedTab);
     }
 
-    var tab_actions = [];
     var tab_menu_actions = [];
-
-    function add_action(title, func) {
-        tab_actions.push(<StorageButton key={title} onClick={func}>{title}</StorageButton>);
-    }
 
     function add_menu_action(title, func) {
         tab_menu_actions.push({ title: title, func: func });
@@ -239,7 +231,7 @@ function create_tabs(client, target, is_partition) {
         if (client.blocks_cleartext[block.path]) {
             add_menu_action(_("Lock"), lock);
         } else {
-            add_action(_("Unlock"), unlock);
+            add_menu_action(_("Unlock"), unlock);
         }
     }
 
@@ -271,7 +263,7 @@ function create_tabs(client, target, is_partition) {
         if (lvol.Active) {
             add_menu_action(_("Deactivate"), deactivate);
         } else {
-            add_action(_("Activate"), activate);
+            add_menu_action(_("Activate"), activate);
         }
         if (client.lvols[lvol.ThinPool]) {
             add_menu_action(_("Create snapshot"), create_snapshot);
@@ -348,22 +340,18 @@ function create_tabs(client, target, is_partition) {
     }
 
     if (block) {
-        if (is_unrecognized)
-            add_action(_("Format"), () => format_dialog(client, block.path));
-        else
-            add_menu_action(_("Format"), () => format_dialog(client, block.path));
+        add_menu_action(_("Format"), () => format_dialog(client, block.path));
     }
 
     if (block_fsys) {
         if (is_mounted(client, block))
             add_menu_action(_("Unmount"), () => mounting_dialog(client, block, "unmount"));
         else
-            add_action(_("Mount"), () => mounting_dialog(client, block, "mount"));
+            add_menu_action(_("Mount"), () => mounting_dialog(client, block, "mount"));
     }
 
     return {
         renderers: tabs,
-        actions: tab_actions,
         menu_actions: tab_menu_actions,
         row_action: row_action,
         has_warnings: warnings.length > 0
@@ -413,7 +401,7 @@ function append_row(client, rows, level, key, name, desc, tabs, job_object) {
     if (tabs.menu_actions && tabs.menu_actions.length > 0)
         menu = <StorageBarMenu id={"menu-" + name} menuItems={tabs.menu_actions.map(menuitem)} isKebab />;
 
-    var actions = <>{tabs.row_action}{tabs.actions}{"\n"}{menu}</>;
+    var actions = <>{tabs.row_action}{"\n"}{menu}</>;
 
     var info = null;
     if (job_object && client.path_jobs[job_object])
