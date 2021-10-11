@@ -193,21 +193,21 @@ export class StorageOnOff extends React.Component {
  * in a dangerous color.
  */
 
-export const StorageUsageBar = ({ stats, critical, block, offset, total }) => {
+export const StorageUsageBar = ({ stats, critical, block, offset, total, small }) => {
     if (!stats)
         return null;
 
     const fraction = stats[0] / stats[1];
     const off_fraction = offset / stats[1];
     const total_fraction = total / stats[1];
-    const labelText = utils.format_fsys_usage(stats[0], stats[1]);
+    const labelText = small ? cockpit.format_bytes(stats[0], 1024) : utils.format_fsys_usage(stats[0], stats[1]);
 
     return (
-        <div className={"pf-c-progress pf-m-outside pf-m-singleline" + (fraction > critical ? " pf-m-danger" : "")}>
+        <div className={"pf-c-progress pf-m-outside pf-m-singleline" + (fraction > critical ? " pf-m-danger" : "") + (small ? " pf-m-sm" : "")}>
             <div className="pf-c-progress__status" aria-hidden="true">
                 <span className="pf-c-progress__measure">{labelText}</span>
             </div>
-            <div className="pf-c-progress__bar" role="progressbar"
+            <div className="pf-c-progress__bar ct-thin-progress" role="progressbar"
                  aria-valuemin="0" aria-valuemax={stats[1]} aria-valuenow={stats[0]}
                  aria-label={cockpit.format(_("Usage of $0"), block)}
                  aria-valuetext={labelText}>

@@ -113,6 +113,8 @@ export class SidePanelRow extends React.Component {
         else if (client.path_warnings[job_path])
             decoration = <ExclamationTriangleIcon className="ct-icon-exclamation-triangle" />;
 
+        const name_class = this.props.truncate_name ? "pf-u-text-truncate" : "pf-u-text-break-word";
+
         return (
             <FlexItem data-testkey={this.props.testkey}
                       className="sidepanel-row"
@@ -120,7 +122,7 @@ export class SidePanelRow extends React.Component {
                       onKeyPress={this.props.go ? go : null}
                       onClick={this.props.go ? go : null}>
                 <Flex flexWrap={{ default: 'nowrap' }}>
-                    <FlexItem grow={{ default: 'grow' }} className="sidepanel-row-name pf-u-text-break-word">{this.props.name}</FlexItem>
+                    <FlexItem grow={{ default: 'grow' }} className={"sidepanel-row-name " + name_class}>{this.props.name}</FlexItem>
                     <FlexItem>{decoration}</FlexItem>
                 </Flex>
                 <Flex className="sidepanel-row-info">
