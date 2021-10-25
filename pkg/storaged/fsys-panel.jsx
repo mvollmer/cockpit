@@ -23,7 +23,7 @@ import { cellWidth, SortByDirection } from '@patternfly/react-table';
 
 import { ListingTable } from "cockpit-components-table.jsx";
 import { StorageUsageBar } from "./storage-controls.jsx";
-import { block_name, fmt_size, go_to_block } from "./utils.js";
+import { block_name, fmt_size, go_to_block, flatten } from "./utils.js";
 import { OptionalPanel } from "./optional-panel.jsx";
 import { get_fstab_config } from "./fsys-tab.jsx";
 
@@ -121,33 +121,23 @@ export class FilesystemsPanel extends React.Component {
                     suffices.push(fs.Devnode);
             });
 
-            return {
-                props: { path, client, key: path },
-                columns: [
-                    {
-                        sortKey: prefix,
-                        title: <>
-                            <div>{prefix}</div>
-                            { filesystems.map((fs, i) => <div key={fs.Devnode}>{suffices[i]}</div>) }
-                        </>
-                    },
-                    {
-                        sortKey: "",
-                        title: <>
-                            <div><span style={{ visibility: "hidden" }}>X</span></div>
-                            { mount_points.map(mp => <div key={mp}>{mp}</div>) }
-                        </>
-                    },
-                    {
-                        title: <>
-                            <div><StorageUsageBar stats={use} critical={0.95} /></div>
-                            { filesystems.map((fs, i) => <div key={i}><StorageUsageBar stats={[Number(fs.data.Used), use[1]]} critical={1} small total={total} offset={offsets[i]} /></div>) }
-                        </>,
-                        props: { className: "ct-text-align-right" }
-
-                    }
-                ]
-            };
+            return filesystems.map((fs, i) => (
+                {
+                    props: { path, client, key: fs.path },
+                    columns: [
+                        {
+                            title: fs.Devnode
+                        },
+                        {
+                            sortKey: "",
+                            title: mount_points[i]
+                        },
+                        {
+                            title: <StorageUsageBar stats={[Number(fs.data.Used), use[1]]} critical={1} total={total} offset={offsets[i]} />,
+                            props: { className: "ct-text-align-right" }
+                        }
+                    ]
+                }));
         }
 
         const pools = Object.keys(client.stratis_pools).filter(has_filesystems)
@@ -179,7 +169,7 @@ export class FilesystemsPanel extends React.Component {
                         { title: _("Mount point"), transforms: [cellWidth(30)], sortable: true },
                         { title:  _("Size"), transforms: [cellWidth(40)] }
                     ]}
-                    rows={mounts.concat(pools)} />
+                    rows={mounts.concat(flatten(pools))} />
             </OptionalPanel>
         );
     }
