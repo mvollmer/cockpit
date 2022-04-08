@@ -42,8 +42,13 @@ export class StdDetailsLayout extends React.Component {
         if (this.props.sidebar) {
             return (
                 <>
+                    { this.props.alert
+                        ? <GridItem span={12}>
+                            { this.props.alert }
+                        </GridItem>
+                        : null
+                    }
                     <GridItem id="detail-header" span={12}>
-                        { this.props.alert }
                         { this.props.header }
                     </GridItem>
                     <GridItem span={12}>
@@ -65,8 +70,13 @@ export class StdDetailsLayout extends React.Component {
         } else {
             return (
                 <>
+                    { this.props.alert
+                        ? <GridItem span={12}>
+                            { this.props.alert }
+                        </GridItem>
+                        : null
+                    }
                     <GridItem id="detail-header" md={12}>
-                        { this.props.alert }
                         { this.props.header }
                     </GridItem>
                     <GridItem md={12}>
