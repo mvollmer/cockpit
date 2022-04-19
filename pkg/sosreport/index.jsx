@@ -17,29 +17,150 @@
  * along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from "react";
+import '../lib/patternfly/patternfly-4-cockpit.scss';
+import './sosreport.scss';
+import "polyfills";
+
+import React, { useState, useContext } from "react";
 import ReactDOM from "react-dom";
 import {
     Alert,
     Button,
     CodeBlockCode,
-    EmptyState,
-    EmptyStateVariant,
-    EmptyStateBody,
     Modal,
-    Progress,
+    Card,
+    CardBody,
+    Page,
+    PageSection,
+    PageSectionVariants,
+    Flex,
+    Label,
+    LabelGroup,
+    Dropdown,
+    DropdownItem,
+    KebabToggle,
+    Form,
+    FormGroup,
+    InputGroup,
+    TextInput,
+    Checkbox,
+    CardHeader,
+    CardTitle,
+    CardActions,
+    Text,
+    TextVariants
 } from "@patternfly/react-core";
+import { EyeIcon, EyeSlashIcon } from '@patternfly/react-icons';
+
+import { EmptyStatePanel } from "cockpit-components-empty-state.jsx";
+import { ListingTable } from "cockpit-components-table.jsx";
 
 import cockpit from "cockpit";
 import { superuser } from "superuser";
 import { useObject, useEvent } from "hooks";
 
-import "../lib/patternfly/patternfly-4-cockpit.scss";
-import "page.scss";
+import { SuperuserDialogs } from "../shell/superuser.jsx";
 
 const _ = cockpit.gettext;
 
-function sosCreate(setProgress, setError, setErrorDetail) {
+const ErrorHandlerContext = React.createContext();
+const WithErrorHandler = ErrorHandlerContext.Provider;
+const useErrorHandler = () => useContext(ErrorHandlerContext);
+
+function sosLister() {
+    const self = {
+        ready: false,
+        problem: null,
+        reports: {}
+    };
+
+    cockpit.event_target(self);
+
+    function emit_changed() {
+        self.dispatchEvent("changed");
+    }
+
+    function parse_report_name(path) {
+        const basename = path.replace(/.*\//, "");
+        const archive_rx = /^(secured-)?sosreport-(.*)\.tar\.[^.]+(\.gpg)?$/;
+        const m = basename.match(archive_rx);
+        if (m) {
+            let parts = m[2].split("-");
+            let obfuscated = false;
+            if (parts[parts.length - 1] == "obfuscated") {
+                obfuscated = true;
+                parts = parts.slice(0, -1);
+            }
+            let label = null;
+            if (parts.length >= 6) {
+                let start = 1;
+                if (parts[start] == "cockpit")
+                    start++;
+                label = parts.slice(start, -4).join("-");
+            }
+            return {
+                encrypted: !!m[1],
+                obfuscated: obfuscated,
+                host: parts[0],
+                date: parts.slice(-4, -1).join("-"),
+                label: label
+            };
+        }
+    }
+
+    function add_report(path) {
+        const report = parse_report_name(path);
+        if (report) {
+            self.reports[path] = report;
+            if (self.ready)
+                emit_changed();
+        }
+    }
+
+    function rem_report(path) {
+        delete self.reports[path];
+        emit_changed();
+    }
+
+    let watch = null;
+
+    function restart() {
+        if (superuser.allowed === null)
+            return;
+
+        if (watch)
+            watch.close("cancelled");
+        self.ready = false;
+        self.problem = null;
+        watch = cockpit.channel({ payload: "fslist1", path: "/var/tmp", superuser: true });
+        watch.addEventListener("close", (event, message) => {
+            self.problem = message.problem;
+            self.ready = true;
+            emit_changed();
+        });
+        watch.addEventListener("control", (event, payload) => {
+            if (payload.command == "ready") {
+                self.ready = true;
+                emit_changed();
+            }
+        });
+        watch.addEventListener("message", (event, payload) => {
+            const msg = JSON.parse(payload);
+            if (msg.event == "deleted")
+                rem_report(msg.path);
+            else if (msg.event == "present")
+                add_report("/var/tmp/" + msg.path);
+            else
+                add_report(msg.path);
+        });
+    }
+
+    restart();
+    superuser.addEventListener("changed", restart);
+    return self;
+}
+
+function sosCreate(args, setProgress, setError, setErrorDetail) {
     let output = "";
     let plugins_count = 0;
     const progress_regex = /Running ([0-9]+)\/([0-9]+):/; // Only for sos < 3.6
@@ -48,7 +169,8 @@ function sosCreate(setProgress, setError, setErrorDetail) {
     const archive_regex = /Your sosreport has been generated and saved in:\s+(\/[^\r\n]+)/;
 
     // TODO - Use a real API instead of scraping stdout once such an API exists
-    const task = cockpit.spawn(["sos", "report", "--batch"], { superuser: true, err: "out", pty: true });
+    const task = cockpit.spawn(["sos", "report", "--batch"].concat(args),
+                               { superuser: true, err: "out", pty: true });
 
     task.archive_url = null;
 
@@ -117,94 +239,299 @@ function sosCreate(setProgress, setError, setErrorDetail) {
     return task;
 }
 
-function sosDownload(task, setError, onClose) {
-    // We download via a hidden iframe to get better control over the error cases
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("src", task.archive_url);
-    iframe.setAttribute("hidden", "hidden");
-    iframe.addEventListener("load", () => {
-        const title = iframe.contentDocument.title;
-        if (title)
-            setError(title);
-        else
-            onClose();
+function sosDownload(path) {
+    const basename = path.replace(/.*\//, "");
+    const query = window.btoa(JSON.stringify({
+        payload: "fsread1",
+        binary: "raw",
+        path: path,
+        superuser: true,
+        max_read_size: 150 * 1024 * 1024,
+        external: {
+            "content-disposition": 'attachment; filename="' + basename + '"',
+            "content-type": "application/x-xz, application/octet-stream"
+        }
+    }));
+    const prefix = (new URL(cockpit.transport.uri("channel/" + cockpit.transport.csrf_token))).pathname;
+    const url = prefix + '?' + query;
+    return new Promise((resolve, reject) => {
+        // We download via a hidden iframe to get better control over the error cases
+        const iframe = document.createElement("iframe");
+        iframe.setAttribute("src", url);
+        iframe.setAttribute("hidden", "hidden");
+        iframe.addEventListener("load", () => {
+            const title = iframe.contentDocument.title;
+            if (title) {
+                reject(title);
+            } else {
+                resolve();
+            }
+        });
+        document.body.appendChild(iframe);
     });
-    document.body.appendChild(iframe);
+}
+
+function sosRemove(path) {
+    return cockpit.spawn(["bash", "-c", cockpit.format("shopt -s nullglob; rm '$0' '$0'.*", path)],
+                         { superuser: true, err: "message" });
 }
 
 const SOSDialog = ({ onClose }) => {
-    const [progress, setProgress] = useState(0);
+    const [label, setLabel] = useState("");
+    const [passphrase, setPassphrase] = useState("");
+    const [showPassphrase, setShowPassphrase] = useState(false);
+    const [obfuscate, setObfuscate] = useState(true);
+    const [verbose, setVerbose] = useState(false);
+    const [task, setTask] = useState(null);
+    const [progress, setProgress] = useState(null);
     const [error, setError] = useState(null);
     const [errorDetail, setErrorDetail] = useState(null);
 
-    const task = useObject(() => sosCreate(setProgress, setError, setErrorDetail),
-                           task => task.close(),
-                           []);
+    function run() {
+        setError(null);
+        setProgress(null);
+
+        const args = [];
+
+        if (label) {
+            args.push("--label");
+            args.push("cockpit-" + label);
+        }
+
+        if (passphrase) {
+            args.push("--encrypt-pass");
+            args.push(passphrase);
+        }
+
+        if (obfuscate) {
+            args.push("--clean");
+        }
+
+        if (verbose) {
+            args.push("-vvv");
+        }
+
+        const task = sosCreate(args, setProgress, err => { if (err == "cancelled") onClose(); else setError(err); },
+                               setErrorDetail);
+        setTask(task);
+        task.then(onClose);
+        task.finally(() => setTask(null));
+    }
 
     const actions = [];
+    actions.push(<Button key="run" isLoading={!!task} isDisabled={!!task} onClick={run}>
+        {_("Run report")}
+    </Button>);
+    if (task)
+        actions.push(<Button key="stop" variant="secondary" onClick={() => task.close("cancelled")}>
+            {_("Stop report")}
+        </Button>);
+    else
+        actions.push(<Button key="cancel" variant="link" onClick={onClose}>
+            {_("Cancel")}
+        </Button>);
 
-    if (task.archive_url) {
-        // success
-        actions.push(
-            <Button id="sos-download" key="download" variant="primary" onClick={ () => sosDownload(task, setError, onClose) }>
-                { _("Download report") }
-            </Button>);
-    } else if (!error && progress < 100) {
-        // in progress
-        actions.push(<Button id="sos-cancel" key="cancel" variant="secondary" onClick={ () => {
-            task.close("cancelled");
-            onClose();
-        } }>{ _("Cancel") }</Button>);
-    } else {
-        // error
-        actions.push(<Button key="close" variant="secondary" onClick={onClose}>{ _("Close") }</Button>);
-    }
-
-    let content;
-    if (error) {
-        content = <Alert variant="warning" isInline title={error}><CodeBlockCode>{errorDetail}</CodeBlockCode></Alert>;
-    } else {
-        content = (
-            <>
-                <Alert variant="info" isInline
-                       title={ _("The generated archive contains data considered sensitive and its content should be reviewed by the originating organization before being passed to any third party.") } />
-
-                <Progress id="sos-progress" value={progress} title={ progress == 100 ? _("Done!") : _("Generating report") } />
+    return <Modal id="sos-dialog"
+                  position="top"
+                  variant="medium"
+                  isOpen
+                  onClose={onClose}
+                  footer={
+                      <>
+                          {actions}
+                          {progress ? cockpit.format(_("Progress: $0"), progress.toFixed() + "%") : null}
+                      </>
+                  }
+                  title={ _("Run new report") }>
+        { error
+            ? <>
+                <Alert variant="warning" isInline title={error}>
+                    <CodeBlockCode>{errorDetail}</CodeBlockCode>
+                </Alert>
+                <br />
             </>
-        );
+            : null }
+        <p>{ _("SOS reporting collects system information to help with diagnosing problems.") }</p>
+        <p>{ _("This information is stored only on the system.") }</p>
+        <br />
+        <Form isHorizontal>
+            <FormGroup label={_("Report label")}>
+                <TextInput value={label} onChange={setLabel} />
+            </FormGroup>
+            <FormGroup label={_("Encryption passphrase")}
+                       helperText="Leave empty to skip encryption">
+                <InputGroup>
+                    <TextInput type={showPassphrase ? "text" : "password"} value={passphrase} onChange={setPassphrase} />
+                    <Button variant="control" onClick={() => setShowPassphrase(!showPassphrase)}>
+                        { showPassphrase ? <EyeSlashIcon /> : <EyeIcon /> }
+                    </Button>
+                </InputGroup>
+            </FormGroup>
+            <FormGroup label={_("Options")} hasNoPaddingTop>
+                <Checkbox label={_("Obfuscate potentially sensitive data")}
+                                 isChecked={obfuscate} onChange={setObfuscate} />
+                <Checkbox label={_("Use verbose logging")}
+                                 isChecked={verbose} onChange={setVerbose} />
+            </FormGroup>
+        </Form>
+    </Modal>;
+};
+
+const Menu = ({ items }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <Dropdown onSelect={() => setIsOpen(!isOpen)}
+                  toggle={<KebabToggle onToggle={setIsOpen} />}
+                  isOpen={isOpen}
+                  isPlain
+                  position="right"
+                  dropdownItems={items} />
+    );
+};
+
+const MenuItem = ({ onClick, onlyNarrow, children }) => (
+    <DropdownItem className={onlyNarrow ? "show-only-when-narrow" : null}
+                  onKeyPress={onClick}
+                  onClick={onClick}>
+        {children}
+    </DropdownItem>
+);
+
+const SOSBody = ({ run_report }) => {
+    const lister = useObject(sosLister, obj => obj.close, []);
+    useEvent(lister, "changed");
+
+    const superuser_proxy = useObject(() => cockpit.dbus(null, { bus: "internal" }).proxy("cockpit.Superuser",
+                                                                                          "/superuser"),
+                                      obj => obj.close(),
+                                      []);
+    useEvent(superuser_proxy, "changed");
+
+    const raiseError = useErrorHandler();
+
+    if (!lister.ready)
+        return <EmptyStatePanel loading />;
+
+    if (lister.problem && lister.problem != "access-denied")
+        return <EmptyStatePanel title={lister.problem} />;
+
+    function make_report_row(path) {
+        const report = lister.reports[path];
+
+        const labels = [];
+        if (report.encrypted)
+            labels.push(<Label key="enc" color="orange">
+                {_("Encrypted")}
+            </Label>);
+        if (report.obfuscated)
+            labels.push(<Label key="obf" color="gray">
+                {_("Obfuscated")}
+            </Label>);
+
+        const action = (
+            <Button variant="secondary" className="show-only-when-wide"
+                    onClick={() => sosDownload(path).catch(raiseError)}>
+                {_("Download")}
+            </Button>);
+        const menu = <Menu items={[
+            <MenuItem key="download"
+                      onlyNarrow
+                      onClick={() => sosDownload(path).catch(raiseError)}>
+                {_("Download")}
+            </MenuItem>,
+            <MenuItem key="remove"
+                      onClick={() => sosRemove(path).catch(raiseError)}>
+                {_("Remove")}
+            </MenuItem>
+        ]} />;
+
+        return {
+            props: { key: path },
+            columns: [
+                report.label || "-",
+                report.date,
+                { title: <LabelGroup>{labels}</LabelGroup> },
+                {
+                    title: <>{action}{menu}</>,
+                    props: { className: "pf-c-table__action table-row-action" }
+                },
+            ]
+        };
     }
 
-    return <Modal id="sos-dialog" position="top" variant="medium" isOpen onClose={onClose} actions={actions}
-                  title={ _("Create diagnostic report") }>{content}</Modal>;
+    return (
+        <PageSection>
+            <div className={lister.problem != "access-denied" ? "hidden" : null}>
+                <EmptyStatePanel
+                    title={_("Administrative access required")}
+                    paragraph={_("Administrative access is required to create and access reports.")}
+                    action={
+                        <SuperuserDialogs create_trigger={(unlocked, onclick) =>
+                            <Button onClick={onclick}>{_("Turn on administrative access")}</Button>}
+                                          proxy={superuser_proxy}
+                        />}
+                />
+            </div>
+            { !lister.problem &&
+            <Card className="ct-card">
+                <CardHeader>
+                    <CardTitle>
+                        <Text component={TextVariants.h2}>{_("Reports")}</Text>
+                    </CardTitle>
+                    <CardActions>
+                        <Button id="create-button" variant="primary" onClick={run_report}>
+                            {_("Run report")}
+                        </Button>
+                    </CardActions>
+                </CardHeader>
+                <CardBody className="contains-list">
+                    <ListingTable variant='compact'
+                                    emptyCaption={_("No system reports.")}
+                                    columns={ [
+                                        { title: _("Report label") },
+                                        { title: _("Date") },
+                                        { title: _("Attributes") },
+                                    ] }
+                                    rows={Object.keys(lister.reports).sort().map(make_report_row)}
+                    />
+                </CardBody>
+            </Card>
+            }
+        </PageSection>);
+};
+
+const SOSErrorDialog = ({ error, onClose }) => {
+    return <Modal id="sos-error-dialog"
+                  position="top"
+                  variant="medium"
+                  isOpen
+                  onClose={onClose}
+                  title={ _("Error") }>
+        <p>{error}</p>
+    </Modal>;
 };
 
 const SOSPage = () => {
     const [showDialog, setShowDialog] = useState(false);
-
-    useEvent(superuser, "changed");
+    const [error, setError] = useState(null);
 
     return (
-        <>
-            <EmptyState variant={EmptyStateVariant.full}>
-                <img className="pf-c-empty-state__icon" aria-hidden="true" src="./sosreport.png" alt="" />
-                <EmptyStateBody>
-                    <p>{ _("This tool will collect system configuration and diagnostic information from this system for use with diagnosing problems with the system.") }</p>
-                    <p>{ _("The collected information will be stored locally on the system.") }</p>
-                    { superuser.allowed || <p id="switch-instructions">{ _("You need to switch to \"Administrative access\" in order to create reports.") }</p> }
-                </EmptyStateBody>
-
-                { superuser.allowed &&
-                    <Button id="create-button" variant="primary" onClick={ () => setShowDialog(true) }>
-                        { _("Create report") }
-                    </Button> }
-            </EmptyState>
-
-            { showDialog && <SOSDialog onClose={ () => setShowDialog(false) } /> }
-        </>
-    );
+        <Page>
+            <WithErrorHandler value={setError}>
+                <PageSection variant={PageSectionVariants.light}>
+                    <Flex alignItems={{ default: 'alignItemsCenter' }}>
+                        <h2 className="pf-u-font-size-3xl">{_("System diagnostics")}</h2>
+                    </Flex>
+                </PageSection>
+                <SOSBody run_report={() => setShowDialog(true)} />
+                { showDialog && <SOSDialog onClose={() => setShowDialog(false)} /> }
+                { error && <SOSErrorDialog error={error.toString()} onClose={() => setError(null)} /> }
+            </WithErrorHandler>
+        </Page>);
 };
 
 document.addEventListener("DOMContentLoaded", () => {
     cockpit.translate();
-    ReactDOM.render(React.createElement(SOSPage, {}), document.getElementById('app'));
+    ReactDOM.render(<SOSPage />, document.getElementById('app'));
 });
