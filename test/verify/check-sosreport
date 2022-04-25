@@ -80,7 +80,8 @@ only-plugins=release,date,host,cgroups,networking
 
         b.wait_visible("tr:contains(mylabel) button:contains(Download)")
         if urlroot == "":
-            b.assert_pixels("#app", "table", ignore=["td[data-label=Date]"])
+            b.set_mock_data({"date": "XXXX-XX-XX"})
+            b.assert_pixels("#app", "table")
 
         if b.cdp.browser.name == "chromium":
             b.cdp.invoke("Page.setDownloadBehavior", behavior="allow", downloadPath=b.cdp.download_dir)

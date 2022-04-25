@@ -299,3 +299,40 @@ export function useEvent(obj, event, handler) {
         return () => obj && obj.removeEventListener(event, update);
     }, [obj, event, handler]);
 }
+
+/* - useMockData()
+ *
+ * function MyObjectLabel() {
+ *   const mock = useMockData();
+ *   const obj = useObject(...);
+ *   useEvent(obj, "changed")
+ *   ...
+ *
+ *   return <div>{mock.label || obj.label}</div>;
+ * }
+ *
+ * This hooks allows simple injection of mocked up data into a
+ * component, for the benefits of automated tests.
+ *
+ * The mock data can be set with the Browset.set_mock_data function:
+ *
+ *   def testLabel(self):
+ *     ..
+ *     self.browser.set_mock_data({ "label": "FOO" })
+ *
+ * We should use this sparingly. It is better to control the real data
+ * to a degree that we need, in the lowest part of the stack as
+ * possible.
+ */
+
+export function useMockData() {
+    const [data, setData] = useState(window.cockpit_mock_data);
+
+    useEffect(() => {
+        function update() { setData(window.cockpit_mock_data) }
+        window.addEventListener("mockchanged", update);
+        return () => window.removeEventListener("mockchanged", update);
+    }, []);
+
+    return data || { };
+}

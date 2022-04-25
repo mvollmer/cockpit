@@ -427,6 +427,9 @@ class Browser:
 
         self.wait_val("{0} > div input[type=text]".format(group_identifier), location)
 
+    def set_mock_data(self, data):
+        self.call_js_func("ph_set_mock_data", data)
+
     def wait_timeout(self, timeout):
         browser = self
 

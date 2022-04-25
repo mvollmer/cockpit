@@ -57,7 +57,7 @@ import { ListingTable } from "cockpit-components-table.jsx";
 
 import cockpit from "cockpit";
 import { superuser } from "superuser";
-import { useObject, useEvent } from "hooks";
+import { useObject, useEvent, useMockData } from "hooks";
 
 import { SuperuserDialogs } from "../shell/superuser.jsx";
 
@@ -399,6 +399,7 @@ const MenuItem = ({ onClick, onlyNarrow, children }) => (
 );
 
 const SOSBody = ({ run_report }) => {
+    const mock = useMockData();
     const lister = useObject(sosLister, obj => obj.close, []);
     useEvent(lister, "changed");
 
@@ -409,6 +410,8 @@ const SOSBody = ({ run_report }) => {
     useEvent(superuser_proxy, "changed");
 
     const raiseError = useErrorHandler();
+
+    console.log("MOCK", mock);
 
     if (!lister.ready)
         return <EmptyStatePanel loading />;
@@ -450,7 +453,7 @@ const SOSBody = ({ run_report }) => {
             props: { key: path },
             columns: [
                 report.label || "-",
-                report.date,
+                mock.date || report.date,
                 { title: <LabelGroup>{labels}</LabelGroup> },
                 {
                     title: <>{action}{menu}</>,
