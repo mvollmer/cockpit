@@ -424,6 +424,26 @@ export class BlockVolTab extends React.Component {
                             </Flex>
                         </DescriptionListDescription>
                     </DescriptionListGroup>
+                    { this.props.lvol.Layout != "linear" &&
+                      <>
+                          <DescriptionListGroup>
+                              <DescriptionListTerm>{_("Layout")}</DescriptionListTerm>
+                              <DescriptionListDescription>
+                                  <Flex>
+                                      <FlexItem>{this.props.lvol.Layout}</FlexItem>
+                                  </Flex>
+                              </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                              <DescriptionListTerm>{_("Synchronized")}</DescriptionListTerm>
+                              <DescriptionListDescription>
+                                  <Flex>
+                                      <FlexItem>{(this.props.lvol.SyncRatio * 100) + "%"}</FlexItem>
+                                  </Flex>
+                              </DescriptionListDescription>
+                          </DescriptionListGroup>
+                      </>
+                    }
                     { !unused_space &&
                     <DescriptionListGroup>
                         <DescriptionListTerm>{_("Size")}</DescriptionListTerm>
