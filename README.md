@@ -7,7 +7,7 @@ Cockpit is an interactive server admin interface. It is easy to use and very lig
 Cockpit interacts directly with the operating system from a real Linux session in a browser.
 
 ### Using Cockpit
-
+-PILOT WAS HERE-
 You can [install Cockpit](https://cockpit-project.org/running.html) on many Linux operating
 systems including Debian, Fedora and RHEL.
 
