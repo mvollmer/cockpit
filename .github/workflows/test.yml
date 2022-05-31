@@ -1,0 +1,10 @@
+name: test
+on:
+  workflow_dispatch:
+
+jobs:
+  echo:
+    steps:
+      - name: Annotate
+        run: |
+          echo Hello, World!
