@@ -1,0 +1,14 @@
+name: test
+on:
+  workflow_dispatch:
+
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Annotate
+        run: |
+          echo Hello, World!
+          echo "::notice file=README.md::No line, no title, bla bla"
+          echo "::warning file=README.md,line=5::Warning! `yip` [yo](http://foo.com)"
+          echo "::warning file=pkg/storaged/utils.js,line=5::Warning! `storage` [yo](http://foo.com)"
