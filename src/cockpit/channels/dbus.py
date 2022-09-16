@@ -111,21 +111,12 @@ class DBusChannel(Channel):
 
         self.ready()
 
-    def match_hit(self, message):
-        logger.debug('got match')
-
-        async def handler_async(message):
-            async with self.watch_processing_lock:
-                self.send_message(signal=[
-                    message.get_path(),
-                    message.get_interface(),
-                    message.get_member(),
-                    list(message.get_body())
-                ])
-
-        task = asyncio.create_task(handler_async(message))
-        self.tasks.add(task)
-        task.add_done_callback(self.tasks.discard)
+    def add_match(self, rule, handler):
+        def sync_handler(message):
+            task = asyncio.create_task(handler(message))
+            self.tasks.add(task)
+            task.add_done_callback(self.tasks.discard)
+        self.matches.append(self.bus.add_match(rule, sync_handler))
 
     async def do_call(self, call, message):
         path, iface, method, args = call
@@ -167,9 +158,20 @@ class DBusChannel(Channel):
             self.send_message(error=['python.error', [str(exc)]], id=cookie)
 
     async def do_add_match(self, add_match, message):
-        rule = ','.join(f"{key}='{value}'" for key, value in add_match.items())
         logger.debug('adding match %s', add_match)
-        self.matches.append(self.bus.add_match("type='signal'," + rule, self.match_hit))
+
+        async def match_hit(message):
+            logger.debug('got match')
+            async with self.watch_processing_lock:
+                self.send_message(signal=[
+                    message.get_path(),
+                    message.get_interface(),
+                    message.get_member(),
+                    list(message.get_body())
+                ])
+
+        rule = ','.join(f"{key}='{value}'" for key, value in add_match.items())
+        self.add_match("type='signal'," + rule, match_hit)
         self.send_message(reply=[], id=message.get('id'))
 
     async def setup_objectmanager_watch(self, path, interface_name, meta, notify):
@@ -177,34 +179,29 @@ class DBusChannel(Channel):
         # Properties are not watched, that is done by setup_path_watch
         # below.
 
-        async def om_interfaces_added(path, interface_props):
-            meta = {}
-            notify = {}
-            async with self.watch_processing_lock:
-                for name, props in interface_props.items():
-                    if interface_name is None or name == interface_name:
-                        mm = await self.cache.get_interface_if_new(name, self.bus, self.name, path)
-                        if mm:
-                            meta.update({ name: mm })
-                        notify.update({ path: { name: {k: v['v'] for k, v in props.items()} }})
-                self.send_message(meta=meta)
-                self.send_message(notify=notify)
-
-        def om_handler(message):
+        async def handler(message):
             member = message.get_member()
             if member == "InterfacesAdded":
                 (path, interface_props) = message.get_body()
                 logger.debug('interfaces added %s %s', path, interface_props)
-                task = asyncio.create_task(om_interfaces_added(path, interface_props))
-                self.tasks.add(task)
-                task.add_done_callback(self.tasks.discard)
+                meta = {}
+                notify = {}
+                async with self.watch_processing_lock:
+                    for name, props in interface_props.items():
+                        if interface_name is None or name == interface_name:
+                            mm = await self.cache.get_interface_if_new(name, self.bus, self.name, path)
+                            if mm:
+                                meta.update({ name: mm })
+                            notify.update({ path: { name: {k: v['v'] for k, v in props.items()} }})
+                    self.send_message(meta=meta)
+                    self.send_message(notify=notify)
             elif member == "InterfacesRemoved":
                 (path, interfaces) = message.get_body()
                 logger.debug('interfaces removed %s %s', path, interfaces)
                 notify = { path: { name: None for name in interfaces } }
                 self.send_message(notify=notify)
 
-        self.matches.append(self.bus.add_match(f"type='signal',sender='{self.name}',path='{path}',interface='org.freedesktop.DBus.ObjectManager'", om_handler))
+        self.add_match(f"type='signal',sender='{self.name}',path='{path}',interface='org.freedesktop.DBus.ObjectManager'", handler)
         objects, = await self.bus.call_method_async(self.name, path, 'org.freedesktop.DBus.ObjectManager', 'GetManagedObjects')
         for p, ifaces in objects.items():
             for iface, props in ifaces.items():
@@ -217,7 +214,7 @@ class DBusChannel(Channel):
     async def setup_path_watch(self, path, interface_name, recursive_props, meta, notify):
         # Watch a single object at "path"
 
-        async def handler_async(message):
+        async def handler(message):
             async with self.watch_processing_lock:
                 path = message.get_path()
                 name, props, invalids = message.get_body()
@@ -225,18 +222,13 @@ class DBusChannel(Channel):
                 # TODO - call Get for all invalids
                 self.send_message(notify={path: { name: {k: v['v'] for k, v in props.items()} }})
 
-        def handler(message):
-            task = asyncio.create_task(handler_async(message))
-            self.tasks.add(task)
-            task.add_done_callback(self.tasks.discard)
-
         this_meta = await self.cache.introspect_path(self.bus, self.name, path)
         if interface_name is not None:
             interface = this_meta.get(interface_name)
             this_meta = {interface_name: interface}
         meta.update(this_meta)
         path_keyword = "path_namespace" if recursive_props else "path"
-        self.matches.append(self.bus.add_match(f"type='signal',sender='{self.name}',{path_keyword}='{path}',interface='org.freedesktop.DBus.Properties'", handler))
+        self.add_match(f"type='signal',sender='{self.name}',{path_keyword}='{path}',interface='org.freedesktop.DBus.Properties'", handler)
         for name, interface in meta.items():
             if name.startswith("org.freedesktop.DBus."):
                 continue
