@@ -215,7 +215,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 });
     });
 
-    QUnit.test.butNotForPy("variants", function (assert) {
+    QUnit.test("variants", function (assert) {
         const done = assert.async();
         assert.expect(2);
 
