@@ -3,6 +3,8 @@ import { common_dbus_tests, dbus_track_tests } from "./test-dbus-common.js";
 
 import QUnit from "qunit-tests";
 
+QUnit.test.butNotForPy = QUnit.test;
+
 /* no name */
 const direct_options = {
     address: direct_address,

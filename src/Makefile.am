@@ -12,6 +12,7 @@ pyTESTS_PASSING = \
 	dist/base1/test-browser-storage.html \
 	dist/base1/test-cache.html \
 	dist/base1/test-chan.html \
+	dist/base1/test-dbus.html \
 	dist/base1/test-dbus-framed.html \
 	dist/base1/test-echo.html \
 	dist/base1/test-events.html \
@@ -44,7 +45,6 @@ pyTESTS_FAILING = \
 
 pyTESTS_HANGING = \
 	dist/base1/test-dbus-address.html \
-	dist/base1/test-dbus.html \
 	dist/base1/test-spawn-proc.html \
 	$(NULL)
 
