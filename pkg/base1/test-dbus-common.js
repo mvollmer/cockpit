@@ -1050,7 +1050,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 .always(function() {
                     assert.equal(this.state(), "resolved", "deleted stray objects");
 
-                    const proxies = dbus.proxies("com.redhat.Cockpit.DBusTests.Frobber");
+                    const proxies = dbus.proxies("com.redhat.Cockpit.DBusTests.Frobber", "/otree");
                     proxies.wait().always(function() {
                         let added;
                         proxies.addEventListener("added", function(event, proxy) {
