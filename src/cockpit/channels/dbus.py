@@ -21,7 +21,7 @@ import json
 import logging
 import xml.etree.ElementTree as ET
 
-from systemd_ctypes import Bus, BusError, introspection
+from systemd_ctypes import Bus, BusError, InvalidArgsError, introspection
 
 from ..channel import Channel
 from ..internal_endpoints import InternalEndpoints
@@ -154,6 +154,8 @@ class DBusChannel(Channel):
         except BusError as error:
             # actually, should send the fields from the message body
             self.send_message(error=[error.code, [error.description]], id=cookie)
+        except InvalidArgsError as error:
+            self.send_message(error=['org.freedesktop.DBus.Error.InvalidArgs', [str(error)]], id=cookie)
         except Exception as exc:
             self.send_message(error=['python.error', [str(exc)]], id=cookie)
 

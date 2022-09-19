@@ -60,9 +60,9 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 .done(function(reply) {
                     assert.ok(false, "should not be reached");
                 })
-            .fail(function(ex) {
+                .fail(function(ex) {
                     assert.ok(["org.freedesktop.DBus.Error.Timeout",
-                               "org.freedesktop.DBus.Error.NoReply"].indexOf(ex.name) >= 0);
+                        "org.freedesktop.DBus.Error.NoReply"].indexOf(ex.name) >= 0);
                 })
                 .always(function() {
                     assert.equal(this.state(), "rejected", "call timed out");
@@ -143,7 +143,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 });
     });
 
-    QUnit.test.butNotForPy("integer bounds", function (assert) {
+    QUnit.test("integer bounds", function (assert) {
         assert.expect(35);
 
         const dbus = cockpit.dbus(bus_name, channel_options);
@@ -158,7 +158,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                     })
                     .always(function() {
                         if (valid)
-                            assert.equal(this.state(), "resolved", "accepted in bounds number");
+                            assert.equal(this.state(), "resolved", "accepted in bounds number " + value + " " + type);
                         else
                             assert.equal(this.state(), "rejected", "rejected out of bounds number");
                         done();
@@ -240,7 +240,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 });
     });
 
-    QUnit.test.butNotForPy("bad variants", function (assert) {
+    QUnit.test("bad variants", function (assert) {
         const done = assert.async();
         assert.expect(3);
 
@@ -255,7 +255,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                   }])
                 .fail(function(ex) {
                     assert.equal(ex.name, "org.freedesktop.DBus.Error.InvalidArgs", "error name");
-                    assert.equal(ex.message, "Unexpected type 'string' in argument", "error message");
+                    assert.ok(ex.message.startsWith("Unexpected type"));
                 })
                 .always(function() {
                     assert.equal(this.state(), "rejected", "should fail");
@@ -316,7 +316,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 });
     });
 
-    QUnit.test.butNotForPy("call bad base64", function (assert) {
+    QUnit.test("call bad base64", function (assert) {
         const done = assert.async();
         assert.expect(3);
 
@@ -578,16 +578,15 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 });
     });
 
-    QUnit.test.butNotForPy("bad dict type", function (assert) {
+    QUnit.test("bad dict type", function (assert) {
         const done = assert.async();
-        assert.expect(3);
+        assert.expect(2);
 
         const dbus = cockpit.dbus(bus_name, channel_options);
         dbus.call("/otree/frobber", "com.redhat.Cockpit.DBusTests.Frobber",
                   "Nobody", [{ "!!!": "value" }], { type: "a{is}" })
                 .fail(function(ex) {
                     assert.equal(ex.name, "org.freedesktop.DBus.Error.InvalidArgs", "error name");
-                    assert.equal(ex.message, "Unexpected key '!!!' in dict entry", "error message");
                 })
                 .always(function() {
                     assert.equal(this.state(), "rejected", "should fail");
@@ -595,7 +594,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 });
     });
 
-    QUnit.test.butNotForPy("bad object path", function (assert) {
+    QUnit.test("bad object path", function (assert) {
         const done = assert.async();
         assert.expect(3);
 
@@ -612,7 +611,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
                 });
     });
 
-    QUnit.test.butNotForPy("bad signature", function (assert) {
+    QUnit.test("bad signature", function (assert) {
         const done = assert.async();
         assert.expect(3);
 
@@ -981,7 +980,7 @@ export function common_dbus_tests(channel_options, bus_name) { // eslint-disable
         proxy.call('NeverReturn', [], { timeout: 10 })
                 .fail(function (ex) {
                     assert.ok(["org.freedesktop.DBus.Error.Timeout",
-                               "org.freedesktop.DBus.Error.NoReply"].indexOf(ex.name) >= 0);
+                        "org.freedesktop.DBus.Error.NoReply"].indexOf(ex.name) >= 0);
                 })
                 .always(function() {
                     assert.equal(this.state(), "rejected", "call timed out");
