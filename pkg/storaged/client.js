@@ -515,7 +515,7 @@ function init_model(callback) {
 
     function enable_stratis_feature() {
         return client.stratis_start().catch(error => {
-            if (error.problem != "not-found")
+            if (error.problem != "not-found" && error.name != "org.freedesktop.DBus.Error.ServiceUnknown")
                 console.warn("Failed to start Stratis support", error);
             return cockpit.resolve();
         });
@@ -938,7 +938,7 @@ client.legacy_vdo_overlay = legacy_vdo_overlay();
 client.stratis_start = () => {
     return stratis2_start()
             .catch(error => {
-                if (error.problem == "not-found")
+                if (error.problem == "not-found" || error.name == "org.freedesktop.DBus.Error.ServiceUnknown")
                     return stratis3_start();
                 return Promise.reject(error);
             });
@@ -1114,7 +1114,7 @@ function stratis2_start() {
                 });
             })
             .catch(err => {
-                if (err.problem == "not-found")
+                if (err.problem == "not-found" || error.name == "org.freedesktop.DBus.Error.ServiceUnknown")
                     err.message = "The name org.storage.stratis2 can not be activated on D-Bus.";
                 return Promise.reject(err);
             });
