@@ -94,13 +94,18 @@ class StreamChannel(AsyncChannel):
         env.update(options.get('env') or [])
 
         logger.debug('Spawning process args=%s', args)
-        process = await asyncio.create_subprocess_exec(
-            *args,
-            cwd=cwd,
-            env=env,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=stderr)
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *args,
+                cwd=cwd,
+                env=env,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=stderr)
+        except FileNotFoundError:
+            logger.debug('Executable not found.')
+            self.close(problem="not-found", exit_status=-1)
+            return
 
         logger.debug('starting forwarding')
         await asyncio.gather(self.receive_writer(process.stdin),
