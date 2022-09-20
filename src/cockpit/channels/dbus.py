@@ -76,6 +76,12 @@ class InterfaceCache:
 
         return ''.join(interface['methods'][method]['in'])
 
+def notify_update(notify, path, interface_name, props):
+    data = {k: v['v'] for k, v in props.items()}
+    if path in notify:
+        notify[path][interface_name] = data
+    else:
+        notify[path] = { interface_name: data }
 
 class DBusChannel(Channel):
     payload = 'dbus-json3'
@@ -208,7 +214,7 @@ class DBusChannel(Channel):
                             mm = await self.cache.get_interface_if_new(name, self.bus, self.name, path)
                             if mm:
                                 meta.update({ name: mm })
-                            notify.update({ path: { name: {k: v['v'] for k, v in props.items()} }})
+                            notify_update(notify, path, name, props)
                     self.send_message(meta=meta)
                     self.send_message(notify=notify)
             elif member == "InterfacesRemoved":
@@ -236,7 +242,9 @@ class DBusChannel(Channel):
                 name, props, invalids = message.get_body()
                 logger.debug('NOTIFY: %s %s %s %s', path, name, props, invalids)
                 # TODO - call Get for all invalids
-                self.send_message(notify={path: { name: {k: v['v'] for k, v in props.items()} }})
+                notify = {}
+                notify_update(notify, path, name, props)
+                self.send_message(notify=notify)
 
         this_meta = await self.cache.introspect_path(self.bus, self.name, path)
         if interface_name is not None:
@@ -250,7 +258,7 @@ class DBusChannel(Channel):
                 continue
             try:
                 props, = await self.bus.call_method_async(self.name, path, 'org.freedesktop.DBus.Properties', 'GetAll', 's', name)
-                notify.update({ path: { name: {k: v['v'] for k, v in props.items()} }})
+                notify_update(notify, path,  name, props)
             except BusError as error:
                 pass
 
