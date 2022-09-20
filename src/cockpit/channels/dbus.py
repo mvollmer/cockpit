@@ -265,8 +265,8 @@ class DBusChannel(Channel):
     async def do_watch(self, watch, message):
         path = watch.get('path')
         path_namespace = watch.get('path_namespace')
+        interface_name = watch.get('interface')
         cookie = message.get('id')
-        interface_name = message.get('interface')
 
         path = path or path_namespace
         recursive = path == path_namespace
