@@ -97,14 +97,18 @@ class DBusChannel(Channel):
 
         bus = options.get('bus')
 
-        if bus == 'internal':
-            self.bus = InternalEndpoints.get_client()
-        elif bus == 'session':
-            logger.debug('get session bus for %s', self.name)
-            self.bus = Bus.default_user()
-        else:
-            logger.debug('get system bus for %s', self.name)
-            self.bus = Bus.default_system()
+        try:
+            if bus == 'internal':
+                self.bus = InternalEndpoints.get_client()
+            elif bus == 'session':
+                logger.debug('get session bus for %s', self.name)
+                self.bus = Bus.default_user()
+            else:
+                logger.debug('get system bus for %s', self.name)
+                self.bus = Bus.default_system()
+        except OSError:
+            self.close(problem="not-found")
+            return
 
         try:
             self.bus.attach_event(None, 0)
