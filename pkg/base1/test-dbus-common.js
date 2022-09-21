@@ -1415,18 +1415,18 @@ export function extra_dbus_tests() {
         acquire_name();
     });
 
-    QUnit.test.butNotForPy("bad dbus address", function (assert) {
+    QUnit.test("bad dbus address", function (assert) {
         const done = assert.async();
         assert.expect(1);
 
         const dbus = cockpit.dbus(null, { bus: "none", address: "bad" });
         dbus.addEventListener("close", (event, options) => {
-            assert.equal(options.problem, "protocol-error", "bad address closed");
+            assert.ok(["protocol-error", "not-found"].indexOf(options.problem) >= 0, "bad address closed");
             done();
         });
     });
 
-    QUnit.test.butNotForPy("bad dbus bus", function (assert) {
+    QUnit.test("bad dbus bus", function (assert) {
         const done = assert.async();
         assert.expect(1);
 

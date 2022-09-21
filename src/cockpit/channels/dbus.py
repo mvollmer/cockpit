@@ -104,17 +104,28 @@ class DBusChannel(Channel):
         self.tasks = set()
 
         bus = options.get('bus')
+        address = options.get('address')
 
         try:
             if bus == 'internal':
                 self.bus = InternalEndpoints.get_client()
+            elif bus == 'none':
+                if address is None or address == 'internal':
+                    self.bus = InternalEndpoints.get_client()
+                else:
+                    logger.debug('connect to %s for %s', address, self.name)
+                    self.bus = Bus.from_address(address)
             elif bus == 'session':
                 logger.debug('get session bus for %s', self.name)
                 self.bus = Bus.default_user()
-            else:
+            elif bus is None or bus == 'system':
                 logger.debug('get system bus for %s', self.name)
                 self.bus = Bus.default_system()
-        except OSError:
+            else:
+                self.close(problem="protocol-error")
+                return
+        except Exception as error:
+            logger.info("Failed to open DBus '%s'", address if bus == 'none' else (bus or 'system'))
             self.close(problem="not-found")
             return
 
@@ -156,6 +167,7 @@ class DBusChannel(Channel):
                 self.send_message(error=[error.name, [f'Introspection: {error.message}']], id=cookie)
                 return
             except KeyError as error:
+                raise error
                 self.send_message(error=["org.freedesktop.DBus.Error.UnknownMethod",
                                          [f"Introspection data for method {iface} {method} not available"]], id=cookie)
                 return

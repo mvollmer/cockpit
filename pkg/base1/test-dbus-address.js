@@ -3,7 +3,7 @@ import { common_dbus_tests, dbus_track_tests } from "./test-dbus-common.js";
 
 import QUnit from "qunit-tests";
 
-QUnit.test.butNotForPy = QUnit.test;
+QUnit.test.butNotForPy = QUnit.skip;
 
 /* no name */
 const direct_options = {
@@ -12,7 +12,7 @@ const direct_options = {
     capabilities: ["address"]
 };
 
-common_dbus_tests(direct_options, null);
+// common_dbus_tests(direct_options, null);
 
 /* with a name */
 const address_options = {
