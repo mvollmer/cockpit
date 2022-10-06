@@ -20,6 +20,7 @@
 import React from "react";
 
 import { Page, PageSection, Grid, GridItem, Card, CardBody, Gallery } from "@patternfly/react-core";
+import { WithDialogs } from "dialogs.jsx";
 
 import { StoragePlots } from "./plot.jsx";
 
@@ -36,33 +37,35 @@ import { StorageLogsPanel } from "./logs-panel.jsx";
 
 export const Overview = ({ client, plot_state }) => {
     return (
-        <Page id="main-storage">
-            <PageSection className="ct-pagesection-mobile">
-                <Grid hasGutter>
-                    <GridItem md={8} lg={9}>
-                        <Gallery hasGutter>
-                            <Card>
-                                <CardBody>
-                                    <StoragePlots plot_state={plot_state} />
-                                </CardBody>
-                            </Card>
-                            <FilesystemsPanel client={client} />
-                            <LockedCryptoPanel client={client} />
-                            <NFSPanel client={client} />
-                            <JobsPanel client={client} />
-                            <StorageLogsPanel />
-                        </Gallery>
-                    </GridItem>
-                    <GridItem md={4} lg={3} className="storage-sidebar">
-                        <Gallery hasGutter>
-                            <ThingsPanel client={client} />
-                            <DrivesPanel client={client} />
-                            <IscsiPanel client={client} />
-                            <OthersPanel client={client} />
-                        </Gallery>
-                    </GridItem>
-                </Grid>
-            </PageSection>
-        </Page>
+        <WithDialogs key="overview">
+            <Page id="main-storage">
+                <PageSection className="ct-pagesection-mobile">
+                    <Grid hasGutter>
+                        <GridItem md={8} lg={9}>
+                            <Gallery hasGutter>
+                                <Card>
+                                    <CardBody>
+                                        <StoragePlots plot_state={plot_state} />
+                                    </CardBody>
+                                </Card>
+                                <FilesystemsPanel client={client} />
+                                <LockedCryptoPanel client={client} />
+                                <NFSPanel client={client} />
+                                <JobsPanel client={client} />
+                                <StorageLogsPanel />
+                            </Gallery>
+                        </GridItem>
+                        <GridItem md={4} lg={3} className="storage-sidebar">
+                            <Gallery hasGutter>
+                                <ThingsPanel client={client} />
+                                <DrivesPanel client={client} />
+                                <IscsiPanel client={client} />
+                                <OthersPanel client={client} />
+                            </Gallery>
+                        </GridItem>
+                    </Grid>
+                </PageSection>
+            </Page>
+        </WithDialogs>
     );
 };

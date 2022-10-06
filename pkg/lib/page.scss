@@ -170,6 +170,10 @@ html:not(.index-page) body {
   }
 }
 
+.ct-icon-check-circle {
+  color: var(--pf-global--success-color--100);
+}
+
 .ct-icon-info-circle {
   color: var(--pf-global--info-color--100);
 }

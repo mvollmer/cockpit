@@ -21,6 +21,7 @@ import cockpit from "cockpit";
 import React from "react";
 
 import { Page, PageSection, Grid, GridItem, Breadcrumb, BreadcrumbItem, Flex, FlexItem } from "@patternfly/react-core";
+import { WithDialogs } from "dialogs.jsx";
 
 import * as utils from "./utils.js";
 import { BlockDetails } from "./block-details.jsx";
@@ -132,20 +133,22 @@ export class Details extends React.Component {
             body = <GridItem span={12}>{_("Not found")}</GridItem>;
 
         return (
-            <Page groupProps={{ sticky: 'top' }}
-                  isBreadcrumbGrouped
-                  id="storage-detail"
-                  breadcrumb={
-                      <Breadcrumb>
-                          <BreadcrumbItem to="#/">{_("Storage")}</BreadcrumbItem>
-                          <BreadcrumbItem isActive>{name}</BreadcrumbItem>
-                      </Breadcrumb>}>
-                <PageSection className="ct-pagesection-mobile">
-                    <Grid hasGutter>
-                        {body}
-                    </Grid>
-                </PageSection>
-            </Page>
+            <WithDialogs key="details">
+                <Page groupProps={{ sticky: 'top' }}
+                      isBreadcrumbGrouped
+                      id="storage-detail"
+                      breadcrumb={
+                          <Breadcrumb>
+                              <BreadcrumbItem to="#/">{_("Storage")}</BreadcrumbItem>
+                              <BreadcrumbItem isActive>{name}</BreadcrumbItem>
+                          </Breadcrumb>}>
+                    <PageSection className="ct-pagesection-mobile">
+                        <Grid hasGutter>
+                            {body}
+                        </Grid>
+                    </PageSection>
+                </Page>
+            </WithDialogs>
         );
     }
 }

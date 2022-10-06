@@ -19,6 +19,7 @@ import json
 import os.path
 import re
 import textwrap
+import time
 
 from testlib import Error, MachineCase, wait
 
@@ -496,8 +497,8 @@ for s in $(grep -h ^Socket= /run/systemd/ask-password/ask.* | sed 's/^Socket=//'
 done
 
 # Sleep a bit to avoid starting this agent too quickly over and over,
-# which would be wasteful and also cause systemd to block us.
-sleep 2
+# and so that other agents get a chance as well.
+sleep 30
 """, perm="0755")
 
         self.write_file("/etc/systemd/system/test-password-agent.service",
@@ -524,6 +525,50 @@ MakeDirectory=yes
 """)
         self.machine.execute("ln -s ../test-password-agent.path /etc/systemd/system/sysinit.target.wants/")
 
+    def encrypt_root(self, passphrase):
+        m = self.machine
+
+        # Set up a password agent in the old root and then arrange for
+        # it to be included in the initrd.  This will unlock the new
+        # encrypted root during boot.
+        #
+        # The password agent and its initrd configuration will be
+        # copied to the new root, so it will stay in place also when
+        # the initrd is regenerated again from within the new root.
+
+        self.setup_systemd_password_agent(passphrase)
+        m.write("/etc/dracut.conf.d/01-askpass.conf","""install_items+=" /usr/local/bin/test-password-agent /etc/systemd/system/test-password-agent.service /etc/systemd/system/test-password-agent.path /etc/systemd/system/sysinit.target.wants/test-password-agent.path "
+""")
+
+        # Copy (most of) the old root into a new encrypted filesystem
+        # and change the kernel command line to unlock and mount that
+        # new filesystem as root.  It also needs to be mentioned
+        # correctly in fstab for the boot to succeed.
+        #
+        # At that point the new root can be booted by the existing
+        # initrd, but the initrd will prompt for the passphrase (as
+        # expected).  Thus, the initrd is regenerated to include the
+        # password agent from above.
+
+        info = m.add_disk("4G", serial="NEWROOT")
+        dev = "/dev/" + info["dev"]
+        m.execute(f"""
+echo {passphrase} | cryptsetup luksFormat {dev}
+echo {passphrase} | cryptsetup luksOpen {dev} dm-test
+luks_uuid=$(blkid -p {dev} -s UUID -o value)
+mkfs.ext4 /dev/mapper/dm-test
+mkdir /new-root
+mount /dev/mapper/dm-test /new-root
+tar --one-file-system -cf - --exclude='/var/lib/mock/*' --exclude='/var/lib/containers/*' / | tar -C /new-root -xf -
+touch /new-root/.autorelabel
+uuid=$(blkid -p /dev/mapper/dm-test -s UUID -o value)
+grubby --update-kernel=ALL --args="root=UUID=$uuid rootflags= rd.luks.uuid=$luks_uuid"
+sed -i -e "s,^UUID=[-0-9a-f]*[ \t]*/[ \t].*,UUID=$uuid / auto defaults 0 0," /new-root/etc/fstab
+dracut --regenerate-all --force
+""", timeout=300)
+        luks_uuid = m.execute(f"blkid -p {dev} -s UUID -o value").strip()
+        m.reboot(timeout_sec=300)
+        self.assertEqual(m.execute("findmnt -n -o SOURCE /").strip(), f"/dev/mapper/luks-{luks_uuid}")
 
 class StorageCase(MachineCase, StorageHelpers):
 
