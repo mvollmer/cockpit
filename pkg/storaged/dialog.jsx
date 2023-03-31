@@ -496,6 +496,12 @@ export const dialog_open = (def) => {
             update();
         },
 
+        get_options: (tag) => {
+            for (const f of fields)
+                if (f.tag == tag)
+                    return f.options;
+        },
+
         set_options: (tag, new_options) => {
             fields.forEach(f => {
                 if (f.tag == tag) {
@@ -690,7 +696,7 @@ export const SelectSpaces = (tag, title, options) => {
         tag,
         title,
         options,
-        initial_value: [],
+        initial_value: options.value || [],
 
         render: (val, change) => {
             if (options.spaces.length === 0)

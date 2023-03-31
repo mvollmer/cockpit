@@ -24,17 +24,31 @@ import React from "react";
 import { Alert } from "@patternfly/react-core/dist/esm/components/Alert/index.js";
 import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
 import { Flex, FlexItem } from "@patternfly/react-core/dist/esm/layouts/Flex/index.js";
+import { ExclamationTriangleIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
 import { StorageButton, StorageLink, StorageOnOff } from "./storage-controls.jsx";
 import {
     existing_passphrase_fields, init_existing_passphrase,
     request_passphrase_on_error_handler
 } from "./crypto-keyslots.jsx";
 import {
-    dialog_open, TextInput, SizeSlider, BlockingMessage, TeardownMessage,
+    dialog_open, TextInput, SizeSlider, BlockingMessage, TeardownMessage, SelectSpaces,
     init_active_usage_processes
 } from "./dialog.jsx";
+import {
+    fmt_size,
+    decode_filename
+} from "./utils.js";
 
 const _ = cockpit.gettext;
+
+export function check_partial_lvols(client, path, enter_warning) {
+    if (client.lvols_status[path] && client.lvols_status[path] != "") {
+        enter_warning(path, {
+            warning: "partial-lvol",
+            danger: client.lvols_status[path] != "degraded"
+        });
+    }
+}
 
 function lvol_rename(lvol) {
     dialog_open({
@@ -47,6 +61,30 @@ function lvol_rename(lvol) {
             Title: _("Rename"),
             action: function (vals) {
                 return lvol.Rename(vals.name, { });
+            }
+        }
+    });
+}
+
+function lvol_repair(client, vgroup, lvol) {
+    const pvs_as_spaces = client.vgroups_pvols[vgroup.path].filter(pvol => pvol.FreeSize > 0).map(pvol => {
+        const block = client.blocks[pvol.path];
+        return { type: 'block', block, size: pvol.FreeSize, desc: "", pvol };
+    });
+
+    dialog_open({
+        Title: cockpit.format(_("Repair logical volume $0"), lvol.Name),
+        Fields: [
+            SelectSpaces("pvs", _("Physical Volumes"),
+                         {
+                             spaces: pvs_as_spaces,
+                             validate: pvs => pvs.length == 0 && _("At least one physical volume must be selected")
+                         }),
+        ],
+        Action: {
+            Title: _("Repair"),
+            action: function (vals) {
+                return lvol.Repair(vals.pvs.map(spc => spc.block.path), { });
             }
         }
     });
@@ -372,6 +410,117 @@ function lvol_shrink(client, lvol, info, to_fit) {
     });
 }
 
+const StructureDescription = ({ client, lvol, repair }) => {
+    const struct = lvol.Structure;
+
+    if (!struct)
+        return null;
+
+    let status = null;
+    const status_code = client.lvols_status[lvol.path];
+    if (status_code == "partial") {
+        status = _("This logical volume has lost some of its physical volumes and can no longer be used. You need to delete it and create a new one to take its place.");
+    } else if (status_code == "degraded") {
+        status = _("This logical volume has lost some of its physical volumes but has not lost any data yet. You should repair it to restore its original redundancy.");
+    } else if (status_code == "degraded-maybe-partial") {
+        status = _("This logical volume has lost some of its physical volumes but might not have lost any data yet. You might be able to repair it.");
+    }
+
+    function pvs_box(used, block_path) {
+        if (block_path != "/") {
+            const block = client.blocks[block_path];
+            return <div key={block_path} className="storage-pvs-pv-box">
+                <div className="storage-stripe-pv-box-dev">
+                    {block ? decode_filename(block.PreferredDevice).replace("/dev/", "") : "???"}
+                </div>
+                <div>{fmt_size(used)}</div>
+            </div>;
+        } else {
+            return <div key={block_path} className="storage-pvs-pv-box">
+                <div className="storage-pvs-pv-box-dev">
+                    { status_code == "degraded"
+                        ? <ExclamationTriangleIcon className="ct-icon-exclamation-triangle" />
+                        : <ExclamationCircleIcon className="ct-icon-times-circle" />
+                    }
+                </div>
+                <div>{fmt_size(used)}</div>
+            </div>;
+        }
+    }
+
+    if (lvol.Layout == "linear") {
+        const pvs = client.lvols_stripe_summary[lvol.path];
+        if (!pvs)
+            return null;
+
+        const stripe = Object.keys(pvs).map((path, i) =>
+            <FlexItem key={i} className="storage-pvs-box">
+                {pvs_box(pvs[path], path)}
+            </FlexItem>);
+
+        return (
+            <DescriptionListGroup>
+                <DescriptionListTerm>{_("Physical volumes")}</DescriptionListTerm>
+                <DescriptionListDescription>
+                    <Flex spaceItems={{ default: "spaceItemsNone" }}
+                          alignItems={{ default: "alignItemsStretch" }}>
+                        {stripe}
+                    </Flex>
+                    {status}
+                </DescriptionListDescription>
+            </DescriptionListGroup>);
+    }
+
+    function stripe_box(used, block_path) {
+        if (block_path != "/") {
+            const block = client.blocks[block_path];
+            return <div key={block_path} className="storage-stripe-pv-box">
+                <div className="storage-stripe-pv-box-dev">
+                    {block ? decode_filename(block.PreferredDevice).replace("/dev/", "") : "???"}
+                </div>
+                <div>{fmt_size(used)}</div>
+            </div>;
+        } else {
+            return <div key={block_path} className="storage-stripe-pv-box">
+                <div className="storage-stripe-pv-box-dev">
+                    { status_code == "degraded"
+                        ? <ExclamationTriangleIcon className="ct-icon-exclamation-triangle" />
+                        : <ExclamationCircleIcon className="ct-icon-times-circle" />
+                    }
+                </div>
+                <div>{fmt_size(used)}</div>
+            </div>;
+        }
+    }
+
+    if (lvol.Layout == "mirror" || lvol.Layout.indexOf("raid") == 0) {
+        const summary = client.lvols_stripe_summary[lvol.path];
+        if (!summary)
+            return null;
+
+        const stripes = summary.map((pvs, i) =>
+            <FlexItem key={i} className="storage-stripe-box">
+                {Object.keys(pvs).map(path => stripe_box(pvs[path], path))}
+            </FlexItem>);
+
+        return (
+            <>
+                <DescriptionListGroup>
+                    <DescriptionListTerm>{_("Stripes")}</DescriptionListTerm>
+                    <DescriptionListDescription>
+                        <Flex alignItems={{ default: "alignItemsStretch" }}>{stripes}</Flex>
+                        {status}
+                        {lvol.SyncRatio != 1.0
+                            ? <div>{cockpit.format(_("$0 synchronized"), lvol.SyncRatio * 100 + "%")}</div>
+                            : null}
+                    </DescriptionListDescription>
+                </DescriptionListGroup>
+            </>);
+    }
+
+    return null;
+};
+
 export class BlockVolTab extends React.Component {
     render() {
         const self = this;
@@ -385,6 +534,10 @@ export class BlockVolTab extends React.Component {
 
         function rename() {
             lvol_rename(lvol);
+        }
+
+        function repair() {
+            lvol_repair(client, vgroup, lvol);
         }
 
         let { info, shrink_excuse, grow_excuse } = get_resize_info(client, block, unused_space);
@@ -407,6 +560,17 @@ export class BlockVolTab extends React.Component {
             lvol_grow(client, lvol, info, unused_space);
         }
 
+        const layout_desc = {
+            raid0: _("Striped (RAID 0)"),
+            raid1: _("Mirrored (RAID 1)"),
+            raid10: _("Striped and mirrored (RAID 10)"),
+            raid4: _("Dedicated parity (RAID 4)"),
+            raid5: _("Distributed parity (RAID 5)"),
+            raid6: _("Double distributed parity (RAID 6)")
+        };
+
+        const layout = this.props.lvol.Layout;
+
         return (
             <div>
                 <DescriptionList className="pf-m-horizontal-on-sm">
@@ -419,6 +583,17 @@ export class BlockVolTab extends React.Component {
                             </Flex>
                         </DescriptionListDescription>
                     </DescriptionListGroup>
+                    { (layout && layout != "linear") &&
+                    <DescriptionListGroup>
+                        <DescriptionListTerm>{_("Layout")}</DescriptionListTerm>
+                        <DescriptionListDescription>
+                            <Flex>
+                                <FlexItem>{layout_desc[layout] || layout}</FlexItem>
+                            </Flex>
+                        </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    }
+                    <StructureDescription client={client} lvol={this.props.lvol} repair={repair} />
                     { !unused_space &&
                     <DescriptionListGroup>
                         <DescriptionListTerm>{_("Size")}</DescriptionListTerm>
@@ -426,7 +601,16 @@ export class BlockVolTab extends React.Component {
                             {utils.fmt_size(this.props.lvol.Size)}
                             <div className="tab-row-actions">
                                 <StorageButton excuse={shrink_excuse} onClick={shrink}>{_("Shrink")}</StorageButton>
-                                <StorageButton excuse={grow_excuse} onClick={grow}>{_("Grow")}</StorageButton>
+                                {
+                                    // HACK - lvextend might produce "stupid" configurations when
+                                    // extending a logical volume that has redundancy.  See
+                                    // https://bugzilla.redhat.com/show_bug.cgi?id=2181573. So
+                                    // let's not show the "Grow" button until we can help
+                                    // lvextend the same way we help lvcreate.
+                                    !(layout == "raid1" || layout == "raid5" ||
+                                      layout == "raid6" || layout == "raid10") &&
+                                      <StorageButton excuse={grow_excuse} onClick={grow}>{_("Grow")}</StorageButton>
+                                }
                             </div>
                         </DescriptionListDescription>
                     </DescriptionListGroup>

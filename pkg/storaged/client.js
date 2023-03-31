@@ -331,6 +331,84 @@ function update_indices() {
         client.lvols_pool_members[path].sort(function (a, b) { return a.Name.localeCompare(b.Name) });
     }
 
+    function summarize_stripe(lv_size, segments) {
+        const pvs = { };
+        let total_size = 0;
+        for (const [, size, pv] of segments) {
+            if (!pvs[pv])
+                pvs[pv] = 0;
+            pvs[pv] += size;
+            total_size += size;
+        }
+        if (total_size < lv_size)
+            pvs["/"] = lv_size - total_size;
+        return pvs;
+    }
+
+    client.lvols_stripe_summary = { };
+    client.lvols_status = { };
+    for (path in client.lvols) {
+        const struct = client.lvols[path].Structure;
+        const lvol = client.lvols[path];
+
+        let summary;
+        let status = "";
+        if (struct && struct.segments) {
+            summary = summarize_stripe(struct.size.v, struct.segments.v);
+            if (summary["/"])
+                status = "partial";
+        } else if (struct && struct.data && struct.metadata &&
+                   (struct.data.v.length == struct.metadata.v.length || struct.metadata.v.length == 0)) {
+            summary = [];
+            let n_missing = 0;
+            for (let i = 0; i < struct.data.v.length; i++) {
+                const data_lv = struct.data.v[i];
+                const metadata_lv = struct.metadata.v[i];
+
+                if (!data_lv.segments || (metadata_lv && !metadata_lv.segments)) {
+                    summary = undefined;
+                    break;
+                }
+
+                const s = summarize_stripe(data_lv.size.v + (metadata_lv ? metadata_lv.size.v : 0),
+                                           data_lv.segments.v.concat(metadata_lv ? metadata_lv.segments.v : []));
+                if (s["/"])
+                    n_missing += 1;
+
+                summary.push(s);
+            }
+            if (n_missing > 0) {
+                // XXX - revaluate with non-default stripe numbers,
+                // e.g. three way mirrors etc.
+                status = "partial";
+                if (lvol.Layout == "raid1") {
+                    if (n_missing <= 1)
+                        status = "degraded";
+                }
+                if (lvol.Layout == "raid10") {
+                    // XXX - if we know how the mirroring is done, we
+                    // can be more precise.
+                    if (n_missing > 1)
+                        status = "degraded-maybe-partial";
+                    else
+                        status = "degraded";
+                }
+                if (lvol.Layout == "raid4" || lvol.Layout == "raid5") {
+                    if (n_missing <= 1)
+                        status = "degraded";
+                }
+                if (lvol.Layout == "raid6") {
+                    if (n_missing <= 2)
+                        status = "degraded";
+                }
+            }
+        }
+        if (summary) {
+            client.lvols_stripe_summary[path] = summary;
+            client.lvols_status[path] = status;
+        }
+    }
+
     client.stratis_poolnames_pool = { };
     for (path in client.stratis_pools) {
         pool = client.stratis_pools[path];

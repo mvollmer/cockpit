@@ -443,3 +443,39 @@ td button.pf-m-link {
     display: none;
   }
 }
+
+.storage-pvs-box {
+  border: 1px solid #8476d1;
+  background: #e5e0ff;
+}
+
+.storage-pvs-pv-box {
+  padding: 0.3em;
+}
+
+.storage-pvs-pv-box:not(:last-child) {
+  border-right: 1px solid #8476d1;
+}
+
+.storage-pvs-pv-box-dev {
+  font-size: 120%;
+  font-weight: bold;
+}
+
+.storage-stripe-box {
+  border: 1px solid #8476d1;
+  background: #e5e0ff;
+}
+
+.storage-stripe-pv-box {
+  padding: 0.3em;
+}
+
+.storage-stripe-pv-box:not(:last-child) {
+  border-bottom: 1px solid #8476d1;
+}
+
+.storage-stripe-pv-box-dev {
+  font-size: 120%;
+  font-weight: bold;
+}
