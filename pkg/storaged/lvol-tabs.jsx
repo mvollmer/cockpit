@@ -90,7 +90,7 @@ function lvol_repair(client, vgroup, lvol) {
     });
 }
 
-function lvol_and_fsys_resize(client, lvol, size, offline, passphrase) {
+function lvol_and_fsys_resize(client, lvol, size, offline, passphrase, pvs) {
     let fsys;
     let crypto_overhead;
     let vdo;
@@ -170,7 +170,7 @@ function lvol_and_fsys_resize(client, lvol, size, offline, passphrase) {
 
     function lvm_resize() {
         if (size != lvol.Size)
-            return lvol.Resize(size, { });
+            return lvol.Resize(size, { pvs: pvs ? { t: 'ao', v: pvs } : undefined });
         else
             return Promise.resolve();
     }
@@ -257,6 +257,7 @@ function lvol_grow(client, lvol, info, to_fit) {
     const block = client.lvols_block[lvol.path];
     const vgroup = client.vgroups[lvol.VolumeGroup];
     const pool = client.lvols[lvol.ThinPool];
+    const subvols = client.lvols_stripe_summary[lvol.path];
 
     const usage = utils.get_active_usage(client, block && info.grow_needs_unmount ? block.path : null, _("grow"));
 
@@ -268,6 +269,64 @@ function lvol_grow(client, lvol, info, to_fit) {
         return;
     }
 
+    const pvs_as_spaces = client.vgroups_pvols[vgroup.path].filter(pvol => pvol.FreeSize > 0).map(pvol => {
+        const block = client.blocks[pvol.path];
+        return { type: 'block', block, size: pvol.FreeSize, desc: "", pvol };
+    });
+
+    let initial_pvs;
+
+    if (lvol.Layout == "linear")
+        initial_pvs = pvs_as_spaces;
+    else {
+        initial_pvs = [ ];
+
+        // Step 1: Find the spaces that are already used for a
+        // subvolume.  If a subvolume uses more than one, prefer the
+        // one with more available space.
+        for (const sv of subvols) {
+            let sel = null;
+            for (const p in sv) {
+                for (const spc of pvs_as_spaces)
+                    if (spc.block.path == p && (!sel || sel.size < spc.size))
+                        sel = spc;
+            }
+            if (sel)
+                initial_pvs.push(sel);
+        }
+
+        // Step 2: Select missing one randomly.
+        for (const pv of pvs_as_spaces) {
+            if (initial_pvs.indexOf(pv) == -1 && initial_pvs.length < subvols.length)
+                initial_pvs.push(pv);
+        }
+    }
+
+    function max_size(spaces) {
+        const layout = lvol.Layout;
+        const pvs = spaces.map(s => s.pvol);
+        const n_pvs = pvs.length;
+        const sum = pvs.reduce((sum, pv) => sum + pv.FreeSize, 0);
+        const min = Math.min.apply(null, pvs.map(pv => pv.FreeSize));
+
+        if (layout == "linear") {
+            return sum;
+        } else if (n_pvs != subvols.length) {
+            return 0;
+        } else if (layout == "raid0") {
+            return n_pvs * min;
+        } else if (layout == "raid1") {
+            return min;
+        } else if (layout == "raid10") {
+            return (n_pvs / 2) * min;
+        } else if ((layout == "raid4" || layout == "raid5")) {
+            return (n_pvs - 1) * min;
+        } else if (layout == "raid6") {
+            return (n_pvs - 2) * min;
+        } else
+            return 0;
+    }
+
     let grow_size;
     let size_fields = [];
     if (!to_fit) {
@@ -276,7 +335,7 @@ function lvol_grow(client, lvol, info, to_fit) {
                        {
                            value: lvol.Size,
                            min: lvol.Size,
-                           max: (pool ? pool.Size * 3 : lvol.Size + vgroup.FreeSize),
+                           max: (pool ? pool.Size * 3 : lvol.Size + max_size(initial_pvs)),
                            allow_infinite: !!pool,
                            round: vgroup.ExtentSize
                        })
@@ -290,14 +349,65 @@ function lvol_grow(client, lvol, info, to_fit) {
     if (block && block.IdType == "crypto_LUKS" && block.IdVersion == 2)
         passphrase_fields = existing_passphrase_fields(_("Resizing an encrypted filesystem requires unlocking the disk. Please provide a current disk passphrase."));
 
-    if (!usage.Teardown && size_fields.length + passphrase_fields.length === 0) {
+    if ((!lvol.Layout || lvol.Layout == "linear") &&
+        !usage.Teardown && size_fields.length + passphrase_fields.length === 0) {
         return lvol_and_fsys_resize(client, lvol, grow_size, info.grow_needs_unmount, null);
+    }
+
+    function prepare_pvs(pvs) {
+        if (lvol.Layout == "linear")
+            return pvs;
+
+        const subvol_pvs = [];
+
+        // Step 1: Find PVs that are already used by a subvolume
+        subvols.forEach((sv, idx) => {
+            subvol_pvs[idx] = null;
+            for (const pv in sv) {
+                if (pvs.indexOf(pv) >= 0 && subvol_pvs.indexOf(pv) == -1) {
+                    subvol_pvs[idx] = pv;
+                    break;
+                }
+            }
+        });
+
+        // Step 2: Use the rest for the leftover subvolumes
+        subvols.forEach((sv, idx) => {
+            if (!subvol_pvs[idx]) {
+                for (const pv of pvs) {
+                    if (subvol_pvs.indexOf(pv) == -1) {
+                        subvol_pvs[idx] = pv;
+                        break;
+                    }
+                }
+            }
+        });
+
+        return subvol_pvs;
     }
 
     const dlg = dialog_open({
         Title: _("Grow logical volume"),
         Teardown: TeardownMessage(usage),
-        Fields: size_fields.concat(passphrase_fields),
+        Body: lvol.Layout != "linear" && <div><p>{cockpit.format(_("Exactly $0 physical volumes need to be selected, one for each subvolume of the logical volume."), subvols.length)}</p><br/></div>,
+        Fields: [
+            SelectSpaces("pvs", _("Physical Volumes"),
+                         {
+                             spaces: pvs_as_spaces,
+                             value: initial_pvs,
+                             validate: val => {
+                                 if (lvol.Layout != "linear" && subvols.length != val.length)
+                                     return cockpit.format(_("Exactly $0 physical volumes must be selected"),
+                                                           subvols.length);
+                             }
+                         })
+        ].concat(size_fields.concat(passphrase_fields)),
+        update: (dlg, vals, trigger) => {
+            const max = lvol.Size + max_size(vals.pvs);
+            if (vals.size > max)
+                dlg.set_values({ size: max });
+            dlg.set_options("size", { max });
+        },
         Action: {
             Title: _("Grow"),
             action: function (vals) {
@@ -306,7 +416,8 @@ function lvol_grow(client, lvol, info, to_fit) {
                             return (lvol_and_fsys_resize(client, lvol,
                                                          to_fit ? grow_size : vals.size,
                                                          info.grow_needs_unmount,
-                                                         vals.passphrase || recovered_passphrase)
+                                                         vals.passphrase || recovered_passphrase,
+                                                         prepare_pvs(vals.pvs.map(spc => spc.block.path)))
                                     .catch(request_passphrase_on_error_handler(dlg, vals, recovered_passphrase, block)));
                         });
             }
@@ -601,16 +712,7 @@ export class BlockVolTab extends React.Component {
                             {utils.fmt_size(this.props.lvol.Size)}
                             <div className="tab-row-actions">
                                 <StorageButton excuse={shrink_excuse} onClick={shrink}>{_("Shrink")}</StorageButton>
-                                {
-                                    // HACK - lvextend might produce "stupid" configurations when
-                                    // extending a logical volume that has redundancy.  See
-                                    // https://bugzilla.redhat.com/show_bug.cgi?id=2181573. So
-                                    // let's not show the "Grow" button until we can help
-                                    // lvextend the same way we help lvcreate.
-                                    !(layout == "raid1" || layout == "raid5" ||
-                                      layout == "raid6" || layout == "raid10") &&
-                                      <StorageButton excuse={grow_excuse} onClick={grow}>{_("Grow")}</StorageButton>
-                                }
+                                <StorageButton excuse={grow_excuse} onClick={grow}>{_("Grow")}</StorageButton>
                             </div>
                         </DescriptionListDescription>
                     </DescriptionListGroup>
