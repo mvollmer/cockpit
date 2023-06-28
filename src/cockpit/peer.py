@@ -40,7 +40,7 @@ class Peer(CockpitProtocol, SubprocessProtocol, Endpoint):
     done_callbacks: List[Callable[[], None]]
     init_future: Optional[asyncio.Future]
 
-    def __init__(self, router: Router):
+    def __init__(self, router: Router, auth_challenge_responses=None):
         super().__init__(router)
 
         # All Peers start out frozen — we only unfreeze after we see the first 'init' message
@@ -48,6 +48,7 @@ class Peer(CockpitProtocol, SubprocessProtocol, Endpoint):
 
         self.init_future = asyncio.get_running_loop().create_future()
         self.done_callbacks = []
+        self.auth_challenge_responses = auth_challenge_responses
 
     # Initialization
     async def do_connect_transport(self) -> asyncio.Transport:
@@ -87,6 +88,13 @@ class Peer(CockpitProtocol, SubprocessProtocol, Endpoint):
 
         connect_task = asyncio.create_task(self.do_connect_transport())
         connect_task.add_done_callback(_connect_task_done)
+
+        async def remove_auth_responses_after_two_minutes():
+            await asyncio.sleep(120)
+            self.auth_challenge_responses = None
+
+        if self.auth_challenge_responses:
+            asyncio.create_task(remove_auth_responses_after_two_minutes())
 
         try:
             # Wait for something to happen:
@@ -143,6 +151,17 @@ class Peer(CockpitProtocol, SubprocessProtocol, Endpoint):
         if command == 'init' and self.init_future is not None:
             logger.debug('Got init message with active init_future.  Setting result.')
             self.init_future.set_result(message)
+        elif command == 'authorize':
+            logger.debug('Got authorize message.')
+            cookie = message.get('cookie')
+            challenge = message.get('challenge')
+            response = ""
+            if self.auth_challenge_responses:
+                response = self.auth_challenge_responses.get(challenge)
+            self.write_control(command='authorize', cookie=cookie, response=response)
+        elif command == 'superuser-init-done':
+            logger.debug('Got superuser-init-done message')
+            self.auth_challenge_responses = None
         else:
             raise CockpitProtocolError(f'Received unexpected control message {command}')
 
