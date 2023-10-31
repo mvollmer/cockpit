@@ -22,10 +22,12 @@ import React from "react";
 import client from "../client";
 
 import { Button } from "@patternfly/react-core/dist/esm/components/Button/index.js";
-import { Card, CardHeader, CardTitle, CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
+import { CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
-import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
+import { DescriptionList } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
 
+import { SCard } from "../utils/card.jsx";
+import { SDesc } from "../utils/desc.jsx";
 import {
     ParentPageLink, PageContainerStackItems,
     new_page, block_location, ActionButtons, page_type,
@@ -34,7 +36,7 @@ import {
 import { format_dialog } from "../format-dialog.jsx";
 import { block_name, fmt_size } from "../utils.js";
 import { std_lock_action } from "../actions.jsx";
-import { StorageSize } from "../storage-controls.jsx";
+import { StorageSize, StorageUsageBar } from "../storage-controls.jsx";
 
 const _ = cockpit.gettext;
 
@@ -53,7 +55,9 @@ export function make_lvm2_physical_volume_page(parent, backing_block, content_bl
         columns: [
             _("LVM2 physical volume"),
             vgroup ? vgroup.Name : null,
-            <StorageSize key="s" size={backing_block.Size} />,
+            (block_pvol
+                ? <StorageUsageBar key="s" stats={[block_pvol.Size - block_pvol.FreeSize, block_pvol.Size]} short />
+                : <StorageSize key="s" size={backing_block.Size} />),
         ],
         component: LVM2PhysicalVolumePage,
         props: { backing_block, content_block },
@@ -105,7 +109,8 @@ export function make_lvm2_physical_volume_page(parent, backing_block, content_bl
                     excuse: remove_excuse,
                 },
             ],
-            size: cockpit.format(_("$0, $1 free"), fmt_size(block_pvol.Size), fmt_size(block_pvol.FreeSize)),
+            size: <StorageUsageBar stats={[block_pvol.Size - block_pvol.FreeSize, block_pvol.Size]} short />,
+            extra: content_block.IdUUID,
         });
     }
 }
@@ -117,39 +122,32 @@ export const LVM2PhysicalVolumePage = ({ page, backing_block, content_block }) =
     return (
         <Stack hasGutter>
             <StackItem>
-                <Card>
-                    <CardHeader actions={{ actions: <ActionButtons page={page} /> }}>
-                        <CardTitle component="h2">{page_type(page)}</CardTitle>
-                    </CardHeader>
+                <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <DescriptionListGroup>
-                                <DescriptionListTerm>{_("Stored on")}</DescriptionListTerm>
-                                <DescriptionListDescription>
-                                    <ParentPageLink page={page} />
-                                </DescriptionListDescription>
-                            </DescriptionListGroup>
-                            <DescriptionListGroup>
-                                <DescriptionListTerm>{_("Volume group")}</DescriptionListTerm>
-                                <DescriptionListDescription>
-                                    {vgroup
-                                        ? <Button variant="link" isInline role="link"
-                                               onClick={() => cockpit.location.go(["vg", vgroup.Name])}>
-                                            {vgroup.Name}
-                                        </Button>
-                                        : "-"
-                                    }
-                                </DescriptionListDescription>
-                            </DescriptionListGroup>
-                            <DescriptionListGroup>
-                                <DescriptionListTerm>{_("Free")}</DescriptionListTerm>
-                                <DescriptionListDescription>
-                                    {block_pvol ? fmt_size(block_pvol.FreeSize) : "-"}
-                                </DescriptionListDescription>
-                            </DescriptionListGroup>
+                            <SDesc title={_("Stored on")}>
+                                <ParentPageLink page={page} />
+                            </SDesc>
+                            <SDesc title={_("Volume group")}>
+                                {vgroup
+                                    ? <Button variant="link" isInline role="link"
+                                           onClick={() => cockpit.location.go(["vg", vgroup.Name])}>
+                                        {vgroup.Name}
+                                    </Button>
+                                    : "-"
+                                }
+                            </SDesc>
+                            <SDesc title={_("UUID")} value={content_block.IdUUID} />
+                            { block_pvol &&
+                            <SDesc title={_("Usage")}>
+                                <StorageUsageBar key="s"
+                                                   stats={[block_pvol.Size - block_pvol.FreeSize,
+                                                       block_pvol.Size]} />
+                            </SDesc>
+                            }
                         </DescriptionList>
                     </CardBody>
-                </Card>
+                </SCard>
             </StackItem>
             <PageContainerStackItems page={page} />
         </Stack>);

@@ -267,26 +267,26 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
     }
 
     function make_row(page, crossref, level, key, border) {
-        console.log("P", page.name, border);
         let info = null;
         if (page.has_danger || container_has_danger(page.container))
             info = <>{"\n"}<ExclamationCircleIcon className="ct-icon-times-circle" /></>;
         else if (page.has_warning || container_has_warning(page.container))
             info = <>{"\n"}<ExclamationTriangleIcon className="ct-icon-exclamation-triangle" /></>;
-        const type_colspan = page.columns[1] ? 1 : 2;
+        const type_colspan = (crossref ? crossref.extra : page.columns[1]) ? 1 : 2;
         const cols = [
             <Td key="1"><span>{page.name}{info}</span></Td>,
             <Td key="2" colSpan={type_colspan}>{crossref ? page_stored_on(page) : page_type(page)}</Td>,
         ];
         if (type_colspan == 1)
-            cols.push(<Td key="3">{crossref ? null : page.columns[1]}</Td>);
+            cols.push(<Td key="3">{crossref ? crossref.extra : page.columns[1]}</Td>);
         cols.push(
             <Td key="4" className="pf-v5-u-text-align-right">
                 {crossref ? crossref.size : page.columns[2]}
             </Td>);
+        const actions = crossref ? make_actions_kebab(crossref.actions) : make_page_kebab(page);
         cols.push(
             <Td key="5" className="pf-v5-c-table__action content-action">
-                {crossref ? make_actions_kebab(crossref.actions) : make_page_kebab(page)}
+                {actions || <div /> }
             </Td>);
 
         function onRowClick(event) {
@@ -339,6 +339,7 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
     return (
         <Table aria-label={aria_label}
                variant="compact">
+            { pages &&
             <Thead>
                 <Tr>
                     <Th>{_("ID")}</Th>
@@ -347,6 +348,7 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
                     <Th>{_("Size")}</Th>
                 </Tr>
             </Thead>
+            }
             <Tbody>
                 {rows}
             </Tbody>

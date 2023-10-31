@@ -22,10 +22,12 @@ import React from "react";
 import client from "../client";
 
 import { Button } from "@patternfly/react-core/dist/esm/components/Button/index.js";
-import { Card, CardHeader, CardTitle, CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
+import { CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
-import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
+import { DescriptionList } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
 
+import { SCard } from "../utils/card.jsx";
+import { SDesc } from "../utils/desc.jsx";
 import {
     ParentPageLink, PageContainerStackItems,
     new_page, block_location, ActionButtons, page_type,
@@ -61,23 +63,21 @@ export function make_stratis_blockdev_page(parent, backing_block, content_block,
         ]
     });
 
-    let desc;
-    if (blockdev && blockdev.Tier == 0)
-        desc = cockpit.format(_("$0 data"),
-                              fmt_size(Number(blockdev.TotalPhysicalSize)));
-    else if (blockdev && blockdev.Tier == 1)
-        desc = cockpit.format(_("$0 cache"),
-                              fmt_size(Number(blockdev.TotalPhysicalSize)));
-    else
-        desc = cockpit.format(_("$0 of unknown tier"),
-                              fmt_size(backing_block.Size));
-
     if (pool || stopped_pool) {
+        let extra;
+        if (blockdev && blockdev.Tier == 0)
+            extra = _("data");
+        else if (blockdev && blockdev.Tier == 1)
+            extra = _("cache");
+        else
+            extra = null;
+
         register_crossref({
             key: pool || stopped_pool,
             page: p,
-            size: desc,
             actions: [],
+            size: fmt_size(Number(blockdev.TotalPhysicalSize)),
+            extra,
         });
     }
 }
@@ -89,33 +89,24 @@ export const StratisBlockdevPage = ({ page, backing_block, content_block, pool, 
     return (
         <Stack hasGutter>
             <StackItem>
-                <Card>
-                    <CardHeader actions={{ actions: <ActionButtons page={page} /> }}>
-                        <CardTitle component="h2">{page_type(page)}</CardTitle>
-                    </CardHeader>
+                <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <DescriptionListGroup>
-                                <DescriptionListTerm>{_("Stored on")}</DescriptionListTerm>
-                                <DescriptionListDescription>
-                                    <ParentPageLink page={page} />
-                                </DescriptionListDescription>
-                            </DescriptionListGroup>
-                            <DescriptionListGroup>
-                                <DescriptionListTerm>{_("Stratis pool")}</DescriptionListTerm>
-                                <DescriptionListDescription>
-                                    {(pool || stopped_pool)
-                                        ? <Button variant="link" isInline role="link"
-                                                  onClick={() => cockpit.location.go(["pool", pool_uuid])}>
-                                            {pool_name}
-                                        </Button>
-                                        : "-"
-                                    }
-                                </DescriptionListDescription>
-                            </DescriptionListGroup>
+                            <SDesc title={_("Stored on")}>
+                                <ParentPageLink page={page} />
+                            </SDesc>
+                            <SDesc title={_("Stratis pool")}>
+                                {(pool || stopped_pool)
+                                    ? <Button variant="link" isInline role="link"
+                                           onClick={() => cockpit.location.go(["pool", pool_uuid])}>
+                                        {pool_name}
+                                    </Button>
+                                    : "-"
+                                }
+                            </SDesc>
                         </DescriptionList>
                     </CardBody>
-                </Card>
+                </SCard>
             </StackItem>
             <PageContainerStackItems page={page} />
         </Stack>);

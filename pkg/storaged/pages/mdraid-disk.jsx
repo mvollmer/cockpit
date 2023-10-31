@@ -34,7 +34,7 @@ import {
     register_crossref,
 } from "../pages.jsx";
 import { format_dialog } from "../format-dialog.jsx";
-import { block_name, mdraid_name } from "../utils.js";
+import { block_name, fmt_size, mdraid_name } from "../utils.js";
 import { std_lock_action } from "../actions.jsx";
 import { StorageSize } from "../storage-controls.jsx";
 
@@ -124,7 +124,8 @@ export function make_mdraid_disk_page(parent, backing_block, content_block, cont
             actions: [
                 remove_action
             ],
-            size: states,
+            size: fmt_size(content_block.Size),
+            extra: states,
         });
     }
 }
