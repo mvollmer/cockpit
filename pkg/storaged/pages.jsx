@@ -310,7 +310,7 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
     }
 
     function make_page_rows(pages, level, last_has_border) {
-        for (const p of pages) {
+        for (const p of pages.toSorted((a, b) => a.name.localeCompare(b.name))) {
             const is_last = (level == 0 || p == pages[pages.length - 1]);
             rows.push(make_row(p, null, level, rows.length, is_last && p.children.length == 0 && last_has_border));
             make_page_rows(p.children, level + 1, is_last && last_has_border);
@@ -318,7 +318,7 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
     }
 
     function make_crossref_rows(crossrefs) {
-        for (const c of crossrefs) {
+        for (const c of crossrefs.toSorted((a, b) => a.page.name.localeCompare(b.page.name))) {
             rows.push(make_row(c.page, c, 0, rows.length, true));
         }
     }
