@@ -28,13 +28,13 @@ import { Flex } from "@patternfly/react-core/dist/esm/layouts/Flex/index.js";
 
 import { SCard } from "../utils/card.jsx";
 import { SDesc } from "../utils/desc.jsx";
-import { PageChildrenCard, ParentPageLink, ActionButtons, new_page, page_type, block_location } from "../pages.jsx";
+import { PageChildrenCard, ParentPageLink, ActionButtons, new_page, page_type, block_location, new_container } from "../pages.jsx";
 import { block_name, drive_name, format_temperature, fmt_size_long } from "../utils.js";
 import { format_disk } from "../content-views.jsx"; // XXX
 import { format_dialog } from "../format-dialog.jsx";
 import { StorageSize } from "../storage-controls.jsx";
 
-import { make_block_pages } from "../create-pages.jsx";
+import { make_block_pages, make_block_page } from "../create-pages.jsx";
 
 const _ = cockpit.gettext;
 
@@ -75,25 +75,27 @@ export function make_drive_page(parent, drive) {
     if (!block)
         return;
 
-    const drive_page = new_page({
-        location: ["drive", block_location(block)],
-        parent,
-        name: drive_name(drive),
-        columns: [
-            _("Drive"),
-            block_name(block),
-            block.Size > 0 ? <StorageSize key="s" size={block.Size} /> : null
-        ],
-        actions: partitionable_block_actions(block, "content"),
-        component: DrivePage,
-        props: { drive }
-    });
-
-    if (block.Size > 0)
-        make_partitionable_block_pages(drive_page, block);
+    const container = make_drive_container(null, drive, block);
+    make_block_page(parent, block, container);
 }
 
-const DrivePage = ({ page, drive }) => {
+function make_drive_container(parent, drive, block) {
+    const is_formatted = !client.blocks_available[block.path];
+    const excuse = block.ReadOnly ? _("Device is read-only") : null;
+
+    const cont = new_container({
+        parent,
+        page_location: ["drive", block_location(block)],
+        stored_on_format: drive_name(drive), // XXX - escape?
+        component: DriveContainer,
+        props: { drive },
+        actions: partitionable_block_actions(block),
+        fallback_column_1: drive_name(drive),
+    });
+    return cont;
+}
+
+const DriveContainer = ({ container, drive }) => {
     const block = client.drives_block[drive.path];
     const drive_ata = client.drives_ata[drive.path];
     const multipath_blocks = client.drives_multipath_blocks[drive.path];
@@ -117,46 +119,28 @@ const DrivePage = ({ page, drive }) => {
     }
 
     return (
-        <Stack hasGutter>
-            <StackItem>
-                <SCard title={page_type(page)}>
-                    <CardBody>
-                        <DescriptionList className="pf-m-horizontal-on-sm">
-                            { client.drives_iscsi_session[drive.path]
-                                ? <SDesc title={_("Part of")}>
-                                    <ParentPageLink page={page} />
-                                </SDesc>
-                                : null }
-                            <SDesc title={_("Model")} value={drive.Model} />
-                            <SDesc title={_("Firmware version")} value={drive.Revision} />
-                            <SDesc title={_("Serial number")} value={drive.Serial} />
-                            <SDesc title={_("World wide name")} value={drive.WWN} />
-                            <SDesc title={_("Capacity")}>
-                                {drive.Size
-                                    ? fmt_size_long(drive.Size)
-                                    : _("No media inserted")
-                                }
-                            </SDesc>
-                            { assessment }
-                            <SDesc title={_("Device file")}
-                                   value={block ? block_name(block) : "-"} />
-                            { multipath_blocks.length > 0 &&
-                            <SDesc title={_("Multipathed devices")}
-                                     value={multipath_blocks.map(block_name).join(" ")} />
-                            }
-                        </DescriptionList>
-                    </CardBody>
-                </SCard>
-            </StackItem>
-            { block && block.Size > 0
-                ? (<StackItem>
-                    <PageChildrenCard title={is_partitioned ? _("Partitions") : _("Content")}
-                                      actions={<ActionButtons page={page} tag="content" />}
-                                      emptyCaption={_("Drive is not formatted")}
-                                      page={page} />
-                </StackItem>)
-                : null
-            }
-        </Stack>
+        <SCard title={_("Drive")} actions={<ActionButtons container={container} />}>
+            <CardBody>
+                <DescriptionList className="pf-m-horizontal-on-sm">
+                    <SDesc title={_("Model")} value={drive.Model} />
+                    <SDesc title={_("Firmware version")} value={drive.Revision} />
+                    <SDesc title={_("Serial number")} value={drive.Serial} />
+                    <SDesc title={_("World wide name")} value={drive.WWN} />
+                    <SDesc title={_("Capacity")}>
+                        {drive.Size
+                         ? fmt_size_long(drive.Size)
+                         : _("No media inserted")
+                        }
+                    </SDesc>
+                    { assessment }
+                    <SDesc title={_("Device file")}
+                           value={block ? block_name(block) : "-"} />
+                    { multipath_blocks.length > 0 &&
+                      <SDesc title={_("Multipathed devices")}
+                             value={multipath_blocks.map(block_name).join(" ")} />
+                    }
+                </DescriptionList>
+            </CardBody>
+        </SCard>
     );
 };

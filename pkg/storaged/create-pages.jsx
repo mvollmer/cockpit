@@ -18,12 +18,14 @@
  */
 
 import cockpit from "cockpit";
+import React from "react";
 import client from "./client";
 
 import { get_partitions, fmt_size } from "./utils.js";
 import { get_fstab_config } from "./fsys-tab.jsx"; // XXX
 
 import { format_dialog } from "./format-dialog.jsx";
+import { StorageSize } from "./storage-controls.jsx";
 
 import { make_overview_page } from "./pages/overview.jsx";
 import { make_unrecognized_data_page } from "./pages/unrecognized-data.jsx";
@@ -34,6 +36,7 @@ import { make_lvm2_physical_volume_page } from "./pages/lvm2-physical-volume.jsx
 import { make_mdraid_disk_page } from "./pages/mdraid-disk.jsx";
 import { make_stratis_blockdev_page } from "./pages/stratis-blockdev.jsx";
 import { make_swap_page } from "./pages/swap.jsx";
+import { make_partition_table_page } from "./pages/partition-table.jsx";
 
 import { make_partition_container, delete_partition } from "./containers/partition.jsx";
 import { make_encryption_container } from "./containers/encryption.jsx";
@@ -64,7 +67,7 @@ function make_partition_pages(parent, block) {
             columns: [
                 null,
                 null,
-                fmt_size(size),
+                <StorageSize key="s" size={size} />,
             ],
             actions: [
                 {
@@ -122,6 +125,11 @@ export function make_block_page(parent, block, container) {
     const is_stratis = ((content_block && content_block.IdUsage == "raid" && content_block.IdType == "stratis") ||
                         (block_stratis_blockdev && client.stratis_pools[block_stratis_blockdev.Pool]) ||
                         block_stratis_stopped_pool);
+
+    if (client.blocks_ptable[block.path]) {
+        make_partition_table_page(parent, block, container);
+        return;
+    }
 
     // Adjust for encryption leaking out of Stratis
     if (is_crypto && is_stratis) {

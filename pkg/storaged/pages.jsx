@@ -100,7 +100,8 @@ export function new_container({
     parent,
     type_format, stored_on_format, page_name, page_location,
     component, props,
-    has_warning, has_danger, actions
+    has_warning, has_danger, actions,
+    fallback_column_1
 }) {
     return {
         parent,
@@ -113,6 +114,7 @@ export function new_container({
         has_warning,
         has_danger,
         actions: actions ? actions.filter(a => !!a) : null,
+        fallback_column_1,
     };
 }
 
@@ -274,13 +276,16 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
             info = <>{"\n"}<ExclamationCircleIcon className="ct-icon-times-circle" /></>;
         else if (page.has_warning || container_has_warning(page.container))
             info = <>{"\n"}<ExclamationTriangleIcon className="ct-icon-exclamation-triangle" /></>;
-        const type_colspan = (crossref ? crossref.extra : page.columns[1]) ? 1 : 2;
+        let loc = crossref ? crossref.extra : page.columns[1];
+        if (!loc && page.container)
+            loc = page.container.fallback_column_1; // XXX - what a hack
+        const type_colspan = loc ? 1 : 2;
         const cols = [
             <Td key="1"><span>{page.name}{info}</span></Td>,
             <Td key="2" colSpan={type_colspan}>{crossref ? page_stored_on(page) : page_type(page)}</Td>,
         ];
         if (type_colspan == 1)
-            cols.push(<Td key="3">{crossref ? crossref.extra : page.columns[1]}</Td>);
+            cols.push(<Td key="3">{loc}</Td>);
         cols.push(
             <Td key="4" className="pf-v5-u-text-align-right">
                 {crossref ? crossref.size : page.columns[2]}
