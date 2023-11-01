@@ -18,10 +18,11 @@
  */
 
 import cockpit from "cockpit";
-import React from "react";
+import React, { useState } from "react";
 
 import { CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 import { StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
+import { Bullseye } from "@patternfly/react-core/dist/esm/layouts/Bullseye/index.js";
 import { Button } from "@patternfly/react-core/dist/esm/components/Button/index.js";
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { EmptyState, EmptyStateBody } from "@patternfly/react-core/dist/esm/components/EmptyState/index.js";
@@ -250,7 +251,8 @@ export function page_stored_on(page) {
 }
 
 const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
-    const rows = [];
+    const [collapsed, setCollapsed] = useState(true);
+    let rows = [];
 
     function container_has_danger(container) {
         if (container)
@@ -336,23 +338,39 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
         </EmptyState>;
     }
 
+    let show_all_button = null;
+    if (rows.length > 50 && collapsed) {
+        show_all_button = (
+            <Bullseye>
+                <Button variant='link'
+                        onKeyDown={ev => ev.key === "Enter" && setCollapsed(false)}
+                        onClick={() => setCollapsed(false)}>
+                    {cockpit.format(_("Show all $0 rows"), rows.length)}
+                </Button>
+            </Bullseye>);
+        rows = rows.slice(0, 50);
+    }
+
     return (
-        <Table aria-label={aria_label}
-               variant="compact">
-            { pages &&
-            <Thead>
-                <Tr>
-                    <Th>{_("ID")}</Th>
-                    <Th>{_("Type")}</Th>
-                    <Th>{_("Location")}</Th>
-                    <Th>{_("Size")}</Th>
-                </Tr>
-            </Thead>
-            }
-            <Tbody>
-                {rows}
-            </Tbody>
-        </Table>);
+        <>
+            <Table aria-label={aria_label}
+                   variant="compact">
+                { pages &&
+                <Thead>
+                    <Tr>
+                        <Th>{_("ID")}</Th>
+                        <Th>{_("Type")}</Th>
+                        <Th>{_("Location")}</Th>
+                        <Th>{_("Size")}</Th>
+                    </Tr>
+                </Thead>
+                }
+                <Tbody>
+                    {rows}
+                </Tbody>
+            </Table>
+            {show_all_button}
+        </>);
 };
 
 export const PageChildrenCard = ({ title, page, emptyCaption, actions }) => {
