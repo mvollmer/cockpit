@@ -31,6 +31,10 @@
   @extend .ct-card;
 }
 
+.ct-card.pf-v5-c-card .pf-v5-c-card__title-text.ct-card-small-title {
+  font-size: var(--pf-v5-global--FontSize--xl);
+}
+
 #storage .pf-v5-l-gallery {
   --pf-v5-l-gallery--GridTemplateColumns: 1fr;
 }

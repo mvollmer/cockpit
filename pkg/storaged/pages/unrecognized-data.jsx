@@ -26,7 +26,7 @@ import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/
 import { DescriptionList } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
 
 import {
-    ParentPageLink, PageContainerStackItems,
+    PageContainerStackItems,
     new_page, block_location, ActionButtons, page_type,
 } from "../pages.jsx";
 import { SCard } from "../utils/card.jsx";
@@ -65,9 +65,6 @@ export const UnrecognizedDataPage = ({ page, backing_block, content_block }) => 
                 <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
                             <SDesc title={_("Usage")} value={content_block.IdUsage || "-"} />
                             <SDesc title={_("Type")} value={content_block.IdType || "-"} />
                         </DescriptionList>

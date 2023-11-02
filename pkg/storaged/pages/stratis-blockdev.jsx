@@ -29,7 +29,7 @@ import { DescriptionList } from "@patternfly/react-core/dist/esm/components/Desc
 import { SCard } from "../utils/card.jsx";
 import { SDesc } from "../utils/desc.jsx";
 import {
-    ParentPageLink, PageContainerStackItems,
+    PageContainerStackItems,
     new_page, block_location, ActionButtons, page_type,
     register_crossref,
 } from "../pages.jsx";
@@ -92,9 +92,6 @@ export const StratisBlockdevPage = ({ page, backing_block, content_block, pool, 
                 <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
                             <SDesc title={_("Stratis pool")}>
                                 {(pool || stopped_pool)
                                     ? <Button variant="link" isInline role="link"

@@ -31,7 +31,7 @@ import { Flex, FlexItem } from "@patternfly/react-core/dist/esm/layouts/Flex/ind
 import { SCard } from "../utils/card.jsx";
 import { SDesc } from "../utils/desc.jsx";
 import { StorageButton, StorageUsageBar, StorageLink, StorageSize } from "../storage-controls.jsx";
-import { PageChildrenCard, PageCrossrefCard, ActionButtons, new_page, page_type, get_crossrefs } from "../pages.jsx";
+import { PageContainerStackItems, PageTable, ActionButtons, new_page, new_container, page_type, get_crossrefs } from "../pages.jsx";
 import {
     get_active_usage, teardown_active_usage, for_each_async,
     get_available_spaces, prepare_available_spaces,
@@ -368,12 +368,26 @@ export function make_stratis_pool_page(parent, pool) {
     const managed_fsys_sizes = client.features.stratis_managed_fsys_sizes && !pool.Overprovisioning;
     const stats = client.stratis_pool_stats[pool.path];
 
+    const blockdevs_container = new_container({
+        parent: null,
+        component: StratisBlockdevsContainer,
+        props: { pool },
+        actions: [
+            {
+                title: _("Add block devices"),
+                action: () => add_disks(pool),
+                tag: "blockdevs",
+            },
+        ],
+    });
+
     const p = new_page({
         location: ["pool", pool.Uuid],
         parent,
+        container: blockdevs_container,
         name: pool.Name,
         columns: [
-            pool.Encrypted ? _("Encrypted Stratis pool") : _("Stratis pool"),
+            pool.Encrypted ? _("Encrypted Stratis filesystems pool") : _("Stratis filesystems pool"),
             "/dev/stratis/" + pool.Name + "/",
             <StorageSize key="s" size={pool.TotalPhysicalSize} />,
         ],
@@ -382,20 +396,15 @@ export function make_stratis_pool_page(parent, pool) {
         props: { pool, degraded_ops, can_grow, managed_fsys_sizes, stats },
         actions: [
             {
-                title: _("Add block devices"),
-                action: () => add_disks(pool),
-                tag: "blockdevs",
-            },
-            {
                 title: _("Create new filesystem"),
                 action: () => create_fs(pool),
                 excuse: (managed_fsys_sizes && stats.pool_free < fsys_min_size
                     ? _("Not enough space for new filesystems")
                     : null),
-                tag: "fsys"
+                tag: "pool"
             },
             {
-                title: _("Delete"),
+                title: _("Delete pool"),
                 action: () => delete_pool(pool),
                 danger: true,
                 tag: "pool",
@@ -644,19 +653,26 @@ const StratisPoolPage = ({ page, pool, degraded_ops, can_grow, managed_fsys_size
                             }
                         </DescriptionList>
                     </CardBody>
+                    <CardBody className="contains-list">
+                        <PageTable emptyCaption={_("No filesystems")}
+                                   aria-label={_("Stratis filesystems pool")}
+                                   pages={page.children} />
+                    </CardBody>
                 </SCard>
             </StackItem>
-            <StackItem>
-                <PageCrossrefCard title={_("Block devices")}
-                                  actions={<ActionButtons page={page} tag="blockdevs" />}
-                                  crossrefs={get_crossrefs(pool)} />
-            </StackItem>
-            <StackItem>
-                <PageChildrenCard title={_("Filesystems")}
-                                  emptyCaption={_("No filesystems")}
-                                  actions={<ActionButtons page={page} tag="fsys" />}
-                                  page={page} />
-            </StackItem>
+            <PageContainerStackItems page={page} />
         </Stack>
+    );
+};
+
+const StratisBlockdevsContainer = ({ container, pool }) => {
+    return (
+        <SCard title={_("Stratis block devices")} actions={<ActionButtons container={container} />}>
+            <CardBody className="contains-list">
+                <PageTable emptyCaption={_("No block devices  found")}
+                           aria-label={_("Stratis block devices")}
+                           crossrefs={get_crossrefs(pool)} />
+            </CardBody>
+        </SCard>
     );
 };

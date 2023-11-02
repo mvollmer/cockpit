@@ -27,7 +27,7 @@ import { DescriptionList } from "@patternfly/react-core/dist/esm/components/Desc
 import { useEvent } from "hooks";
 
 import {
-    ParentPageLink, PageContainerStackItems,
+    PageContainerStackItems,
     new_page, block_location, ActionButtons, page_type,
 } from "../pages.jsx";
 import { SCard } from "../utils/card.jsx";
@@ -89,9 +89,6 @@ export const SwapPage = ({ page, block, block_swap }) => {
                 <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
                             <SDesc title={_("Used")} value={used} />
                         </DescriptionList>
                     </CardBody>

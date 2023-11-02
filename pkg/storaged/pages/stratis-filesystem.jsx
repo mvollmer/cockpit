@@ -33,7 +33,7 @@ import {
 } from "../dialog.jsx";
 import { StorageUsageBar, StorageLink } from "../storage-controls.jsx";
 import {
-    ParentPageLink, PageContainerStackItems,
+    PageContainerStackItems,
     new_page, ActionButtons, page_type,
     navigate_away_from_page,
 } from "../pages.jsx";
@@ -248,9 +248,6 @@ const StratisFilesystemPage = ({
                 <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
                             <SDesc title={_("Name")}
                                    value={fsys.Name}
                                    action={<StorageLink onClick={rename_fsys}>

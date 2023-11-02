@@ -33,8 +33,6 @@ import { block_name, fmt_size, get_active_usage, teardown_active_usage, reload_s
 import { check_unused_space, get_resize_info, free_space_after_part, grow_dialog, shrink_dialog } from "../resize.jsx";
 import { new_container, navigate_away_from_page, ActionButtons } from "../pages.jsx";
 
-import { format_dialog } from "../format-dialog.jsx";
-
 const _ = cockpit.gettext;
 
 export function delete_partition(block, page) {
@@ -97,7 +95,6 @@ export function make_partition_container(parent, block) {
                  action: () => grow_dialog(client, block_part, info),
                  excuse: grow_excuse,
              }),
-            { title: _("Format"), action: () => format_dialog(client, block.path), danger: true },
             {
                 title: _("Delete"),
                 action: () => delete_partition(block, cont.page),

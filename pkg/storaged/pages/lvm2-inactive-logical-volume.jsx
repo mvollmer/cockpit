@@ -20,14 +20,11 @@
 import cockpit from "cockpit";
 import React from "react";
 
-import { Card, CardHeader, CardTitle, CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
-import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
-
 import {
-    ParentPageLink,
     new_page, ActionButtons, page_type,
 } from "../pages.jsx";
 import { lvm2_delete_logical_volume_dialog, lvm2_create_snapshot_action } from "./lvm2-volume-group.jsx";
+import { SCard } from "../utils/card.jsx";
 import { StorageSize } from "../storage-controls.jsx";
 
 const _ = cockpit.gettext;
@@ -54,20 +51,5 @@ export function make_lvm2_inactive_logical_volume_page(parent, vgroup, lvol, con
 }
 
 export const LVM2InactiveLogicalVolumePage = ({ page, vgroup, lvol }) => {
-    return (
-        <Card>
-            <CardHeader actions={{ actions: <ActionButtons page={page} /> }}>
-                <CardTitle component="h2">{page_type(page)}</CardTitle>
-            </CardHeader>
-            <CardBody>
-                <DescriptionList className="pf-m-horizontal-on-sm">
-                    <DescriptionListGroup>
-                        <DescriptionListTerm>{_("Stored on")}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                            <ParentPageLink page={page} />
-                        </DescriptionListDescription>
-                    </DescriptionListGroup>
-                </DescriptionList>
-            </CardBody>
-        </Card>);
+    return <SCard title={page_type(page)} action={<ActionButtons page={page} /> } />;
 };

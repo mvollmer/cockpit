@@ -35,7 +35,7 @@ import {
 } from "../dialog.jsx";
 import { StorageButton, StorageLink, StorageUsageBar, StorageSize } from "../storage-controls.jsx";
 import {
-    ParentPageLink, PageContainerStackItems,
+    PageContainerStackItems,
     new_page, block_location, ActionButtons, page_type,
 } from "../pages.jsx";
 import { format_dialog } from "../format-dialog.jsx";
@@ -410,9 +410,6 @@ export const FilesystemPage = ({
                 <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
                             <SDesc title={_("Name")}
                                    value={content_block?.IdLabel || "-"}
                                    action={<StorageLink onClick={rename_dialog}

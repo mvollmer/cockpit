@@ -21,13 +21,10 @@ import cockpit from "cockpit";
 import React from "react";
 import client from "../client";
 
-import { CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
-import { DescriptionList } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
 
 import { SCard } from "../utils/card.jsx";
-import { SDesc } from "../utils/desc.jsx";
-import { ParentPageLink, PageContainerStackItems, new_page, block_location, ActionButtons } from "../pages.jsx";
+import { PageContainerStackItems, new_page, block_location, ActionButtons } from "../pages.jsx";
 import { format_dialog } from "../format-dialog.jsx";
 import { block_name } from "../utils.js";
 import { unlock } from "../actions.jsx";
@@ -59,15 +56,7 @@ export const LockedEncryptedDataPage = ({ page, block }) => {
     return (
         <Stack hasGutter>
             <StackItem>
-                <SCard title={_("Locked encrypted data")} actions={<ActionButtons page={page} />}>
-                    <CardBody>
-                        <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
-                        </DescriptionList>
-                    </CardBody>
-                </SCard>
+                <SCard title={_("Locked encrypted data")} actions={<ActionButtons page={page} />} />
             </StackItem>
             <PageContainerStackItems page={page} />
         </Stack>);

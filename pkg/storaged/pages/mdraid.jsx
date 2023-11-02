@@ -29,9 +29,10 @@ import { DescriptionList } from "@patternfly/react-core/dist/esm/components/Desc
 import { SCard } from "../utils/card.jsx";
 import { SDesc } from "../utils/desc.jsx";
 import { StorageButton, StorageSize } from "../storage-controls.jsx";
-import { PageChildrenCard, PageCrossrefCard, ActionButtons, new_page, get_crossrefs, page_type } from "../pages.jsx";
+import { PageContainerStackItems, PageTable, ActionButtons, new_page, new_container, get_crossrefs } from "../pages.jsx";
+import { make_block_page } from "../create-pages.jsx";
 import {
-    block_name, mdraid_name, encode_filename, decode_filename,
+    mdraid_name, encode_filename, decode_filename,
     fmt_size, fmt_size_long, get_active_usage, teardown_active_usage,
     get_available_spaces, prepare_available_spaces,
     reload_systemd,
@@ -43,7 +44,7 @@ import {
     init_active_usage_processes
 } from "../dialog.jsx";
 
-import { partitionable_block_actions, make_partitionable_block_pages } from "./drive.jsx";
+import { partitionable_block_actions } from "./drive.jsx";
 
 const _ = cockpit.gettext;
 
@@ -188,47 +189,73 @@ function add_disk(mdraid) {
 export function make_mdraid_page(parent, mdraid) {
     const block = client.mdraids_block[mdraid.path];
 
-    /* Older versions of Udisks/storaged don't have a Running property */
-    let running = mdraid.Running;
-    if (running === undefined)
-        running = mdraid.ActiveDevices && mdraid.ActiveDevices.length > 0;
-
-    // XXX - set has_warning appropriately
-    const p = new_page({
-        location: ["mdraid", mdraid.UUID],
-        parent,
-        name: mdraid_name(mdraid),
-        columns: [
-            _("RAID device"),
-            block ? block_name(block) : null,
-            <StorageSize key="s" size={mdraid.Size} />,
+    const disks_container = new_container({
+        parent: null,
+        component: MDRaidDisksContainer,
+        props: { mdraid, running: !!block },
+        actions: [
+            (mdraid.Level != "raid0" &&
+             {
+                 title: _("Add disk"),
+                 action: () => add_disk(mdraid),
+                 tag: "disks",
+             }),
         ],
-        component: MDRaidPage,
-        props: { mdraid, block, running },
-        actions: (block ? partitionable_block_actions(block, "content") : [])
-                .concat([
-                    (mdraid.Level != "raid0" &&
-                 {
-                     title: _("Add disk"),
-                     action: () => add_disk(mdraid),
-                     excuse: !running && _("The RAID device must be running in order to add spare disks."),
-                     tag: "disks",
-                 }),
-                    start_stop_action(mdraid),
-                    {
-                        title: _("Delete"),
-                        action: () => mdraid_delete(mdraid, block),
-                        danger: true,
-                        tag: "device",
-                    },
-                ]),
     });
 
-    if (block)
-        make_partitionable_block_pages(p, block);
+    if (!block) {
+        new_page({
+            location: ["mdraid", mdraid.UUID],
+            parent,
+            container: disks_container,
+            name: mdraid_name(mdraid),
+            columns: [
+                _("MDRAID device (stopped)"),
+                null,
+                <StorageSize key="s" size={mdraid.Size} />,
+            ],
+            component: MDRaidContainer,
+            props: { mdraid, running: false },
+            actions: [
+                start_stop_action(mdraid),
+                {
+                    title: _("Delete"),
+                    action: () => mdraid_delete(mdraid, null),
+                    danger: true,
+                    tag: "device",
+                },
+            ],
+        });
+        return;
+    }
+
+    const container = make_mdraid_container(disks_container, mdraid, block);
+    make_block_page(parent, block, container);
 }
 
-const MDRaidPage = ({ page, mdraid, block, running }) => {
+export function make_mdraid_container(parent, mdraid, block) {
+    // XXX - set has_warning appropriately
+    const device_cont = new_container({
+        parent,
+        page_location: ["mdraid", mdraid.UUID],
+        id_extra: cockpit.format(_("MDRAID Device $0"), mdraid_name(mdraid)),
+        component: MDRaidContainer,
+        props: { mdraid, block, running: true },
+        actions: partitionable_block_actions(block, "device").concat([
+            start_stop_action(mdraid),
+            {
+                title: _("Delete"),
+                action: () => mdraid_delete(mdraid, block),
+                danger: true,
+                tag: "device",
+            },
+        ]),
+    });
+
+    return device_cont;
+}
+
+const MDRaidContainer = ({ page, container, mdraid, block, running }) => {
     function format_level(str) {
         return {
             raid0: _("RAID 0"),
@@ -286,31 +313,32 @@ const MDRaidPage = ({ page, mdraid, block, running }) => {
             {bitmap_message}
             {degraded_message}
             <StackItem>
-                <SCard title={page_type(page)} actions={<ActionButtons page={page} tag="device" />}>
+                <SCard title={_("MDRAID device")} actions={<ActionButtons container={container} page={page}
+                                                                          tag="device" />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
                             <SDesc title={_("Device")} value={block ? decode_filename(block.PreferredDevice) : "-"} />
                             <SDesc title={_("UUID")} value={mdraid.UUID} />
-                            <SDesc ttile={_("Capacity")} value={fmt_size_long(mdraid.Size)} />
+                            <SDesc title={_("Capacity")} value={fmt_size_long(mdraid.Size)} />
                             <SDesc title={_("RAID level")} value={level} />
                             <SDesc title={_("State")} value={running ? _("Running") : _("Not running")} />
                         </DescriptionList>
                     </CardBody>
                 </SCard>
             </StackItem>
-            <StackItem>
-                <PageCrossrefCard title={_("Disks")}
-                                  actions={<ActionButtons page={page} tag="disks" />}
-                                  crossrefs={get_crossrefs(mdraid)} />
-            </StackItem>
-            { block &&
-            <StackItem>
-                <PageChildrenCard title={client.blocks_ptable[block.path] ? _("Partitions") : _("Content")}
-                                  actions={<ActionButtons page={page} tag="content" />}
-                                  emptyCaption={_("Device is not formatted")}
-                                  page={page} />
-            </StackItem>
-            }
+            { page && <PageContainerStackItems page={page} /> }
         </Stack>
+    );
+};
+
+const MDRaidDisksContainer = ({ container, mdraid, block, running }) => {
+    return (
+        <SCard title={_("MDRAID disks")} actions={<ActionButtons container={container} tag="disks" />}>
+            <CardBody className="contains-list">
+                <PageTable emptyCaption={_("No disks found")}
+                           aria-label={_("MDRAID disks")}
+                           crossrefs={get_crossrefs(mdraid)} />
+            </CardBody>
+        </SCard>
     );
 };

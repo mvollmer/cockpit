@@ -25,8 +25,18 @@ export const SCard = ({ title, actions, children }) => {
     return (
         <Card data-test-card-title={title}>
             <CardHeader actions={{ actions }}>
-                <CardTitle component="h2">{title}</CardTitle>
+                <CardTitle>{title}</CardTitle>
             </CardHeader>
             {children}
         </Card>);
+};
+
+export const SSubCard = ({ title, actions, children }) => {
+    return (
+        <div data-test-card-title={title}>
+            <CardHeader actions={{ actions }}>
+                <CardTitle className="ct-card-small-title">{title}</CardTitle>
+            </CardHeader>
+            {children}
+        </div>);
 };

@@ -26,6 +26,7 @@ import { install_dialog } from "cockpit-components-install-dialog.jsx";
 import { Card, CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
 
+import { SCard } from "../utils/card.jsx";
 import { StoragePlots } from "../plot.jsx";
 import { StorageMenuItem, StorageBarMenu } from "../storage-controls.jsx";
 import { dialog_open } from "../dialog.jsx";
@@ -37,7 +38,7 @@ import { create_stratis_pool } from "../stratis-panel.jsx"; // XXX
 import { iscsi_change_name, iscsi_discover } from "../iscsi-panel.jsx"; // XXX
 import { get_other_devices } from "../utils.js"; // XXX
 
-import { new_page, PageChildrenCard } from "../pages.jsx";
+import { new_page, PageTable } from "../pages.jsx";
 import { make_drive_page } from "./drive.jsx";
 import { make_lvm2_volume_group_page } from "./lvm2-volume-group.jsx";
 import { make_mdraid_page } from "./mdraid.jsx";
@@ -158,7 +159,13 @@ const OverviewPage = ({ page, plot_state }) => {
                 </Card>
             </StackItem>
             <StackItem>
-                <PageChildrenCard title={_("Storage")} page={page} actions={actions} />
+                <SCard title={_("Storage")} actions={actions}>
+                    <CardBody className="contains-list">
+                        <PageTable emptyCaption={_("No storage found")}
+                                   aria-label={_("Storage")}
+                                   pages={page.children} />
+                    </CardBody>
+                </SCard>
             </StackItem>
             <StackItem>
                 <StorageLogsPanel />

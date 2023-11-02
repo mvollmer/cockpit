@@ -31,7 +31,7 @@ import { SCard } from "../utils/card.jsx";
 import { SDesc } from "../utils/desc.jsx";
 import { StorageButton, StorageLink, StorageSize } from "../storage-controls.jsx";
 import {
-    PageChildrenCard, PageCrossrefCard, ActionButtons, new_page, page_type, get_crossrefs, navigate_away_from_page
+    PageContainerStackItems, PageTable, ActionButtons, new_page, new_container, page_type, get_crossrefs, navigate_away_from_page
 } from "../pages.jsx";
 import {
     fmt_size_long, get_active_usage, teardown_active_usage, for_each_async,
@@ -206,17 +206,9 @@ export function make_lvm2_volume_group_page(parent, vgroup) {
     else if (vgroup.FreeSize == 0)
         lvol_excuse = _("No free space");
 
-    const vgroup_page = new_page({
-        location: ["vg", vgroup.Name],
-        parent,
-        name: vgroup.Name,
-        columns: [
-            _("LVM2 volume group"),
-            "/dev/" + vgroup.Name + "/",
-            <StorageSize key="s" size={vgroup.Size} />,
-        ],
-        has_warning: has_missing_pvs,
-        component: LVM2VolumeGroupPage,
+    const pvols_container = new_container({
+        parent: null,
+        component: LVM2PVolsContainer,
         props: { vgroup },
         actions: [
             {
@@ -224,16 +216,41 @@ export function make_lvm2_volume_group_page(parent, vgroup) {
                 action: () => add_disk(vgroup),
                 tag: "pvols",
             },
+        ],
+    });
+
+    const vgroup_container = new_container({
+        parent: pvols_container,
+        component: LVM2VolumeGroupContainer,
+        props: { vgroup },
+        actions: [
+            {
+                title: _("Delete group"),
+                action: () => vgroup_delete(client, vgroup, parent),
+                danger: true,
+                tag: "group",
+            },
+        ],
+    });
+
+    const vgroup_page = new_page({
+        location: ["vg", vgroup.Name],
+        parent,
+        container: vgroup_container,
+        name: vgroup.Name,
+        columns: [
+            _("LVM2 logical volumes"),
+            null,
+            <StorageSize key="s" size={vgroup.Size} />,
+        ],
+        has_warning: has_missing_pvs,
+        component: LVM2VolumeGroupPage,
+        props: { vgroup },
+        actions: [
             {
                 title: _("Create new logical volume"),
                 action: () => create_logical_volume(client, vgroup),
                 excuse: lvol_excuse,
-                tag: "lvols",
-            },
-            {
-                title: _("Delete"),
-                action: () => vgroup_delete(client, vgroup, parent),
-                danger: true,
                 tag: "group",
             },
         ],
@@ -260,6 +277,23 @@ function vgroup_poller(vgroup) {
 }
 
 const LVM2VolumeGroupPage = ({ page, vgroup }) => {
+    return (
+        <Stack hasGutter>
+            <StackItem>
+                <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
+                    <CardBody className="contains-list">
+                        <PageTable emptyCaption={_("No logical volumes")}
+                                   aria-label={_("LVM2 logical volumes")}
+                                   pages={page.children} />
+                    </CardBody>
+                </SCard>
+            </StackItem>
+            <PageContainerStackItems page={page} />
+        </Stack>
+    );
+};
+
+const LVM2VolumeGroupContainer = ({ container, vgroup }) => {
     const has_missing_pvs = vgroup.MissingPhysicalVolumes && vgroup.MissingPhysicalVolumes.length > 0;
 
     useObject(() => vgroup_poller(vgroup),
@@ -336,10 +370,10 @@ const LVM2VolumeGroupPage = ({ page, vgroup }) => {
         <Stack hasGutter>
             {alert}
             <StackItem>
-                <SCard title={page_type(page)} actions={<ActionButtons page={page} tag="group" />}>
+                <SCard title={_("LVM2 Volume Group")} actions={<ActionButtons container={container} />}>
                     <CardBody>
                         <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Name")}
+                            <SDesc title={_("Group name")}
                                    value={vgroup.Name}
                                    action={<StorageLink onClick={() => vgroup_rename(client, vgroup)}
                                                         excuse={has_missing_pvs && _("A volume group with missing physical volumes can not be renamed.")}>
@@ -351,17 +385,17 @@ const LVM2VolumeGroupPage = ({ page, vgroup }) => {
                     </CardBody>
                 </SCard>
             </StackItem>
-            <StackItem>
-                <PageCrossrefCard title={_("Physical volumes")}
-                                  actions={<ActionButtons page={page} tag="pvols" />}
-                                  crossrefs={get_crossrefs(vgroup)} />
-            </StackItem>
-            <StackItem>
-                <PageChildrenCard title={_("Logical volumes")}
-                                  emptyCaption={_("No logical volumes")}
-                                  actions={<ActionButtons page={page} tag="lvols" />}
-                                  page={page} />
-            </StackItem>
         </Stack>
     );
+};
+
+const LVM2PVolsContainer = ({ container, vgroup }) => {
+    return (
+        <SCard title={_("LVM2 physical volumes")} actions={<ActionButtons container={container} />}>
+            <CardBody className="contains-list">
+                <PageTable emptyCaption={_("No physical volumes found")}
+                           aria-label={_("LVM2 physical volumes")}
+                           crossrefs={get_crossrefs(vgroup)} />
+            </CardBody>
+        </SCard>);
 };

@@ -20,14 +20,13 @@
 import cockpit from "cockpit";
 import React from "react";
 
-import { Card, CardHeader, CardTitle, CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
-import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
+import { CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 
 import {
-    ParentPageLink,
     new_page, ActionButtons, page_type,
 } from "../pages.jsx";
 import { lvm2_delete_logical_volume_dialog } from "./lvm2-volume-group.jsx";
+import { SCard } from "../utils/card.jsx";
 import { StorageSize } from "../storage-controls.jsx";
 
 const _ = cockpit.gettext;
@@ -54,22 +53,9 @@ export function make_lvm2_unsupported_logical_volume_page(parent, vgroup, lvol, 
 
 const LVM2UnsupportedLogicalVolumePage = ({ page, vgroup, lvol }) => {
     return (
-        <Card>
-            <CardHeader actions={{ actions: <ActionButtons page={page} /> }}>
-                <CardTitle component="h2">{page_type(page)}</CardTitle>
-            </CardHeader>
-            <CardBody>
-                <DescriptionList className="pf-m-horizontal-on-sm">
-                    <DescriptionListGroup>
-                        <DescriptionListTerm>{_("Stored on")}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                            <ParentPageLink page={page} />
-                        </DescriptionListDescription>
-                    </DescriptionListGroup>
-                </DescriptionList>
-            </CardBody>
+        <SCard title={page_type(page)} actions={<ActionButtons page={page} /> }>
             <CardBody>
                 <p>{_("INTERNAL ERROR - This logical volume is marked as active and should have an associated block device. However, no such block device could be found.")}</p>
             </CardBody>
-        </Card>);
+        </SCard>);
 };

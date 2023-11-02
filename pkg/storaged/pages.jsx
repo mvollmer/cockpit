@@ -20,15 +20,16 @@
 import cockpit from "cockpit";
 import React, { useState } from "react";
 
-import { CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
+import { Card, CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 import { StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
 import { Bullseye } from "@patternfly/react-core/dist/esm/layouts/Bullseye/index.js";
 import { Button } from "@patternfly/react-core/dist/esm/components/Button/index.js";
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { EmptyState, EmptyStateBody } from "@patternfly/react-core/dist/esm/components/EmptyState/index.js";
-import { ExclamationTriangleIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
+import { ExclamationTriangleIcon, ExclamationCircleIcon, LongArrowAltDownIcon } from "@patternfly/react-icons";
+import { Icon } from '@patternfly/react-core';
 
-import { SCard } from "./utils/card.jsx";
+import { SSubCard } from "./utils/card.jsx";
 import { decode_filename } from "./utils.js";
 import { fmt_to_fragments } from "utils.jsx";
 
@@ -101,7 +102,7 @@ export function new_container({
     type_format, stored_on_format, page_name, page_location,
     component, props,
     has_warning, has_danger, actions,
-    fallback_column_1
+    id_extra,
 }) {
     return {
         parent,
@@ -114,7 +115,7 @@ export function new_container({
         has_warning,
         has_danger,
         actions: actions ? actions.filter(a => !!a) : null,
-        fallback_column_1,
+        id_extra,
     };
 }
 
@@ -242,17 +243,21 @@ export function page_type(page) {
 export function page_stored_on(page) {
     function apply_container_format(cont, text) {
         if (cont) {
-            text = apply_container_format(cont.parent, text);
-            if (cont.stored_on_format)
-                text = cockpit.format(cont.stored_on_format, text);
+            if (cont.id_extra) {
+                text = cont.id_extra;
+            } else {
+                text = apply_container_format(cont.parent, text);
+                if (cont.stored_on_format)
+                    text = cockpit.format(cont.stored_on_format, text);
+            }
         }
         return text;
     }
 
-    return apply_container_format(page.container, page.parent.name);
+    return apply_container_format(page.container, page_display_name(page.parent));
 }
 
-const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
+export const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
     const [collapsed, setCollapsed] = useState(true);
     let rows = [];
 
@@ -276,12 +281,10 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
             info = <>{"\n"}<ExclamationCircleIcon className="ct-icon-times-circle" /></>;
         else if (page.has_warning || container_has_warning(page.container))
             info = <>{"\n"}<ExclamationTriangleIcon className="ct-icon-exclamation-triangle" /></>;
-        let loc = crossref ? crossref.extra : page.columns[1];
-        if (!loc && page.container)
-            loc = page.container.fallback_column_1; // XXX - what a hack
+        const loc = crossref ? crossref.extra : page.columns[1];
         const type_colspan = loc ? 1 : 2;
         const cols = [
-            <Td key="1"><span>{page.name}{info}</span></Td>,
+            <Td key="1"><span>{crossref ? page.name : page_display_name(page)}{info}</span></Td>,
             <Td key="2" colSpan={type_colspan}>{crossref ? page_stored_on(page) : page_type(page)}</Td>,
         ];
         if (type_colspan == 1)
@@ -380,25 +383,25 @@ const PageTable = ({ emptyCaption, aria_label, pages, crossrefs }) => {
 
 export const PageChildrenCard = ({ title, page, emptyCaption, actions }) => {
     return (
-        <SCard title={title} actions={actions}>
+        <SSubCard title={title} actions={actions}>
             <CardBody className="contains-list">
                 <PageTable emptyCaption={emptyCaption || _("No storage found")}
                            aria-label={title}
                            pages={page.children} />
             </CardBody>
-        </SCard>);
+        </SSubCard>);
 };
 
 export const PageCrossrefCard = ({ title, crossrefs, emptyCaption, actions }) => {
     return (
-        <SCard title={title} actions={actions}>
+        <SSubCard title={title} actions={actions}>
             <CardBody className="contains-list">
                 <PageTable emptyCaption={emptyCaption || _("No storage found")}
                            aria-label={title}
                            crossrefs={crossrefs}
                            isLinks />
             </CardBody>
-        </SCard>);
+        </SSubCard>);
 };
 
 export const ParentPageLink = ({ page }) => {
@@ -424,13 +427,60 @@ export const Container = ({ container }) => {
     return <container.component container={container} {...container.props} />;
 };
 
+function page_display_name(page) {
+    let name = page.name;
+    if (page.container && page.container.id_extra)
+        name = name + " - " + page.container.id_extra;
+    return name;
+}
+
+const PageLink = ({ page }) => {
+    return (
+        <Button isInline variant="link" onClick={() => cockpit.location.go(page.location)}>
+            <div className="pf-v5-u-text-align-center">
+                {page_type(page)}
+                <br />
+                {page_display_name(page)}
+            </div>
+        </Button>);
+};
+
 export const PageContainerStackItems = ({ page }) => {
     const items = [];
     let cont = page.container;
     while (cont) {
-        items.push(<StackItem key={items.length}><Container container={cont} /></StackItem>);
+        items.push(<>
+            <Bullseye>
+                <Icon size="lg">
+                    <LongArrowAltDownIcon />
+                </Icon>
+            </Bullseye>
+            <StackItem key={items.length}>
+                <Container container={cont} />
+            </StackItem>
+        </>);
         cont = cont.parent;
     }
+
+    if (page.parent && page.parent.parent) {
+        items.push(<>
+            <Bullseye>
+                <Icon size="lg">
+                    <LongArrowAltDownIcon />
+                </Icon>
+            </Bullseye>
+            <StackItem>
+                <Bullseye>
+                    <Card>
+                        <CardBody>
+                            <PageLink page={page.parent} />
+                        </CardBody>
+                    </Card>
+                </Bullseye>
+            </StackItem>
+        </>);
+    }
+
     return items;
 };
 

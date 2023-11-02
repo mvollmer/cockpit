@@ -21,16 +21,13 @@ import cockpit from "cockpit";
 import React from "react";
 import client from "../client";
 
-import { CardBody } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
-import { DescriptionList } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
 
 import {
-    ParentPageLink, PageContainerStackItems,
+    PageContainerStackItems,
     new_page, block_location, ActionButtons, page_type,
 } from "../pages.jsx";
 import { SCard } from "../utils/card.jsx";
-import { SDesc } from "../utils/desc.jsx";
 import { format_dialog } from "../format-dialog.jsx";
 import { block_name } from "../utils.js";
 import { std_lock_action } from "../actions.jsx";
@@ -62,15 +59,7 @@ export const UnformattedDataPage = ({ page, backing_block, content_block }) => {
     return (
         <Stack hasGutter>
             <StackItem>
-                <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
-                    <CardBody>
-                        <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
-                        </DescriptionList>
-                    </CardBody>
-                </SCard>
+                <SCard title={page_type(page)} actions={<ActionButtons page={page} />} />
             </StackItem>
             <PageContainerStackItems page={page} />
         </Stack>);

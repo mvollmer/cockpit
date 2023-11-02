@@ -26,8 +26,8 @@ import { DescriptionList } from "@patternfly/react-core/dist/esm/components/Desc
 import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
 
 import {
-    ParentPageLink, PageChildrenCard,
-    new_page, ActionButtons, page_type,
+    PageContainerStackItems, PageTable,
+    new_page, ActionButtons, page_type, new_container,
 } from "../pages.jsx";
 import { fmt_size, validate_lvm2_name } from "../utils.js";
 import {
@@ -70,6 +70,35 @@ export function make_lvm2_thin_pool_logical_volume_page(parent, vgroup, lvol) {
         });
     }
 
+    const pool_container = make_lvm2_thin_pool_container(null, vgroup, lvol);
+
+    const p = new_page({
+        location: ["vg", vgroup.Name, lvol.Name],
+        parent,
+        container: pool_container,
+        name: lvol.Name,
+        columns: [
+            _("Thinly provisioned LVM2 logical volumes"),
+            null,
+            <StorageSize key="s" size={lvol.Size} />,
+        ],
+        component: LVM2ThinPoolLogicalVolumePage,
+        props: { vgroup, lvol },
+        actions: [
+            {
+                title: _("Create new thinly provisioned logical volume"),
+                action: create_thin,
+                tag: "pool",
+            },
+        ]
+    });
+
+    client.lvols_pool_members[lvol.path].forEach(member_lvol => {
+        make_lvm2_logical_volume_page(p, vgroup, member_lvol);
+    });
+}
+
+function make_lvm2_thin_pool_container(parent, vgroup, lvol) {
     let grow_excuse = null;
     if (vgroup.FreeSize == 0) {
         grow_excuse = (
@@ -81,41 +110,24 @@ export function make_lvm2_thin_pool_logical_volume_page(parent, vgroup, lvol) {
         );
     }
 
-    const p = new_page({
-        location: ["vg", vgroup.Name, lvol.Name],
+    const c = new_container({
         parent,
-        name: lvol.Name,
-        columns: [
-            _("Pool for thinly provisioned logical volumes"),
-            null,
-            <StorageSize key="s" size={lvol.Size} />,
-        ],
-        component: LVM2ThinPoolLogicalVolumePage,
+        component: LVM2ThinPoolContainer,
         props: { vgroup, lvol },
         actions: [
-            {
-                title: _("Create thinly provisioned logical volume"),
-                action: create_thin,
-                tag: "volumes",
-            },
             {
                 title: _("Grow"),
                 action: () => grow_dialog(client, lvol, { }),
                 excuse: grow_excuse,
-                tag: "pool",
             },
             {
                 title: _("Delete"),
-                action: () => lvm2_delete_logical_volume_dialog(lvol, p),
+                action: () => lvm2_delete_logical_volume_dialog(lvol, c.page),
                 danger: true,
-                tag: "pool",
             },
-        ]
+        ],
     });
-
-    client.lvols_pool_members[lvol.path].forEach(member_lvol => {
-        make_lvm2_logical_volume_page(p, vgroup, member_lvol);
-    });
+    return c;
 }
 
 function perc(ratio) {
@@ -126,29 +138,33 @@ export const LVM2ThinPoolLogicalVolumePage = ({ page, vgroup, lvol }) => {
     return (
         <Stack hasGutter>
             <StackItem>
-                <SCard title={page_type(page)} actions={<ActionButtons page={page} tag="pool" />}>
-                    <CardBody>
-                        <DescriptionList className="pf-m-horizontal-on-sm">
-                            <SDesc title={_("Stored on")}>
-                                <ParentPageLink page={page} />
-                            </SDesc>
-                            <SDesc title={_("Name")}
-                                   value={lvol.Name}
-                                   action={<StorageLink onClick={() => lvol_rename(lvol)}>
-                                       {_("edit")}
-                                   </StorageLink>} />
-                            <SDesc title={_("Size")} value={fmt_size(lvol.Size)} />
-                            <SDesc title={_("Data used")} value={perc(lvol.DataAllocatedRatio)} />
-                            <SDesc title={_("Metadata used")} value={perc(lvol.MetadataAllocatedRatio)} />
-                        </DescriptionList>
+                <SCard title={page_type(page)} actions={<ActionButtons page={page} />}>
+                    <CardBody className="contains-list">
+                        <PageTable emptyCaption={_("No logical volumes")}
+                                   aria-label={_("Thinly provisioned LVM2 logical volumes")}
+                                   pages={page.children} />
                     </CardBody>
                 </SCard>
             </StackItem>
-            <StackItem>
-                <PageChildrenCard title={_("Thinly provisioned logical volumes")}
-                                  emptyCaption={_("No logical volumes")}
-                                  actions={<ActionButtons page={page} tag="volumes" />}
-                                  page={page} />
-            </StackItem>
+            <PageContainerStackItems page={page} />
         </Stack>);
+};
+
+export const LVM2ThinPoolContainer = ({ container, vgroup, lvol }) => {
+    return (
+        <SCard title={_("LVM2 pool for thinly provisioned logical volumes")}
+               actions={<ActionButtons container={container} />}>
+            <CardBody>
+                <DescriptionList className="pf-m-horizontal-on-sm">
+                    <SDesc title={_("Name")}
+                           value={lvol.Name}
+                           action={<StorageLink onClick={() => lvol_rename(lvol)}>
+                               {_("edit")}
+                           </StorageLink>} />
+                    <SDesc title={_("Size")} value={fmt_size(lvol.Size)} />
+                    <SDesc title={_("Data used")} value={perc(lvol.DataAllocatedRatio)} />
+                    <SDesc title={_("Metadata used")} value={perc(lvol.MetadataAllocatedRatio)} />
+                </DescriptionList>
+            </CardBody>
+        </SCard>);
 };
