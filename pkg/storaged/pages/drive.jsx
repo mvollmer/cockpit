@@ -30,7 +30,7 @@ import { SCard } from "../utils/card.jsx";
 import { SDesc } from "../utils/desc.jsx";
 import { PageChildrenCard, ParentPageLink, ActionButtons, new_page, page_type, block_location } from "../pages.jsx";
 import { block_name, drive_name, format_temperature, fmt_size_long } from "../utils.js";
-import { format_disk, erase_disk } from "../content-views.jsx"; // XXX
+import { format_disk } from "../content-views.jsx"; // XXX
 import { format_dialog } from "../format-dialog.jsx";
 import { StorageSize } from "../storage-controls.jsx";
 
@@ -39,31 +39,14 @@ import { make_block_pages } from "../create-pages.jsx";
 const _ = cockpit.gettext;
 
 export function partitionable_block_actions(block, tag) {
-    const is_formatted = !client.blocks_available[block.path];
     const excuse = block.ReadOnly ? _("Device is read-only") : null;
 
     return [
-        (is_formatted && block.Size > 0
-            ? {
-                title: _("Erase"),
-                action: () => erase_disk(client, block),
-                danger: true,
-                excuse,
-                tag,
-            }
-            : null),
-        (!is_formatted && block.Size > 0
-            ? {
-                title: _("Format as filesystem"),
-                action: () => format_dialog(client, block.path),
-                excuse,
-                tag
-            }
-            : null),
-        (!is_formatted && block.Size > 0
+        (block.Size > 0
             ? {
                 title: _("Create partition table"),
                 action: () => format_disk(client, block),
+                danger: true,
                 excuse,
                 tag
             }
