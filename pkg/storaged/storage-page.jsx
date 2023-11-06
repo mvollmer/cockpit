@@ -21,7 +21,7 @@ import cockpit from "cockpit";
 import React from "react";
 import client from "./client";
 
-import { get_page_from_location } from "./pages.jsx";
+import { get_page_from_location, page_display_name } from "./pages.jsx";
 
 import { Stack, StackItem } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
 import { Page, PageBreadcrumb, PageSection } from "@patternfly/react-core/dist/esm/components/Page/index.js";
@@ -39,7 +39,7 @@ export const StoragePage = ({ location, plot_state }) => {
     while (pp) {
         parent_crumbs.unshift(
             <BreadcrumbItem key={pp.name} to={"#" + cockpit.location.encode(pp.location)}>
-                {pp.name}
+                {page_display_name(pp)}
             </BreadcrumbItem>
         );
         pp = pp.parent;
@@ -50,7 +50,7 @@ export const StoragePage = ({ location, plot_state }) => {
             <PageBreadcrumb stickyOnBreakpoint={{ default: "top" }}>
                 <Breadcrumb>
                     { parent_crumbs }
-                    <BreadcrumbItem isActive>{page.name}</BreadcrumbItem>
+                    <BreadcrumbItem isActive>{page_display_name(page)}</BreadcrumbItem>
                 </Breadcrumb>
             </PageBreadcrumb>
             <PageSection>

@@ -427,10 +427,14 @@ export const Container = ({ container }) => {
     return <container.component container={container} {...container.props} />;
 };
 
-function page_display_name(page) {
+export function page_display_name(page) {
     let name = page.name;
-    if (page.container && page.container.id_extra)
-        name = name + " - " + page.container.id_extra;
+    let cont = page.container;
+    while (cont) {
+        if (cont.id_extra)
+            name = name + " - " + cont.id_extra;
+        cont = cont.parent;
+    }
     return name;
 }
 
