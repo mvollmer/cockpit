@@ -57,6 +57,12 @@ export function make_btrfs_volume_page(parent, uuid) {
     if (block_devices.some(blk => should_ignore(client, blk.path)))
         return;
 
+    // Single-device btrfs volumes are shown directly on the page of
+    // their device; they don't get a standalone "btrfs volume" page.
+    //
+    if (block_btrfs.data.num_devices === 1)
+        return;
+
     const name = block_btrfs.data.label || uuid;
     const btrfs_volume_card = new_card({
         title: _("btrfs volume"),
@@ -70,12 +76,7 @@ export function make_btrfs_volume_page(parent, uuid) {
         props: { block_devices, uuid, use },
     });
 
-    const subvolumes_card = new_card({
-        title: _("btrfs subvolumes"),
-        next: btrfs_volume_card,
-        component: BtrfsSubVolumesCard,
-        props: { volume },
-    });
+    const subvolumes_card = make_btrfs_subvolumes_card(btrfs_volume_card, volume);
 
     const subvolumes_page = new_page(parent, subvolumes_card);
     make_btrfs_subvolume_pages(subvolumes_page, volume);
@@ -140,6 +141,15 @@ const BtrfsVolumeCard = ({ card, block_devices, uuid, use }) => {
     );
 };
 
+export function make_btrfs_subvolumes_card(next, volume) {
+    return new_card({
+        title: _("btrfs subvolumes"),
+        next,
+        component: BtrfsSubVolumesCard,
+        props: { volume },
+    });
+}
+
 const BtrfsSubVolumesCard = ({ card, volume }) => {
     return (
         <StorageCard card={card}>
@@ -152,7 +162,7 @@ const BtrfsSubVolumesCard = ({ card, volume }) => {
     );
 };
 
-function make_btrfs_subvolume_pages(parent, volume) {
+export function make_btrfs_subvolume_pages(parent, volume) {
     const subvols = client.uuids_btrfs_subvols[volume.data.uuid];
     if (subvols) {
         for (const subvol of subvols) {
