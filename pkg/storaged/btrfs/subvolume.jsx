@@ -46,6 +46,8 @@ import {
 } from "../filesystem/utils.jsx";
 import client, { btrfs_poll } from "../client.js";
 
+import btrfs_action_sh from "./btrfs-action.sh";
+
 const _ = cockpit.gettext;
 
 function subvolume_unmount(volume, subvol, forced_options) {
@@ -130,8 +132,12 @@ function set_mount_options(subvol, block, vals) {
             });
 }
 
-function subvolume_create(volume, subvol, parent_dir) {
+function subvolume_create(volume, subvol) {
     const block = client.blocks[volume.path];
+    const fstab_config = get_fstab_config_with_client(client, block, false, subvol);
+    const [, mount_point, opts] = fstab_config;
+    const opt_ro = extract_option(parse_options(opts), "ro");
+    const mounted = is_mounted(client, block, subvol);
 
     let action_variants = [
         { tag: null, Title: _("Create and mount") },
@@ -143,6 +149,21 @@ function subvolume_create(volume, subvol, parent_dir) {
             { tag: "nomount", Title: _("Create") }
         ];
     }
+
+    let need_tmp_mount = false;
+    let parent_dir;
+    if (mounted && !opt_ro) {
+        parent_dir = mount_point;
+    } else {
+        parent_dir = get_mount_point_in_parent(volume, subvol);
+        if (!parent_dir) {
+            need_tmp_mount = true;
+            parent_dir = subvol.pathname == "/" ? "" : subvol.pathname;
+        }
+    }
+
+    if (parent_dir != "" && parent_dir[parent_dir.length-1] != "/")
+        parent_dir += "/";
 
     dialog_open({
         Title: _("Create subvolume"),
@@ -170,7 +191,12 @@ function subvolume_create(volume, subvol, parent_dir) {
                 // HACK: cannot use block_btrfs.CreateSubvolume as it always creates a subvolume relative to MountPoints[0] which
                 // makes it impossible to handle a situation where we have multiple subvolumes mounted.
                 // https://github.com/storaged-project/udisks/issues/1242
-                await cockpit.spawn(["btrfs", "subvolume", "create", `${parent_dir}/${vals.name}`], { superuser: "require", err: "message" });
+                await cockpit.script(btrfs_action_sh,
+                                     [
+                                         need_tmp_mount ? decode_filename(block.PreferredDevice) : "-",
+                                         "subvolume", "create", parent_dir + vals.name,
+                                     ],
+                                     { superuser: "require", err: "message" });
                 await btrfs_poll();
                 if (vals.mount_point !== "") {
                     await set_mount_options(subvol, block, vals);
@@ -180,9 +206,19 @@ function subvolume_create(volume, subvol, parent_dir) {
     });
 }
 
-function subvolume_delete(volume, subvol, mount_point_in_parent, card) {
+function subvolume_delete(volume, subvol, card) {
     const block = client.blocks[volume.path];
     const subvols = client.uuids_btrfs_subvols[volume.data.uuid];
+
+    let need_tmp_mount = false;
+    let parent_dir = get_mount_point_in_parent(volume, subvol);
+    if (!parent_dir) {
+        need_tmp_mount = true;
+        parent_dir = subvol.pathname == "/" ? "" : subvol.pathname;
+    }
+
+    if (parent_dir != "" && parent_dir[parent_dir.length-1] != "/")
+        parent_dir += "/";
 
     function get_direct_subvol_children(subvol) {
         function is_direct_parent(sv) {
@@ -224,8 +260,11 @@ function subvolume_delete(volume, subvol, mount_point_in_parent, card) {
         if (config)
             configs_to_remove.push(config);
 
-        paths_to_delete.push(mount_point_in_parent + sv.pathname.substring(subvol.pathname.length));
+        paths_to_delete.push(parent_dir + sv.pathname.substring(subvol.pathname.length));
     }
+
+    console.log("PARENT", parent_dir);
+    console.log("PATHS", paths_to_delete);
 
     dialog_open({
         Title: cockpit.format(_("Permanently delete subvolume $0?"), subvol.pathname),
@@ -237,8 +276,12 @@ function subvolume_delete(volume, subvol, mount_point_in_parent, card) {
                 await teardown_active_usage(client, usage);
                 for (const c of configs_to_remove)
                     await block.RemoveConfigurationItem(c, {});
-                await cockpit.spawn(["btrfs", "subvolume", "delete"].concat(paths_to_delete),
-                                    { superuser: "require", err: "message" });
+                await cockpit.script(btrfs_action_sh,
+                                     [
+                                         need_tmp_mount ? decode_filename(block.PreferredDevice) : "-",
+                                         "subvolume", "delete"
+                                     ].concat(paths_to_delete),
+                                     { superuser: "require", err: "message" });
                 await btrfs_poll();
                 navigate_away_from_card(card);
             }
@@ -327,7 +370,6 @@ function make_btrfs_subvolume_page(parent, volume, subvol, path_prefix, subvols)
     if (mp_text == null)
         return null;
     const forced_options = [`subvol=${subvol.pathname}`];
-    const mount_point_in_parent = get_mount_point_in_parent(volume, subvol);
 
     if (client.in_anaconda_mode()) {
         actions.push({
@@ -348,34 +390,17 @@ function make_btrfs_subvolume_page(parent, volume, subvol, path_prefix, subvols)
         });
     }
 
-    // If the current subvolume is mounted rw with an fstab entry or any parent
-    // subvolume is mounted rw with an fstab entry allow subvolume creation.
-    let create_excuse = "";
-    if (!mount_point_in_parent) {
-        if (!mounted)
-            create_excuse = _("Subvolume needs to be mounted");
-        else if (opt_ro)
-            create_excuse = _("Subvolume needs to be mounted writable");
-    }
-
     actions.push({
         title: _("Create subvolume"),
-        excuse: create_excuse,
-        action: () => subvolume_create(volume, subvol, (mounted && !opt_ro) ? mount_point : mount_point_in_parent),
+        action: () => subvolume_create(volume, subvol),
     });
-
-    let delete_excuse = "";
-    if (!mount_point_in_parent) {
-        delete_excuse = _("At least one parent needs to be mounted writable");
-    }
 
     // Don't show deletion for the root subvolume as it can never be deleted.
     if (subvol.id !== 5 && subvol.pathname !== "/")
         actions.push({
             danger: true,
             title: _("Delete"),
-            excuse: delete_excuse,
-            action: () => subvolume_delete(volume, subvol, mount_point_in_parent, card),
+            action: () => subvolume_delete(volume, subvol, card),
         });
 
     function strip_prefix(str, prefix) {

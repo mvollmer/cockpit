@@ -39,6 +39,8 @@ import { export_mount_point_mapping } from "./anaconda.jsx";
 
 import { dequal } from 'dequal/lite';
 
+import btrfs_action_sh from "./btrfs/btrfs-action.sh";
+
 /* STORAGED CLIENT
  */
 
@@ -227,72 +229,90 @@ export async function btrfs_poll() {
         const MountPoints = blocks.map(block => {
             return client.blocks_fsys[block.path];
         }).map(block_fsys => block_fsys.MountPoints).reduce((accum, current) => accum.concat(current));
-        const mp = MountPoints[0];
-        if (mp) {
-            const mount_point = utils.decode_filename(mp);
-            try {
-                // HACK: UDisks GetSubvolumes method uses `subvolume list -p` which
-                // does not show the full subvolume path which we want to show in the UI
-                //
-                // $ btrfs subvolume list -p /run/butter
-                // ID 256 gen 7 parent 5 top level 5 path one
-                // ID 257 gen 7 parent 256 top level 256 path two
-                // ID 258 gen 7 parent 257 top level 257 path two/three/four
-                //
-                // $ btrfs subvolume list -ap /run/butter
-                // ID 256 gen 7 parent 5 top level 5 path <FS_TREE>/one
-                // ID 257 gen 7 parent 256 top level 256 path one/two
-                // ID 258 gen 7 parent 257 top level 257 path <FS_TREE>/one/two/three/four
-                const output = await cockpit.spawn(["btrfs", "subvolume", "list", "-apuq", mount_point], { superuser: "require", err: "message" });
-                const subvols = [{ pathname: "/", id: 5, parent: null }];
-                for (const line of output.split("\n")) {
-                    const m = line.match(/ID (\d+).*parent (\d+).*parent_uuid (.*)uuid (.*) path (<FS_TREE>\/)?(.*)/);
-                    if (m) {
-                        // The parent uuid is the uuid of which this subvolume is a snapshot.
-                        // https://github.com/torvalds/linux/blob/8d025e2092e29bfd13e56c78e22af25fac83c8ec/include/uapi/linux/btrfs.h#L885
-                        let parent_uuid = m[3].trim();
-                        // BTRFS_UUID_SIZE is 16
-                        parent_uuid = parent_uuid.length < 16 ? null : parent_uuid;
-                        subvols.push({ pathname: m[6], id: Number(m[1]), parent: Number(m[2]), uuid: m[4], parent_uuid });
-                    }
-                }
-                uuids_subvols[uuid] = subvols;
-            } catch (err) {
-                console.warn(`unable to obtain subvolumes for mount point ${mount_point}`, err);
-            }
 
-            // HACK: Obtain the default subvolume, required for mounts in which do not specify a subvol and subvolid.
-            // In the future can be obtained via UDisks, it requires the btrfs partition to be mounted somewhere.
-            // https://github.com/storaged-project/udisks/commit/b6966b7076cd837f9d307eef64beedf01bc863ae
-            try {
-                const output = await cockpit.spawn(["btrfs", "subvolume", "get-default", mount_point], { superuser: "require", err: "message" });
-                const id_match = output.match(/ID (\d+).*/);
-                if (id_match)
-                    btrfs_default_subvol[uuid] = Number(id_match[1]);
-            } catch (err) {
-                console.warn(`unable to obtain default subvolume for mount point ${mount_point}`, err);
-            }
-
-            // HACK: UDisks should expose a better btrfs API with btrfs device information
-            // https://github.com/storaged-project/udisks/issues/1232
-            // TODO: optimise into just parsing one `btrfs filesystem show`?
-            try {
-                const usage_output = await cockpit.spawn(["btrfs", "filesystem", "show", "--raw", uuid], { superuser: "require", err: "message" });
-                const usages = {};
-                for (const line of usage_output.split("\n")) {
-                    const match = usage_regex.exec(line);
-                    if (match) {
-                        const { used, device } = match.groups;
-                        usages[device] = used;
-                    }
-                }
-                uuids_usage[uuid] = usages;
-            } catch (err) {
-                console.warn(`btrfs filesystem show ${uuid}`, err);
-            }
+        let need_tmp_mount;
+        let list_dir;
+        if (MountPoints[0]) {
+            need_tmp_mount = false;
+            list_dir = utils.decode_filename(MountPoints[0]);
         } else {
-            uuids_subvols[uuid] = null;
-            uuids_usage[uuid] = null;
+            need_tmp_mount = true;
+            list_dir = "."
+        }
+
+        console.log("POLL");
+
+        try {
+            // HACK: UDisks GetSubvolumes method uses `subvolume list -p` which
+            // does not show the full subvolume path which we want to show in the UI
+            //
+            // $ btrfs subvolume list -p /run/butter
+            // ID 256 gen 7 parent 5 top level 5 path one
+            // ID 257 gen 7 parent 256 top level 256 path two
+            // ID 258 gen 7 parent 257 top level 257 path two/three/four
+            //
+            // $ btrfs subvolume list -ap /run/butter
+            // ID 256 gen 7 parent 5 top level 5 path <FS_TREE>/one
+            // ID 257 gen 7 parent 256 top level 256 path one/two
+            // ID 258 gen 7 parent 257 top level 257 path <FS_TREE>/one/two/three/four
+
+            const output = await cockpit.script(btrfs_action_sh,
+                                                [
+                                                    need_tmp_mount ? utils.decode_filename(blocks[0].PreferredDevice) : "-",
+                                                    "subvolume", "list", "-apuq", list_dir
+                                                ],
+                                                { superuser: "require", err: "message" });
+            const subvols = [{ pathname: "/", id: 5, parent: null }];
+            for (const line of output.split("\n")) {
+                const m = line.match(/ID (\d+).*parent (\d+).*parent_uuid (.*)uuid (.*) path (<FS_TREE>\/)?(.*)/);
+                if (m) {
+                    // The parent uuid is the uuid of which this subvolume is a snapshot.
+                    // https://github.com/torvalds/linux/blob/8d025e2092e29bfd13e56c78e22af25fac83c8ec/include/uapi/linux/btrfs.h#L885
+                    let parent_uuid = m[3].trim();
+                    // BTRFS_UUID_SIZE is 16
+                    parent_uuid = parent_uuid.length < 16 ? null : parent_uuid;
+                    subvols.push({ pathname: m[6], id: Number(m[1]), parent: Number(m[2]), uuid: m[4], parent_uuid });
+                }
+            }
+            uuids_subvols[uuid] = subvols;
+        } catch (err) {
+            console.warn(`unable to obtain subvolumes for ${uuid}`, err);
+        }
+
+        // HACK: Obtain the default subvolume, required for mounts in which do not specify a subvol and subvolid.
+        // In the future can be obtained via UDisks, it requires the btrfs partition to be mounted somewhere.
+        // https://github.com/storaged-project/udisks/commit/b6966b7076cd837f9d307eef64beedf01bc863ae
+        try {
+            // XXX - avoid double mounting, combine this with "subvolume list" above, somehow
+            const output = await cockpit.script(btrfs_action_sh,
+                                                [
+                                                    need_tmp_mount ? utils.decode_filename(blocks[0].PreferredDevice) : "-",
+                                                    "subvolume", "get-default", list_dir,
+                                                ],
+                                                { superuser: "require", err: "message" });
+            const id_match = output.match(/ID (\d+).*/);
+            if (id_match)
+                btrfs_default_subvol[uuid] = Number(id_match[1]);
+        } catch (err) {
+            console.warn(`unable to obtain default subvolume for ${uuid}`, err);
+        }
+
+        // HACK: UDisks should expose a better btrfs API with btrfs device information
+        // https://github.com/storaged-project/udisks/issues/1232
+        // TODO: optimise into just parsing one `btrfs filesystem show`?
+        try {
+            const usage_output = await cockpit.spawn(["btrfs", "filesystem", "show", "--raw", uuid], { superuser: "require", err: "message" });
+            const usages = {};
+            for (const line of usage_output.split("\n")) {
+                const match = usage_regex.exec(line);
+                if (match) {
+                    const { used, device } = match.groups;
+                    usages[device] = used;
+                }
+            }
+            uuids_usage[uuid] = usages;
+        } catch (err) {
+            console.warn(`btrfs filesystem show ${uuid}`, err);
         }
     }
 
