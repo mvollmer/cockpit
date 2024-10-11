@@ -78,8 +78,14 @@ export const HostModalState = () => {
     return self;
 };
 
-export async function add_host(state) {
-    await state.show_modal({ });
+export async function add_host(state, shell_state) {
+    const connection_string = await state.show_modal({ });
+    if (connection_string) {
+        const parts = split_connection_string(connection_string);
+        const addr = build_href({ host: parts.address });
+        shell_state.loader.connect(parts.address);
+        shell_state.jump(addr);
+    }
 }
 
 export async function edit_host(state, shell_state, machine) {
