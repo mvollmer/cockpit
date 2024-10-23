@@ -313,14 +313,14 @@ const Row = ({ field, values, errors, onChange }) => {
                 </>
             );
         return (
-            <FormGroup label={titleLabel} hasNoPaddingTop={field.hasNoPaddingTop}>
+            <FormGroup data-tag={tag} label={titleLabel} hasNoPaddingTop={field.hasNoPaddingTop}>
                 { field_elts }
                 { nested_elts }
             </FormGroup>
         );
     } else if (!field.bare) {
         return (
-            <FormGroup hasNoPaddingTop={field.hasNoPaddingTop}>
+            <FormGroup data-tag={tag} hasNoPaddingTop={field.hasNoPaddingTop}>
                 { field_elts }
                 { nested_elts }
             </FormGroup>
@@ -513,13 +513,45 @@ export const dialog_open = (def) => {
                 return null;
         })).then(results => {
             const errors = { };
-            fields.forEach((f, i) => { if (results[i]) errors[f.tag] = results[i]; });
+            let scrolled = false;
+            fields.forEach((f, i) => {
+                if (results[i]) {
+                    if (!scrolled) {
+                        show_field(f.tag);
+                        scrolled = true;
+                    }
+                    errors[f.tag] = results[i];
+                }
+            });
             if (Object.keys(errors).length > 0)
                 return Promise.reject(errors);
         });
     };
 
     const dlg = show_modal_dialog(props(), footer_props(null, null));
+
+    function show_field(tag, align) {
+        function scroll() {
+            const dialog_element = document.querySelector('#dialog .pf-v5-c-modal-box__body');
+            const field_element = document.querySelector('#dialog [data-tag="' + tag + '"]');
+
+            if (field_element) {
+                if (dialog_element) {
+                    // check if we need to scroll
+                    const dialog_rect = dialog_element.getBoundingClientRect();
+                    const field_rect = field_element.getBoundingClientRect();
+                    if (field_rect.top >= dialog_rect.top && field_rect.bottom <= dialog_rect.bottom)
+                        return;
+                }
+
+                field_element.scrollIntoView({ behavior: "smooth", block: align || "start" });
+            }
+        }
+        // By the time show_field is called from the "update"
+        // callback, newly visible fields don't exist yet in the
+        // DOM, so delay the scrolling a bit.
+        window.setTimeout(scroll, 10);
+    }
 
     const self = {
         run: (title, promise) => {
@@ -592,6 +624,8 @@ export const dialog_open = (def) => {
             def.Action.DangerButton = true;
             update_footer();
         },
+
+        show_field: show_field,
 
         close: () => {
             dlg.footerProps.dialog_done();
