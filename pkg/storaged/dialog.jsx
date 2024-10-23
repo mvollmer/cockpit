@@ -313,14 +313,14 @@ const Row = ({ field, values, errors, onChange }) => {
                 </>
             );
         return (
-            <FormGroup data-tag={tag} label={titleLabel} hasNoPaddingTop={field.hasNoPaddingTop}>
+            <FormGroup data-tag={field.tag} label={titleLabel} hasNoPaddingTop={field.hasNoPaddingTop}>
                 { field_elts }
                 { nested_elts }
             </FormGroup>
         );
     } else if (!field.bare) {
         return (
-            <FormGroup data-tag={tag} hasNoPaddingTop={field.hasNoPaddingTop}>
+            <FormGroup data-tag={field.tag} hasNoPaddingTop={field.hasNoPaddingTop}>
                 { field_elts }
                 { nested_elts }
             </FormGroup>
@@ -408,6 +408,8 @@ export const dialog_open = (def) => {
                             errors = null;
                             if (def.update)
                                 def.update(self, values, trigger);
+                            console.log("SHOW", trigger);
+                            show_field(trigger, "center", true);
                             update();
                         }} />
         };
@@ -530,13 +532,13 @@ export const dialog_open = (def) => {
 
     const dlg = show_modal_dialog(props(), footer_props(null, null));
 
-    function show_field(tag, align) {
+    function show_field(tag, align, force) {
         function scroll() {
             const dialog_element = document.querySelector('#dialog .pf-v5-c-modal-box__body');
             const field_element = document.querySelector('#dialog [data-tag="' + tag + '"]');
 
             if (field_element) {
-                if (dialog_element) {
+                if (dialog_element && !force) {
                     // check if we need to scroll
                     const dialog_rect = dialog_element.getBoundingClientRect();
                     const field_rect = field_element.getBoundingClientRect();
