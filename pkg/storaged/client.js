@@ -50,21 +50,23 @@ function debug() {
 }
 
 const client = {
-    busy: 0
+    busy: 0,
+    run: (func) => {
+        const prom = func();
+        if (prom) {
+            client.busy += 1;
+            return prom.finally(() => {
+                client.busy -= 1;
+                client.dispatchEvent("changed");
+            });
+        }
+    },
+
+    // HACK - make these visible to TypeScript, types don't matter.
+    path_jobs: { },
 };
 
 cockpit.event_target(client);
-
-client.run = (func) => {
-    const prom = func();
-    if (prom) {
-        client.busy += 1;
-        return prom.finally(() => {
-            client.busy -= 1;
-            client.dispatchEvent("changed");
-        });
-    }
-};
 
 /* Superuser
  */
@@ -1458,7 +1460,12 @@ client.wait_for = function wait_for(cond) {
 client.get_config = (name, def) =>
     get_manifest_config_matchlist("storage", name, def, [client.os_release.PLATFORM_ID, client.os_release.ID]);
 
-client.in_anaconda_mode = () => !!client.anaconda;
+export function in_anaconda_mode() {
+    return !!client.anaconda;
+}
+
+// HACK - remove this
+client.in_anaconda_mode = in_anaconda_mode;
 
 client.strip_mount_point_prefix = (dir) => {
     const mpp = client.anaconda?.mount_point_prefix;

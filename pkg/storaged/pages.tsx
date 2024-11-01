@@ -1,3 +1,5 @@
+// @cockpit-ts-relaxed
+
 /*
  * This file is part of Cockpit.
  *
@@ -19,7 +21,7 @@
 
 import cockpit from "cockpit";
 import React, { useState, useRef } from "react";
-import client from "./client";
+import client, { in_anaconda_mode } from "./client";
 import { useEvent } from "hooks.js";
 
 import { AlertGroup } from "@patternfly/react-core/dist/esm/components/Alert/index.js";
@@ -39,7 +41,7 @@ import { DescriptionListDescription, DescriptionListGroup, DescriptionListTerm }
 import { Flex, FlexItem } from "@patternfly/react-core/dist/esm/layouts/Flex/index.js";
 
 import { decode_filename, block_short_name, fmt_size } from "./utils.js";
-import { StorageButton, StorageBarMenu, StorageMenuItem, StorageSize } from "./storage-controls.jsx";
+import { StorageButton, StorageBarMenu, StorageMenuItem, StorageSize } from "./storage-controls";
 import { MultipathAlert } from "./multipath.jsx";
 import { JobsPanel } from "./jobs-panel.jsx";
 import { Truncate } from "../lib/cockpit-components-truncate.jsx";
@@ -131,8 +133,23 @@ const _ = cockpit.gettext;
    complication of how cards and pages interact.
 */
 
-let pages = null;
-let crossrefs = null;
+interface PageData {
+    name: string;
+    parent: PageData;
+    children: PageData[];
+    card: CardData;
+    // XXX - ...
+}
+
+interface CardData {
+    next: CardData;
+    title: string;
+    page_name: string;
+    // XXX - ...
+}
+
+let pages: Map<string, PageData> = new Map();
+let crossrefs: Map<string, PageData[]> = new Map();
 
 export const PAGE_CATEGORY_PHYSICAL = 1;
 export const PAGE_CATEGORY_VIRTUAL = 2;
@@ -143,7 +160,7 @@ export function reset_pages() {
     crossrefs = new Map();
 }
 
-function name_from_card(card) {
+function name_from_card(card: CardData) {
     if (!card)
         return null;
     return name_from_card(card.next) || card.page_name;
@@ -181,7 +198,7 @@ function size_from_card(card) {
     return size_from_card(card.next);
 }
 
-export function new_page(parent, card, options) {
+export function new_page(parent, card, options = {}) {
     const page = {
         location: location_from_card(card),
         name: name_from_card(card),
@@ -191,13 +208,13 @@ export function new_page(parent, card, options) {
         parent,
         children: [],
         card,
-        options: options || {},
+        options,
+        columns: [
+            card.title,
+            card.location,
+            size_from_card(card),
+        ]
     };
-    page.columns = [
-        card.title,
-        card.location,
-        size_from_card(card),
-    ];
     if (parent)
         parent.children.push(page);
     while (card) {
@@ -225,6 +242,26 @@ export function new_card({
     has_warning, has_danger, job_path,
     component, props,
     actions,
+} : {
+    title?,
+    location?,
+    next?,
+    type_extra?,
+    id_extra?,
+    page_name?,
+    page_icon?,
+    page_category?,
+    page_key?,
+    page_location?,
+    page_size?,
+    page_block?,
+    for_summary?,
+    has_warning?,
+    has_danger?,
+    job_path?,
+    component?,
+    props?,
+    actions?,
 }) {
     if (page_block) {
         page_location = [block_location(page_block)];
@@ -372,8 +409,8 @@ const ActionButtons = ({ card }) => {
         return false;
     }
 
-    const buttons = [];
-    const items = [];
+    const buttons: React.JSX.Element[] = [];
+    const items: React.JSX.Element[] = [];
 
     if (!card.actions)
         return null;
@@ -434,7 +471,7 @@ function page_type(page) {
 // Thus, we end up with things like "Partition - MDRAID device".
 
 function page_block_summary_1(page) {
-    let description = null;
+    let description = "";
     const extra = [];
     for (let card = page.card; card; card = card.next) {
         if (card.for_summary) {
@@ -462,7 +499,7 @@ function page_block_summary(page) {
 
 let narrow_query = null;
 
-export const useIsNarrow = (onChange) => {
+export const useIsNarrow = (onChange?) => {
     if (!narrow_query) {
         const val = window.getComputedStyle(window.document.body).getPropertyValue("--pf-v5-global--breakpoint--md");
         narrow_query = window.matchMedia(`(max-width: ${val})`);
@@ -472,9 +509,10 @@ export const useIsNarrow = (onChange) => {
     return narrow_query.matches;
 };
 
-export const PageTable = ({ emptyCaption, aria_label, pages, crossrefs, sorted, show_icons }) => {
+export const PageTable = ({ emptyCaption, aria_label, pages, crossrefs, sorted, show_icons } :
+                          { emptyCaption, aria_label, pages?, crossrefs?, sorted, show_icons }) => {
     const [collapsed, setCollapsed] = useState(true);
-    const firstKeys = useRef(false);
+    const firstKeys = useRef< Set<unknown> | false>(false);
     const narrow = useIsNarrow(() => { firstKeys.current = false });
 
     let rows = [];
@@ -609,7 +647,7 @@ export const PageTable = ({ emptyCaption, aria_label, pages, crossrefs, sorted, 
         } else {
             const cols = [
                 <Td key="1" onClick={onClick}>
-                    <div className="indent" style={ { "--level": level } }>
+                    <div className="indent" style={ { "--level": level } as React.CSSProperties }>
                         <Truncate content={name} />
                         {info}
                     </div>
@@ -671,12 +709,13 @@ export const PageTable = ({ emptyCaption, aria_label, pages, crossrefs, sorted, 
     else if (crossrefs)
         make_crossref_rows(crossrefs);
 
-    if (firstKeys.current === false)
+    const fKc = firstKeys.current;
+    if (fKc === false)
         firstKeys.current = row_keys;
     else {
-        firstKeys.current.forEach(v => {
+        fKc.forEach(v => {
             if (!row_keys.has(v))
-                firstKeys.current.delete(v);
+                fKc.delete(v);
         });
     }
 
@@ -793,10 +832,11 @@ const StorageBreadcrumb = ({ page }) => {
         </Breadcrumb>);
 };
 
-export const StorageCard = ({ card, alert, alerts, actions, children }) => {
+export const StorageCard = ({ card, alert, alerts, actions, children } :
+                            { card, alert?, alerts?, actions?, children }) => {
     return (
         <Card data-test-card-title={card.title}>
-            { (client.in_anaconda_mode() && card.page.parent && !card.next) &&
+            { (in_anaconda_mode() && card.page.parent && !card.next) &&
             <CardBody>
                 <StorageBreadcrumb page={card.page} />
             </CardBody>
@@ -839,15 +879,15 @@ export const StoragePage = ({ location, plot_state }) => {
 
     return (
         <Page id="storage">
-            { (!client.in_anaconda_mode() && page.parent) &&
+            { (!in_anaconda_mode() && page.parent) &&
             <PageBreadcrumb stickyOnBreakpoint={{ default: "top" }}>
                 <StorageBreadcrumb page={page} />
             </PageBreadcrumb>
             }
-            <PageSection isFilled={false} padding={client.in_anaconda_mode() ? { default: "noPadding" } : {}}>
+            <PageSection isFilled={false} padding={in_anaconda_mode() ? { default: "noPadding" } : {}}>
                 <Stack hasGutter>
                     <MultipathAlert client={client} />
-                    <PageCardStackItems page={page} plot_state={plot_state} noarrow />
+                    <PageCardStackItems page={page} plot_state={plot_state} />
                 </Stack>
             </PageSection>
         </Page>
