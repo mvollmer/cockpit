@@ -312,6 +312,7 @@ export class Terminal extends React.Component {
             channel.removeEventListener('message', this.onChannelMessage);
             channel.removeEventListener('close', this.onChannelClose);
         }
+        console.log("TERMINAL CLOSE", JSON.stringify(channel.options.spawn));
         channel.close();
     }
 
