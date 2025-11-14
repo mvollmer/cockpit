@@ -50,6 +50,9 @@
         },
         "packagemanager": {
             "label": "PackageManager (install dialog)"
+        },
+        "elements": {
+            "label": "Standard Design Elements"
         }
     },
     "preload": [ "preloaded" ],
