@@ -17,16 +17,13 @@
  * along with Cockpit; If not, see <https://www.gnu.org/licenses/>.
  */
 
-import '../lib/patternfly/patternfly-6-cockpit.scss';
-import 'cockpit-dark-theme'; // once per page
-
 import cockpit from "cockpit";
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Button } from "@patternfly/react-core/dist/esm/components/Button/index.js";
 import { ClipboardCopy } from "@patternfly/react-core/dist/esm/components/ClipboardCopy/index.js";
-import { Page, PageSection, } from "@patternfly/react-core/dist/esm/components/Page/index.js";
+import { PageSection, } from "@patternfly/react-core/dist/esm/components/Page/index.js";
 import { Popover } from "@patternfly/react-core/dist/esm/components/Popover/index.js";
 import { SearchInput } from "@patternfly/react-core/dist/esm/components/SearchInput/index.js";
 import { Stack } from "@patternfly/react-core/dist/esm/layouts/Stack/index.js";
@@ -37,6 +34,7 @@ import {
     HelpIcon,
 } from '@patternfly/react-icons';
 
+import { CockpitPage } from "cockpit/elements";
 import { SimpleSelect } from "cockpit-components-simple-select";
 import { TypeaheadSelect } from "cockpit-components-typeahead-select";
 
@@ -181,7 +179,7 @@ export const LogsPage = () => {
     };
 
     return (
-        <Page className='pf-m-no-sidebar'>
+        <CockpitPage>
             <PageSection hasBodyWrapper={false} id="journal" className="journal-filters">
                 <Toolbar hasNoPadding>
                     <ToolbarContent>
@@ -269,7 +267,7 @@ export const LogsPage = () => {
                             updateIdentifiersList={updateIdentifiersList}
                             setUpdateIdentifiersList={setUpdateIdentifiersList} />
             </PageSection>
-        </Page>
+        </CockpitPage>
     );
 };
 

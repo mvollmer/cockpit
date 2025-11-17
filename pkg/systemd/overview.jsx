@@ -17,14 +17,13 @@
  * along with Cockpit; If not, see <https://www.gnu.org/licenses/>.
  */
 
-import '../lib/patternfly/patternfly-6-cockpit.scss';
 import 'polyfills';
-import 'cockpit-dark-theme'; // once per page
 import cockpit from "cockpit";
 
 import React from 'react';
 import { createRoot } from "react-dom/client";
-import { Page, PageSection, PageSectionVariants } from "@patternfly/react-core/dist/esm/components/Page/index.js";
+import { CockpitPage } from "cockpit/elements";
+import { PageSection, PageSectionVariants } from "@patternfly/react-core/dist/esm/components/Page/index.js";
 import { Gallery } from "@patternfly/react-core/dist/esm/layouts/Gallery/index.js";
 import { Dropdown, DropdownItem, DropdownList } from '@patternfly/react-core/dist/esm/components/Dropdown/index.js';
 import { MenuToggle, MenuToggleAction } from "@patternfly/react-core/dist/esm/components/MenuToggle";
@@ -152,7 +151,7 @@ class OverviewPage extends React.Component {
               window.parent.features.navbar_is_for_current_machine));
 
         return (
-            <Page className='pf-m-no-sidebar'>
+            <CockpitPage>
                 <SuperuserAlert />
                 <PageSection hasBodyWrapper={false} className='ct-overview-header' padding={{ default: 'padding' }}>
                     <div className='ct-overview-header-hostname'>
@@ -178,7 +177,7 @@ class OverviewPage extends React.Component {
                         <ConfigurationCard hostname={this.hostname_text()} />
                     </Gallery>
                 </PageSection>
-            </Page>
+            </CockpitPage>
         );
     }
 }

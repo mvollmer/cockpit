@@ -25,7 +25,9 @@ import { Button } from "@patternfly/react-core/dist/esm/components/Button/index.
 import { Card, CardBody, CardHeader, CardTitle } from '@patternfly/react-core/dist/esm/components/Card/index.js';
 import { Flex } from "@patternfly/react-core/dist/esm/layouts/Flex/index.js";
 import { Gallery } from "@patternfly/react-core/dist/esm/layouts/Gallery/index.js";
-import { Page, PageSection, } from "@patternfly/react-core/dist/esm/components/Page/index.js";
+import { PageSection, } from "@patternfly/react-core/dist/esm/components/Page/index.js";
+
+import { CockpitPage } from "cockpit/elements";
 
 import { FirewallSwitch } from "./firewall-switch.jsx";
 import { ListingTable } from "cockpit-components-table.jsx";
@@ -147,7 +149,7 @@ export const NetworkPage = ({ privileged, operationInProgress, usage_monitor, pl
     );
 
     return (
-        <Page data-test-wait={operationInProgress} id="networking" className="pf-m-no-sidebar">
+        <CockpitPage data-test-wait={operationInProgress} id="networking">
             <PageSection hasBodyWrapper={false} id="networking-graphs" className="networking-graphs">
                 <NetworkPlots plot_state={plot_state} />
             </PageSection>
@@ -210,6 +212,6 @@ export const NetworkPage = ({ privileged, operationInProgress, usage_monitor, pl
                                className="contains-list" />
                 </Gallery>
             </PageSection>
-        </Page>
+        </CockpitPage>
     );
 };

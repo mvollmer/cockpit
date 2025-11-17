@@ -24,9 +24,10 @@ import { Card, CardBody, CardHeader, CardTitle } from '@patternfly/react-core/di
 import { Checkbox } from "@patternfly/react-core/dist/esm/components/Checkbox/index.js";
 import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core/dist/esm/components/DescriptionList/index.js";
 import { Gallery } from "@patternfly/react-core/dist/esm/layouts/Gallery/index.js";
-import { Page, PageBreadcrumb, PageSection } from "@patternfly/react-core/dist/esm/components/Page/index.js";
+import { PageBreadcrumb, PageSection } from "@patternfly/react-core/dist/esm/components/Page/index.js";
 import { Switch } from "@patternfly/react-core/dist/esm/components/Switch/index.js";
 
+import { CockpitPage } from "cockpit/elements";
 import { Privileged } from "cockpit-components-privileged.jsx";
 
 import { ModelContext } from './model-context.jsx';
@@ -699,9 +700,10 @@ export const NetworkInterfacePage = ({
             .map((component, idx) => <React.Fragment key={idx}>{component}</React.Fragment>);
 
     return (
-        <Page id="network-interface"
-              data-test-wait={operationInProgress}
-              className="pf-m-no-sidebar">
+        <CockpitPage
+            id="network-interface"
+            data-test-wait={operationInProgress}
+        >
             <PageBreadcrumb hasBodyWrapper={false} stickyOnBreakpoint={{ default: "top" }}>
                 <Breadcrumb>
                     <BreadcrumbItem to='#/'>
@@ -754,6 +756,6 @@ export const NetworkInterfacePage = ({
                     {renderConnectionMembers(iface.MainConnection)}
                 </Gallery>
             </PageSection>
-        </Page>
+        </CockpitPage>
     );
 };

@@ -41,6 +41,8 @@ import { Flex, FlexItem } from "@patternfly/react-core/dist/esm/layouts/Flex/ind
 import { Icon } from "@patternfly/react-core/dist/esm/components/Icon";
 import { Popover } from "@patternfly/react-core/dist/esm/components/Popover";
 
+import { CockpitPage } from "cockpit/elements";
+
 import {
     decode_filename, block_short_name, fmt_size,
     reset_available_spaces
@@ -863,7 +865,7 @@ export const StoragePage = ({ location, plot_state }) => {
     const page = get_page_from_location(location);
 
     return (
-        <Page id="storage" className={"pf-m-no-sidebar" + (client.in_anaconda_mode() ? " anaconda" : "")}>
+        <CockpitPage className={(client.in_anaconda_mode() ? "anaconda" : "")}>
             { (!client.in_anaconda_mode() && page.parent) &&
             <PageBreadcrumb hasBodyWrapper={false} stickyOnBreakpoint={{ default: "top" }}>
                 <StorageBreadcrumb page={page} />
@@ -875,6 +877,6 @@ export const StoragePage = ({ location, plot_state }) => {
                     <PageCardStackItems page={page} plot_state={plot_state} noarrow />
                 </Stack>
             </PageSection>
-        </Page>
+        </CockpitPage>
     );
 };
