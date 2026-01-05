@@ -276,7 +276,7 @@ class ServicesPageBody extends React.Component {
         if (!currentOptions.name)
             delete currentOptions.name;
 
-        cockpit.location.go(cockpit.location.path, currentOptions);
+        cockpit.location.replace(cockpit.location.path, currentOptions);
     }
 
     componentDidMount() {

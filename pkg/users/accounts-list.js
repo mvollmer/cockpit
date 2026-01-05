@@ -250,7 +250,7 @@ const GroupsList = ({ groups, accounts, isExpanded, setIsExpanded, min_gid, max_
             } else {
                 delete newOptions.group;
             }
-            cockpit.location.go([], newOptions);
+            cockpit.location.replace([], newOptions);
         } else {
             setCurrentTextFilter(options.group || "");
         }
@@ -370,7 +370,7 @@ const AccountsList = ({ accounts, current_user, groups, min_uid, max_uid, shells
             } else {
                 delete newOptions.user;
             }
-            cockpit.location.go([], newOptions);
+            cockpit.location.replace([], newOptions);
         } else {
             setCurrentTextFilter(options.user || "");
         }
