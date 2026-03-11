@@ -17,7 +17,7 @@ import { Location } from 'cockpit/_internal/location';
 import { ensure_transport, transport_globals } from './cockpit/_internal/transport';
 import { FsInfoClient } from "./cockpit/fsinfo";
 import { fetch_info } from './cockpit/_internal/info';
-import { logout, localStorage, sessionStorage } from './cockpit/_internal/session';
+import { logout, localStorage, sessionStorage, get_session_controller } from './cockpit/session';
 import { gettext, ngettext, language, language_direction, translate, locale } from './cockpit/_internal/gettext';
 
 function factory() {
@@ -2814,6 +2814,11 @@ function factory() {
             throw new Error(`Assertion failed: ${message}`);
         }
     };
+
+    /* Session timeout handling
+     */
+
+    cockpit.session_controller = get_session_controller();
 
     return cockpit;
 }
