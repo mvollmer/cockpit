@@ -30,16 +30,16 @@ export class SessionController extends EventEmitter<SessionControllerEvents> {
     countdown: number = 0;
     problem: string | null = null;
 
-    #channel: Channel | null = null;
+    #is_top: boolean;
 
     constructor() {
         super();
-        this.active = (window.parent === window || window.name.indexOf("cockpit1:") !== 0);
-        if (this.active) {
+        this.#is_top = (window.parent === window || window.name.indexOf("cockpit1:") !== 0);
+        this.active = this.#is_top || !shell_features().has_global_session_controller;
+        this.add_window(window);
+        this.add_host("");
+        if (this.active)
             console.debug("session controller active for", window.name);
-            this.add_window(window);
-            this.#open_channel();
-        }
     }
 
     add_window(win: Window) {
@@ -57,8 +57,13 @@ export class SessionController extends EventEmitter<SessionControllerEvents> {
         win.addEventListener("scroll", this.#record_activity, false);
     }
 
-    #open_channel() {
-        const channel = new Channel({ payload: "session-control" });
+    #host_channels: Map<string, Channel> = new Map();
+
+    add_host(host: string) {
+        if (!this.active)
+            return;
+
+        const channel = new Channel({ ...(host ? { host } : { }), payload: "session-control" });
 
         channel.on("data", (event_str) => {
             try {
@@ -71,7 +76,14 @@ export class SessionController extends EventEmitter<SessionControllerEvents> {
                     }
                 }
                 if ("logout" in event) {
-                    logout(true, _("You have been logged out due to inactivity."));
+                    if (this.#is_top) {
+                        logout(true, _("You have been logged out due to inactivity."));
+                    } else {
+                        // This is a frame running in a old shell.
+                        ensure_transport(t => {
+                            t.send_control({ command: "kill", host: transport_globals.default_host });
+                        });
+                    }
                 }
             } catch (ex) {
                 console.warn("Failed to parse session control event", String(ex));
@@ -80,13 +92,17 @@ export class SessionController extends EventEmitter<SessionControllerEvents> {
 
         channel.on("close", (options) => {
             const problem = ("problem" in options && typeof options.problem == "string" ? options.problem : "") || "disconnected";
-            this.#channel = null;
-            console.warn("transport closed: " + problem);
-            this.problem = problem;
-            this.emit("changed");
+            this.#host_channels.delete(host);
+            this.emit("host_disconnected", host, problem);
+
+            if (!host) {
+                console.warn("transport closed: " + problem);
+                this.problem = problem;
+                this.emit("changed");
+            }
         });
 
-        this.#channel = channel;
+        this.#host_channels.set(host, channel);
     }
 
     inhibit_activity_reporting(flag: boolean) {
@@ -95,7 +111,7 @@ export class SessionController extends EventEmitter<SessionControllerEvents> {
 
     continue_session() {
         if (this.countdown != 0) {
-            this.#send_activity_notification();
+            this.#notify_hosts();
             this.countdown = 0;
             this.emit("changed");
         }
@@ -108,7 +124,7 @@ export class SessionController extends EventEmitter<SessionControllerEvents> {
         const now = Date.now();
         if (!this.#inhibit_activity_reporting && now > this.#last_user_was_active + 10 * 1000) {
             this.#last_user_was_active = now;
-            this.#send_activity_notification();
+            this.#notify_hosts();
             if (this.countdown != 0) {
                 this.countdown = 0;
                 this.emit("changed");
@@ -116,24 +132,10 @@ export class SessionController extends EventEmitter<SessionControllerEvents> {
         }
     };
 
-    #send_activity_notification() {
-        if (this.#channel)
-            this.#channel.send_data("active");
+    #notify_hosts() {
+        for (const ch of this.#host_channels.values())
+            ch.send_data("active");
     }
-}
-
-export function get_session_controller(): SessionController {
-    /* XXX - It's not a good idea to have multiple session
-       controllers. If one of them has inhibited activity reporting,
-       the other one might still send them and then the countdown
-       mysteriously stops.
-
-       Let's maybe only allow one session-control channel and all
-       SessionControllers that can't open theirs just shut up.
-     */
-    if (!transport_globals.session_controller)
-        transport_globals.session_controller = new SessionController();
-    return transport_globals.session_controller;
 }
 
 /* Storage

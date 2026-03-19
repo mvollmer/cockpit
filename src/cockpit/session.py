@@ -17,11 +17,11 @@ class SessionController():
         self.on_timeout = on_timeout
         self.channels = set()
         self.task = None
+        if timeout > 0:
+            self.task = asyncio.create_task(self.sequence())
 
     def add_channel(self, channel):
         self.channels.add(channel)
-        if self.task is None:
-            self.reset_session_timeout()
 
     def remove_channel(self, channel):
         self.channels.remove(channel)
@@ -30,7 +30,7 @@ class SessionController():
         for c in self.channels:
             c.send_bytes(msg)
 
-    async def _sequence(self):
+    async def sequence(self):
         await asyncio.sleep(max(self.timeout - 30, 30))
         for i in range(30, 0, -1):
             self.send_channel_message(f'{{"countdown": {i!s}}}'.encode())
@@ -42,6 +42,4 @@ class SessionController():
     def reset_session_timeout(self):
         if self.task is not None:
             self.task.cancel()
-            self.task = None
-        if self.timeout > 0:
-            self.task = asyncio.create_task(self._sequence())
+            self.task = asyncio.create_task(self.sequence())

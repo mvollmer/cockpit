@@ -14,10 +14,10 @@ import { Deferred, later_invoke } from './cockpit/_internal/deferred';
 import { event_mixin } from './cockpit/_internal/event-mixin';
 import { transport_origin, calculate_application, calculate_url } from './cockpit/_internal/location-utils';
 import { Location } from 'cockpit/_internal/location';
-import { ensure_transport, transport_globals } from './cockpit/_internal/transport';
+import { ensure_transport, transport_globals, get_session_controller } from './cockpit/_internal/transport';
 import { FsInfoClient } from "./cockpit/fsinfo";
 import { fetch_info } from './cockpit/_internal/info';
-import { logout, localStorage, sessionStorage, get_session_controller } from './cockpit/session';
+import { logout, localStorage, sessionStorage } from './cockpit/session';
 import { gettext, ngettext, language, language_direction, translate, locale } from './cockpit/_internal/gettext';
 
 function factory() {

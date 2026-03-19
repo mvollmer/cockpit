@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 import { EventEmitter } from '../event';
 
-import type { JsonObject } from './common';
+import { type JsonObject, assert } from './common';
 import { calculate_application, calculate_url } from './location-utils';
 import { ParentWebSocket } from './parentwebsocket';
-import type { SessionController } from '../session';
+import { SessionController } from '../session';
 
 type ControlCallback = (message: JsonObject) => void;
 type MessageCallback = (data: string | Uint8Array) => void;
@@ -18,7 +18,7 @@ class TransportGlobals {
     default_host: string | null = null;
     process_hints: ControlCallback | null = null;
     incoming_filters: FilterCallback[] = [];
-    session_controller: null | SessionController = null;
+    session_controller: null | true | SessionController = null;
 }
 
 // the transport globals must be a *real* global, across bundles -- i.e. a <script>ed cockpit.js and bundled
@@ -308,8 +308,38 @@ class Transport extends EventEmitter<{ ready(): void }> {
 export type { Transport };
 
 export function ensure_transport(callback: (transport: Transport) => void) {
-    if (!transport_globals.default_transport)
+    if (!transport_globals.default_transport) {
         transport_globals.default_transport = new Transport();
+
+        /* /!\ Tricky control flow ahead /!\
+         *
+         * We want to initialize our session controller whenever there
+         * is a transport open, regardless of whether the session
+         * controller is used explicitly by the application. (The
+         * session controller will make sure that the session doesn't
+         * timeout while the user is active, and we want that to
+         * happen even if the top-level page doesn't take care of that
+         * itself.)
+         *
+         * However, creating the session controller will open a
+         * channel, which will call ensure_transport again
+         * recursively.  This is okay, since we wont call
+         * get_session_controller again, since
+         * transport_globals.default_transport is already set.
+         *
+         * We also need to do the right thing when
+         * get_session_controller is called first and then calls
+         * ensure_transport. In that case we come here and would call
+         * get_session_controller a second time unless we protect
+         * against that. That protected is the fact that
+         * get_session_controller sets
+         * transport_globals.session_controller to true while it is
+         * constructing the real object.
+         */
+
+        if (!transport_globals.session_controller)
+            get_session_controller();
+    }
 
     const transport = transport_globals.default_transport;
     if (transport.ready) {
@@ -319,6 +349,18 @@ export function ensure_transport(callback: (transport: Transport) => void) {
             callback(transport);
         });
     }
+}
+
+export function get_session_controller(): SessionController {
+    assert(transport_globals.session_controller !== true);
+    if (!transport_globals.session_controller) {
+        // Prevent ensure_transport from calling us again recursively.
+        // See above.
+        transport_globals.session_controller = true;
+        transport_globals.session_controller = new SessionController();
+    }
+
+    return transport_globals.session_controller;
 }
 
 /* Always close the transport explicitly: allows parent windows to track us */
