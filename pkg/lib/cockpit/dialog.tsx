@@ -1445,24 +1445,31 @@ export function DialogActionButton<V>({
     dialog,
     children,
     action,
+    variant = "main",
+    isDisabled = false,
     onClose = undefined,
     ...props
 } : {
     dialog: DialogState<V> | DialogError | null,
     children: React.ReactNode,
-    action: (values: V) => Promise<void>,
+    action: (values: V, variant: string) => Promise<void>,
+    variant?: string,
+    isDisabled?: boolean,
     onClose?: undefined | (() => void)
 } & Omit<ButtonProps, "id" | "action" | "isLoading" | "isDisabled" | "variant" | "onClick">) {
+    const [running, setRunning] = useState(false);
     return (
         <Button
             id="dialog-apply"
-            isLoading={!!dialog && !(dialog instanceof DialogError) && dialog.busy}
-            isDisabled={!dialog || dialog instanceof DialogError || dialog.actions_disabled}
-            variant="primary"
+            isLoading={!!dialog && !(dialog instanceof DialogError) && dialog.busy && running}
+            isDisabled={isDisabled || !dialog || dialog instanceof DialogError || dialog.actions_disabled}
+            variant={variant == "main" ? "primary" : "secondary"}
             onClick={async () => {
                 cockpit.assert(dialog && !(dialog instanceof DialogError));
-                if (await dialog.run_action(action) && onClose)
+                setRunning(true);
+                if (await dialog.run_action(vals => action(vals, variant)) && onClose)
                     onClose();
+                setRunning(false);
             }}
             {...props}
         >

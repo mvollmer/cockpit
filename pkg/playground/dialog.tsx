@@ -222,7 +222,7 @@ const ExampleDialog = ({
     countAsyncUpdate,
     countAsyncCancel,
 } : {
-    setResult: (values: ExampleValues) => void,
+    setResult: (values: ExampleValues, variant: string) => void,
     countAsyncValidation: () => void,
     countAsyncUpdate: () => void,
     countAsyncCancel: () => void,
@@ -269,8 +269,8 @@ const ExampleDialog = ({
 
     const dlg = useDialogState(init, validate);
 
-    async function apply(values: ExampleValues) {
-        setResult(values);
+    async function apply(values: ExampleValues, variant: string) {
+        setResult(values, variant);
 
         if (values.error == "custom") {
             throw new DialogError("This is a failure", <code>1234-567-98A</code>);
@@ -402,6 +402,9 @@ const ExampleDialog = ({
                 <DialogActionButton dialog={dlg} action={apply} onClose={Dialogs.close}>
                     Apply
                 </DialogActionButton>
+                <DialogActionButton dialog={dlg} action={apply} variant="second" onClose={Dialogs.close}>
+                    Secondary
+                </DialogActionButton>
                 <DialogCancelButton dialog={dlg} onClose={Dialogs.close} />
             </ModalFooter>
         </Modal>
@@ -411,6 +414,7 @@ const ExampleDialog = ({
 const ExampleButton = () => {
     const Dialogs = useDialogs();
     const [values, setValues] = useState<ExampleValues | null>(null);
+    const [variant, setVariant] = useState<string>("");
     const [asyncValidationsBase, setAsyncValidationsBase] = useState<number>(0);
     const [asyncValidations, countAsyncValidation] = useReducer(x => x + 1, 0);
     const [asyncUpdatesBase, setAsyncUpdatesBase] = useState<number>(0);
@@ -438,7 +442,7 @@ const ExampleButton = () => {
                         setAsyncCancelsBase(asyncCancels);
                         Dialogs.show(
                             <ExampleDialog
-                                setResult={setValues}
+                                setResult={(values, variant) => { setValues(values); setVariant(variant) }}
                                 countAsyncValidation={countAsyncValidation}
                                 countAsyncUpdate={countAsyncUpdate}
                                 countAsyncCancel={countAsyncCancel}
@@ -451,6 +455,7 @@ const ExampleButton = () => {
             </Button>
             { values &&
                 <DescriptionList isHorizontal>
+                    { entry("variant", variant) }
                     { entry("flag", String(values.flag)) }
                     { values.flag && entry("text", values.text) }
                     { entry("text2", values.text2) }
