@@ -556,6 +556,17 @@
    When clicked, "func" will be run via "dlg.run_action". If "func"
    completes successfully, "close_func" is called to close the dialog.
 
+   A DialogActionButton has a number of extra features:
+
+     - You can specify a "actionVariant", which will be passed to the
+       action function as the second argument.  The variant defaults
+       to "main". The "main" button will be rendered as a primary
+       button, and any other variant will be rendered as a secondary
+       button.
+
+     - You can specify a "excuse".  Buttons with a excuse are always
+       disabled and show the excuse in a tooltip.
+
    - <DialogCancelButton dialog={dlg} onClose={close_func} />
 
    This will produce a cancel button for a dialog that correctly
@@ -617,6 +628,7 @@ import {
 import { Radio } from "@patternfly/react-core/dist/esm/components/Radio";
 import { InputGroup, InputGroupItem } from "@patternfly/react-core/dist/esm/components/InputGroup/index.js";
 import { EyeIcon, EyeSlashIcon } from "@patternfly/react-icons";
+import { Tooltip } from "@patternfly/react-core/dist/esm/components/Tooltip";
 
 const _ = cockpit.gettext;
 
@@ -1472,46 +1484,67 @@ export function DialogErrorMessage<V>({
 
 export function DialogActionButton<V>({
     dialog,
-    children,
     action,
+    excuse,
+    actionVariant = "main",
     onClose = undefined,
+    isDisabled,
+    isAriaDisabled,
     ...props
 } : {
     dialog: DialogState<V> | DialogError | null,
-    children: React.ReactNode,
-    action: (values: V) => Promise<void>,
+    action: (values: V, variant: string) => Promise<void>,
+    excuse?: string | undefined,
+    actionVariant?: string,
     onClose?: undefined | (() => void)
-} & Omit<ButtonProps, "id" | "action" | "isLoading" | "isDisabled" | "variant" | "onClick">) {
-    return (
+} & Omit<ButtonProps, "action">) {
+    const [running, setRunning] = useState(false);
+
+    const sfx = actionVariant == "main" ? "" : "-" + actionVariant;
+    const id = `dialog-apply${sfx}`;
+
+    const btn = (
         <Button
-            ouiaId="dialog-apply"
-            isLoading={!!dialog && !(dialog instanceof DialogError) && dialog.busy}
-            isDisabled={!dialog || dialog instanceof DialogError || dialog.actions_disabled}
-            variant="primary"
+            ouiaId={id}
+            isLoading={!!dialog && !(dialog instanceof DialogError) && dialog.busy && running}
+            isDisabled={!dialog || dialog instanceof DialogError || dialog.actions_disabled || !!isDisabled}
+            isAriaDisabled={!!excuse || !!isAriaDisabled}
+            variant={actionVariant == "main" ? "primary" : "secondary"}
             onClick={async () => {
                 cockpit.assert(dialog && !(dialog instanceof DialogError));
-                if (await dialog.run_action(action) && onClose)
+                setRunning(true);
+                if (await dialog.run_action(v => action(v, actionVariant)) && onClose)
                     onClose();
+                setRunning(false);
             }}
             {...props}
-        >
-            {children}
-        </Button>
+        />
     );
+
+    if (excuse) {
+        return (
+            <Tooltip content={excuse}>
+                {btn}
+            </Tooltip>
+        );
+    } else {
+        return btn;
+    }
 }
 
 export function DialogCancelButton<V>({
     dialog,
     onClose,
+    isDisabled,
     ...props
 } : {
     dialog: DialogState<V> | DialogError | null,
     onClose: () => void
-} & Omit<ButtonProps, "id" | "isDisabled" | "variant" | "onClick">) {
+} & ButtonProps) {
     return (
         <Button
             ouiaId="dialog-cancel"
-            isDisabled={!dialog || (dialog instanceof DialogState && dialog.cancel_disabled)}
+            isDisabled={!dialog || (dialog instanceof DialogState && dialog.cancel_disabled) || !!isDisabled}
             variant="link"
             onClick={() => {
                 if (dialog instanceof DialogState)
@@ -1519,10 +1552,9 @@ export function DialogCancelButton<V>({
                 else
                     onClose();
             }}
+            children={_("Cancel")} /* Put it here so that "props" can override it. */
             {...props}
-        >
-            {_("Cancel")}
-        </Button>
+        />
     );
 }
 

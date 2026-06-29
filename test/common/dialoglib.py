@@ -94,8 +94,8 @@ class DialogHelpers:
     def error(self) -> str:
         return f"{self.dialogSelector} [data-ouia-component-id='dialog-error-message']"
 
-    def apply_button(self) -> str:
-        return f"{self.dialogSelector} [data-ouia-component-id='dialog-apply']"
+    def apply_button(self, variant: str = "main") -> str:
+        return f"{self.dialogSelector} [data-ouia-component-id='dialog-apply{"" if variant == "main" else "-" + variant}']"
 
     def cancel_button(self) -> str:
         return f"{self.dialogSelector} [data-ouia-component-id='dialog-cancel']"
