@@ -71,6 +71,7 @@ import { get_ip_method_choices } from './ip-settings.jsx';
 
 import {
     useDialogState,
+    dialog_cancel,
     DialogError, DialogErrorMessage,
     DialogTextInput,
     DialogPasswordInput,
@@ -171,7 +172,7 @@ const WiFiConnectDialog = ({ dev, model, ssid: knownSsid, ap }) => {
                position="top"
                variant="small"
                isOpen
-               onClose={Dialogs.close}>
+               onClose={() => dialog_cancel(dlg, Dialogs.close)}>
             <ModalHeader title={isHidden ? _("Connect to hidden network") : cockpit.format(_("Connect to $0"), knownSsid)} />
             <ModalBody>
                 <DialogErrorMessage dialog={dlg} />

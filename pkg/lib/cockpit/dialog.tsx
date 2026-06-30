@@ -356,6 +356,15 @@
    function" (see below).  Otherwise all validation and update tasks
    are cancelled and the dialog is closed by calling "onClose".
 
+   - dialog_cancel(dlg, onClose)
+
+   The same as "dlf.cancel(onClose)" when dlg is a DialogState
+   instance, otherwise just calls onClose.  This is intended to be
+   used with the "onClose" property of a <Modal> component, for
+   example.  It should behave like the Cancel button in the dialog,
+   and also work with useDialogState_async, and the "dialog_cancel"
+   function makes that easy.
+
    - dlg.set_cancel(func)
 
    Arranges for "func" to be called when the cancel button is clicked.
@@ -1532,6 +1541,17 @@ export function DialogActionButton<V>({
     }
 }
 
+export function dialog_cancel<V>(
+    dialog: null | DialogError | DialogState<V>,
+    onClose: () => void,
+) {
+    if (dialog instanceof DialogState)
+        dialog.cancel(onClose);
+    else
+        onClose();
+}
+
+
 export function DialogCancelButton<V>({
     dialog,
     onClose,
@@ -1546,12 +1566,7 @@ export function DialogCancelButton<V>({
             ouiaId="dialog-cancel"
             isDisabled={!dialog || (dialog instanceof DialogState && dialog.cancel_disabled) || !!isDisabled}
             variant="link"
-            onClick={() => {
-                if (dialog instanceof DialogState)
-                    dialog.cancel(onClose);
-                else
-                    onClose();
-            }}
+            onClick={() => dialog_cancel(dialog, onClose)}
             children={_("Cancel")} /* Put it here so that "props" can override it. */
             {...props}
         />

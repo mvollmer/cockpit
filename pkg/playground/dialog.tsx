@@ -25,6 +25,7 @@ import { WithDialogs, useDialogs } from 'dialogs';
 import {
     useDialogState, DialogState,
     useDialogState_async,
+    dialog_cancel,
     DialogError,
     DialogErrorMessage,
     DialogField,
@@ -323,7 +324,7 @@ const ExampleDialog = ({
             position="top"
             variant="medium"
             isOpen
-            onClose={Dialogs.close}
+            onClose={() => dialog_cancel(dlg, Dialogs.close)}
         >
             <ModalHeader title="Demo" />
             <ModalBody>
@@ -539,7 +540,7 @@ const ExampleDialogWithInitFunc = () => {
             position="top"
             variant="medium"
             isOpen
-            onClose={Dialogs.close}
+            onClose={() => dialog_cancel(dlg, Dialogs.close)}
         >
             <ModalHeader title="Demo" />
             <ModalBody>
@@ -635,7 +636,7 @@ const AsyncExampleDialog = ({
             position="top"
             variant="medium"
             isOpen
-            onClose={Dialogs.close}
+            onClose={() => dialog_cancel(dlg, Dialogs.close)}
         >
             <ModalHeader title="Async Demo" />
             <ModalBody>
