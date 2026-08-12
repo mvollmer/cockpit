@@ -78,7 +78,7 @@ class TestRHEL8(testlib.MachineCase):
         stock_b.wait_in_text("#hosts-sel", f"admin@{dev_hostname}")
         stock_b.enter_page("/system")
         stock_b.wait_in_text(".ct-overview-header-hostname", dev_hostname)
-        self.logout_pf5(stock_b)
+        stock_b.logout()
 
         # stock → dev: via shell Add host
         stock_b.login_and_go()
